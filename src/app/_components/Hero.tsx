@@ -18,7 +18,7 @@ export default function Hero({ title, subtitle, description }: HeroProps) {
         <h1 className="text-4xl font-bold tracking-tight text-white md:text-6xl">
           {title}
         </h1>
-        <h2 className="mt-4 text-2xl font-semibold text-dxt-accent md:text-3xl">
+        <h2 className="mt-4 text-2xl font-semibold text-sky-300 md:text-3xl">
           {subtitle}
         </h2>
         <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-slate-300">
