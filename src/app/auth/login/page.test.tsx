@@ -9,40 +9,40 @@ vi.mock('@/lib/auth/queries', () => ({
 }))
 
 vi.mock('next/navigation', () => ({
-  redirect: (...args: unknown[]) => mockRedirect(...args),
+  redirect: (...args: unknown[]) => {
+    mockRedirect(...args)
+    throw new Error('NEXT_REDIRECT')
+  },
 }))
 
 vi.mock('./_components/LoginForm', () => ({
   default: () => <div data-testid="login-form-mock">LoginForm</div>,
 }))
 
+import LoginPage, { metadata } from './page'
+
 beforeEach(() => {
   vi.clearAllMocks()
 })
 
-describe('LoginPage', { timeout: 15000 }, () => {
+describe('LoginPage', () => {
   it('[P1] should redirect to /dashboard when user is authenticated', async () => {
     mockGetCurrentUser.mockResolvedValue({ id: 'u1', email: 'admin@dxt-ai.com' })
 
-    const { default: LoginPage } = await import('./page')
-    await LoginPage()
-
+    await expect(LoginPage()).rejects.toThrow('NEXT_REDIRECT')
     expect(mockRedirect).toHaveBeenCalledWith('/dashboard')
   })
 
   it('[P1] should render LoginForm when user is not authenticated', async () => {
     mockGetCurrentUser.mockResolvedValue(null)
 
-    const { default: LoginPage } = await import('./page')
     const result = await LoginPage()
 
     const { container } = render(result)
     expect(container.querySelector('main')).toBeInTheDocument()
   })
 
-  it('[P2] should export correct metadata', async () => {
-    const { metadata } = await import('./page')
-
+  it('[P2] should export correct metadata', () => {
     expect(metadata).toEqual({
       title: 'Login | zyncdata',
       description: 'Sign in to the zyncdata CMS',

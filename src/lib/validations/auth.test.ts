@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { loginSchema } from './auth'
+import { loginSchema, mfaVerifySchema } from './auth'
 
 describe('loginSchema', () => {
   it('should accept valid email and password', () => {
@@ -89,5 +89,74 @@ describe('loginSchema', () => {
       extra: 'field',
     })
     expect(result.success).toBe(true)
+  })
+})
+
+describe('mfaVerifySchema', () => {
+  it('should accept valid 6-digit code', () => {
+    const result = mfaVerifySchema.safeParse({ code: '123456' })
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.code).toBe('123456')
+    }
+  })
+
+  it('should accept code with all zeros', () => {
+    const result = mfaVerifySchema.safeParse({ code: '000000' })
+    expect(result.success).toBe(true)
+  })
+
+  it('should accept code with all nines', () => {
+    const result = mfaVerifySchema.safeParse({ code: '999999' })
+    expect(result.success).toBe(true)
+  })
+
+  it('should reject code shorter than 6 digits', () => {
+    const result = mfaVerifySchema.safeParse({ code: '12345' })
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(result.error.issues[0].message).toBe('Code must be 6 digits')
+    }
+  })
+
+  it('should reject code longer than 6 digits', () => {
+    const result = mfaVerifySchema.safeParse({ code: '1234567' })
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(result.error.issues[0].message).toBe('Code must be 6 digits')
+    }
+  })
+
+  it('should reject non-numeric input', () => {
+    const result = mfaVerifySchema.safeParse({ code: 'abcdef' })
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(result.error.issues[0].message).toBe('Code must be 6 digits')
+    }
+  })
+
+  it('should reject mixed alphanumeric input', () => {
+    const result = mfaVerifySchema.safeParse({ code: '12ab56' })
+    expect(result.success).toBe(false)
+  })
+
+  it('should reject empty string', () => {
+    const result = mfaVerifySchema.safeParse({ code: '' })
+    expect(result.success).toBe(false)
+  })
+
+  it('should reject missing code field', () => {
+    const result = mfaVerifySchema.safeParse({})
+    expect(result.success).toBe(false)
+  })
+
+  it('should reject code with spaces', () => {
+    const result = mfaVerifySchema.safeParse({ code: '123 56' })
+    expect(result.success).toBe(false)
+  })
+
+  it('should reject code with special characters', () => {
+    const result = mfaVerifySchema.safeParse({ code: '12345!' })
+    expect(result.success).toBe(false)
   })
 })

@@ -6,3 +6,12 @@ export const loginSchema = z.object({
 })
 
 export type LoginFormData = z.infer<typeof loginSchema>
+
+export const mfaVerifySchema = z.object({
+  code: z
+    .string()
+    .length(6, 'Code must be 6 digits')
+    .regex(/^\d{6}$/, 'Code must be 6 digits'),
+})
+
+export type MfaVerifyFormData = z.infer<typeof mfaVerifySchema>
