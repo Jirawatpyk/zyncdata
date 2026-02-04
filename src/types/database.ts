@@ -34,6 +34,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      backup_codes: {
+        Row: {
+          code_hash: string
+          created_at: string | null
+          id: string
+          used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          code_hash: string
+          created_at?: string | null
+          id?: string
+          used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          code_hash?: string
+          created_at?: string | null
+          id?: string
+          used_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       landing_page_content: {
         Row: {
           content: Json

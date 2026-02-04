@@ -15,3 +15,13 @@ export const mfaVerifySchema = z.object({
 })
 
 export type MfaVerifyFormData = z.infer<typeof mfaVerifySchema>
+
+export const backupCodeSchema = z.object({
+  code: z.coerce
+    .string()
+    .min(1, 'Backup code is required')
+    .transform((val) => val.replace(/[-\s]/g, '').toUpperCase())
+    .pipe(z.string().regex(/^[A-F0-9]{8}$/, 'Invalid backup code format')),
+})
+
+export type BackupCodeFormData = z.infer<typeof backupCodeSchema>

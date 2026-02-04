@@ -10,7 +10,9 @@ import { Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { enrollMfaFactor, verifyMfaEnrollment } from '@/lib/auth/mutations'
 import { verifyMfaEnrollmentAction } from '@/lib/actions/mfa'
+import { generateBackupCodesAction } from '@/lib/actions/backup-codes'
 import type { MfaEnrollState } from '@/lib/actions/mfa'
+import BackupCodesDisplay from './BackupCodesDisplay'
 
 const initialState: MfaEnrollState = { error: null, rateLimited: false }
 
@@ -49,6 +51,8 @@ export default function MfaEnrollForm() {
   const [enrollError, setEnrollError] = useState<string | null>(null)
   const [verifyError, setVerifyError] = useState<string | null>(null)
   const [verifying, setVerifying] = useState(false)
+  const [backupCodes, setBackupCodes] = useState<string[] | null>(null)
+  const [showBackupCodes, setShowBackupCodes] = useState(false)
   const enrollInProgress = useRef(false)
 
   const [actionState, formAction] = useActionState(
@@ -69,7 +73,17 @@ export default function MfaEnrollForm() {
       setVerifying(true)
       try {
         await verifyMfaEnrollment(factorId, formData.get('code') as string)
-        router.push('/dashboard')
+
+        // Generate backup codes after successful MFA verification
+        const backupResult = await generateBackupCodesAction()
+        if (backupResult.codes) {
+          setBackupCodes(backupResult.codes)
+          setShowBackupCodes(true)
+        } else {
+          // Backup code generation failed — still allow dashboard access
+          router.push('/dashboard')
+        }
+        setVerifying(false)
         return result
       } catch {
         setVerifying(false)
@@ -118,6 +132,15 @@ export default function MfaEnrollForm() {
     setQrCode(null)
     setSecret(null)
     performEnrollment({ current: false })
+  }
+
+  if (showBackupCodes && backupCodes) {
+    return (
+      <BackupCodesDisplay
+        codes={backupCodes}
+        onContinue={() => router.push('/dashboard')}
+      />
+    )
   }
 
   return (

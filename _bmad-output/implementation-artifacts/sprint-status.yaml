@@ -53,7 +53,7 @@ development_status:
   epic-2: in-progress
   2-1-initial-super-admin-account-login: done
   2-2-totp-mfa-setup: done
-  2-3-backup-codes-generation-usage: backlog
+  2-3-backup-codes-generation-usage: done
   2-4-mfa-login-verification: backlog
   2-5-secure-logout: backlog
   2-6-route-protection-rbac-enforcement: backlog

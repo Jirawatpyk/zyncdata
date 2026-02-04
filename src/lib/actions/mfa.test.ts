@@ -124,4 +124,36 @@ describe('verifyMfaEnrollmentAction', () => {
       expect(mockLimit).not.toHaveBeenCalled()
     })
   })
+
+  describe('unexpected error handling', () => {
+    it('[P0] should return unexpected error when getCurrentUser throws a non-redirect error', async () => {
+      mockGetCurrentUser.mockRejectedValue(new Error('Database connection error'))
+
+      const result = await verifyMfaEnrollmentAction(
+        initialState,
+        buildFormData('123456'),
+      )
+
+      expect(result).toEqual({
+        error: 'An unexpected error occurred. Please try again.',
+        rateLimited: false,
+      })
+    })
+  })
+
+  describe('rate limit before validation ordering', () => {
+    it('[P1] should return rate limit error without reaching validation even with invalid code', async () => {
+      mockLimit.mockResolvedValue({ success: false })
+
+      const result = await verifyMfaEnrollmentAction(
+        initialState,
+        buildFormData('not-a-number'),
+      )
+
+      expect(result).toEqual({
+        error: 'Too many attempts. Please try again later.',
+        rateLimited: true,
+      })
+    })
+  })
 })

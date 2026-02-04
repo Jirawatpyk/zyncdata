@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { loginSchema, mfaVerifySchema } from './auth'
+import { loginSchema, mfaVerifySchema, backupCodeSchema } from './auth'
 
 describe('loginSchema', () => {
   it('should accept valid email and password', () => {
@@ -158,5 +158,78 @@ describe('mfaVerifySchema', () => {
   it('should reject code with special characters', () => {
     const result = mfaVerifySchema.safeParse({ code: '12345!' })
     expect(result.success).toBe(false)
+  })
+})
+
+describe('backupCodeSchema', () => {
+  it('should accept valid 8-char hex code', () => {
+    const result = backupCodeSchema.safeParse({ code: 'A1B2C3D4' })
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.code).toBe('A1B2C3D4')
+    }
+  })
+
+  it('should accept formatted code with dash ("A1B2-C3D4")', () => {
+    const result = backupCodeSchema.safeParse({ code: 'A1B2-C3D4' })
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.code).toBe('A1B2C3D4')
+    }
+  })
+
+  it('should accept code with spaces', () => {
+    const result = backupCodeSchema.safeParse({ code: 'A1B2 C3D4' })
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.code).toBe('A1B2C3D4')
+    }
+  })
+
+  it('should transform lowercase to uppercase', () => {
+    const result = backupCodeSchema.safeParse({ code: 'a1b2c3d4' })
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.code).toBe('A1B2C3D4')
+    }
+  })
+
+  it('should reject code that is too short', () => {
+    const result = backupCodeSchema.safeParse({ code: 'A1B2' })
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(result.error.issues[0].message).toBe('Invalid backup code format')
+    }
+  })
+
+  it('should reject code that is too long', () => {
+    const result = backupCodeSchema.safeParse({ code: 'A1B2C3D4E5' })
+    expect(result.success).toBe(false)
+  })
+
+  it('should reject non-hex characters', () => {
+    const result = backupCodeSchema.safeParse({ code: 'G1H2I3J4' })
+    expect(result.success).toBe(false)
+  })
+
+  it('should reject empty string', () => {
+    const result = backupCodeSchema.safeParse({ code: '' })
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(result.error.issues[0].message).toBe('Backup code is required')
+    }
+  })
+
+  it('should reject missing code field', () => {
+    const result = backupCodeSchema.safeParse({})
+    expect(result.success).toBe(false)
+  })
+
+  it('should accept code with multiple dashes and spaces', () => {
+    const result = backupCodeSchema.safeParse({ code: 'A1-B2 C3-D4' })
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.code).toBe('A1B2C3D4')
+    }
   })
 })
