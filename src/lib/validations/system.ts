@@ -4,7 +4,7 @@ export const systemSchema = z.object({
   id: z.string().uuid(),
   name: z.string(),
   url: z.string().url(),
-  logoUrl: z.string().url().nullable(),
+  logoUrl: z.string().nullable(),
   description: z.string().nullable(),
   displayOrder: z.number().int(),
 })

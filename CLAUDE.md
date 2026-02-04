@@ -154,6 +154,38 @@ npm run type-check   # TypeScript check
 npm run lint         # ESLint
 ```
 
+### Supabase Cloud Deployment
+
+**Push schema (migrations) ขึ้น cloud:**
+```bash
+npx supabase link --project-ref ylrmviunbbxdiyidimyz   # link ครั้งแรก (ทำครั้งเดียว)
+npx supabase db push                                    # push migrations ขึ้น cloud
+```
+
+**Push data ขึ้น cloud:**
+สร้างไฟล์ script ชั่วคราว (เช่น `supabase/_tmp-update.ts`) แล้วรันด้วย `npx tsx`:
+```typescript
+import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(
+  'https://ylrmviunbbxdiyidimyz.supabase.co',          // cloud URL
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,               // service role key
+  { auth: { autoRefreshToken: false, persistSession: false } },
+)
+
+// ตัวอย่าง: upsert data
+await supabase.from('table_name').upsert({ ... }, { onConflict: 'unique_column' })
+```
+```bash
+npx tsx supabase/_tmp-update.ts    # รัน script
+rm supabase/_tmp-update.ts         # ลบ script ชั่วคราว (มี key อยู่ ห้าม commit)
+```
+
+**หมายเหตุ:**
+- `supabase db push` push เฉพาะ schema (migrations) ไม่รวม seed data
+- Seed data ต้อง push แยกผ่าน Supabase JS client (service_role key bypass RLS)
+- ห้าม commit ไฟล์ที่มี service_role key hardcode
+
 ### Pre-commit (Husky)
 `npm run type-check && npm run lint && npm run test` — blocks commit on failure.
 
