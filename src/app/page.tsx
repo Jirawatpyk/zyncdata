@@ -78,10 +78,10 @@ export default async function Home() {
             <FadeInOnScroll>
               <div className="mb-10 text-center">
                 <h2 className="text-3xl font-bold text-gray-800 md:text-4xl">
-                  Our Systems
+                  {content.systems.heading}
                 </h2>
                 <p className="mx-auto mt-3 max-w-xl text-base text-gray-500">
-                  Access all your enterprise AI tools from one place
+                  {content.systems.subtitle}
                 </p>
               </div>
             </FadeInOnScroll>

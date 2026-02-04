@@ -2,15 +2,18 @@ import { createClient } from '@/lib/supabase/server'
 import {
   heroContentSchema,
   introContentSchema,
+  systemsContentSchema,
   footerContentSchema,
   type HeroContent,
   type IntroContent,
+  type SystemsContent,
   type FooterContent,
 } from '@/lib/validations/content'
 
 export interface LandingPageContent {
   hero: HeroContent
   intro: IntroContent
+  systems: SystemsContent
   footer: FooterContent
 }
 
@@ -29,6 +32,7 @@ export async function getLandingPageContent(): Promise<LandingPageContent> {
   return {
     hero: heroContentSchema.parse(contentMap.hero),
     intro: introContentSchema.parse(contentMap.intro),
+    systems: systemsContentSchema.parse(contentMap.systems),
     footer: footerContentSchema.parse(contentMap.footer),
   }
 }

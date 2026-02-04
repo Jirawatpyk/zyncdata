@@ -30,6 +30,13 @@ describe('getLandingPageContent', () => {
           },
         },
         {
+          section_name: 'systems',
+          content: {
+            heading: 'Our Systems',
+            subtitle: 'Access all your enterprise AI tools from one place',
+          },
+        },
+        {
           section_name: 'footer',
           content: {
             copyright: '2026 DxT AI. All rights reserved.',
@@ -52,7 +59,7 @@ describe('getLandingPageContent', () => {
     expect(mockSelect).toHaveBeenCalledWith('section_name, content')
   })
 
-  it('should return structured content map with hero, intro, footer', async () => {
+  it('should return structured content map with hero, intro, systems, footer', async () => {
     const result = await getLandingPageContent()
 
     expect(result.hero).toEqual({
@@ -63,6 +70,10 @@ describe('getLandingPageContent', () => {
     expect(result.intro).toEqual({
       heading: 'About DxT AI',
       body: 'DxT AI builds intelligent solutions.',
+    })
+    expect(result.systems).toEqual({
+      heading: 'Our Systems',
+      subtitle: 'Access all your enterprise AI tools from one place',
     })
     expect(result.footer).toEqual({
       copyright: '2026 DxT AI. All rights reserved.',
@@ -90,6 +101,10 @@ describe('getLandingPageContent', () => {
         {
           section_name: 'intro',
           content: { heading: 'About', body: 'Text' },
+        },
+        {
+          section_name: 'systems',
+          content: { heading: 'Systems', subtitle: 'Subtitle' },
         },
         {
           section_name: 'footer',

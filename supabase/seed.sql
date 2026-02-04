@@ -26,6 +26,10 @@ INSERT INTO landing_page_content (section_name, content, metadata) VALUES
     "heading": "About DxT AI",
     "body": "DxT AI builds intelligent solutions that streamline operations and enhance productivity. Our platform provides unified access to all systems with real-time health monitoring and comprehensive management tools."
   }'::jsonb, '{}'::jsonb),
+  ('systems', '{
+    "heading": "Our Systems",
+    "subtitle": "Access all your enterprise AI tools from one place"
+  }'::jsonb, '{}'::jsonb),
   ('footer', '{
     "copyright": "2026 DxT AI. All rights reserved.",
     "contact_email": "support@dxt-ai.com",

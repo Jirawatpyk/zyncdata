@@ -11,6 +11,11 @@ export const introContentSchema = z.object({
   body: z.string(),
 })
 
+export const systemsContentSchema = z.object({
+  heading: z.string(),
+  subtitle: z.string(),
+})
+
 export const footerContentSchema = z
   .object({
     copyright: z.string(),
@@ -25,4 +30,5 @@ export const footerContentSchema = z
 
 export type HeroContent = z.infer<typeof heroContentSchema>
 export type IntroContent = z.infer<typeof introContentSchema>
+export type SystemsContent = z.infer<typeof systemsContentSchema>
 export type FooterContent = z.infer<typeof footerContentSchema>
