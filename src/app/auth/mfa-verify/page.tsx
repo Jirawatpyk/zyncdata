@@ -1,25 +1,32 @@
-import Link from 'next/link'
+import { redirect } from 'next/navigation'
+import { getCurrentUser, getMfaStatus } from '@/lib/auth/queries'
+import MfaVerifyForm from './_components/MfaVerifyForm'
 
 export const metadata = {
-  title: 'MFA Verification | zyncdata',
-  description: 'Verify your identity with multi-factor authentication',
+  title: 'Verify Identity - zyncdata',
 }
 
-export default function MfaVerifyPage() {
+export default async function MfaVerifyPage() {
+  const user = await getCurrentUser()
+  if (!user) {
+    redirect('/auth/login')
+  }
+
+  const { hasNoFactors, needsMfaVerification } = await getMfaStatus()
+
+  // If no MFA factors, user needs to enroll first
+  if (hasNoFactors) {
+    redirect('/auth/mfa-enroll')
+  }
+
+  // If already aal2, go to dashboard
+  if (!needsMfaVerification) {
+    redirect('/dashboard')
+  }
+
   return (
-    <main className="flex min-h-screen items-center justify-center">
-      <div className="w-full max-w-sm space-y-6 rounded-lg border border-white/10 bg-white/95 p-8 text-center shadow-xl backdrop-blur-sm">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">MFA Verification</h1>
-        <p className="text-sm text-muted-foreground">
-          MFA Verification coming in Story 2.4
-        </p>
-        <Link
-          href="/auth/login"
-          className="inline-block text-sm text-dxt-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-dxt-primary focus-visible:ring-offset-2"
-        >
-          Back to Login
-        </Link>
-      </div>
+    <main className="flex min-h-screen items-center justify-center p-4">
+      <MfaVerifyForm />
     </main>
   )
 }

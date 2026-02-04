@@ -1,32 +1,78 @@
-import { describe, it, expect } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+
+const mockGetCurrentUser = vi.fn()
+const mockGetMfaStatus = vi.fn()
+const mockRedirect = vi.fn()
+
+vi.mock('@/lib/auth/queries', () => ({
+  getCurrentUser: (...args: unknown[]) => mockGetCurrentUser(...args),
+  getMfaStatus: (...args: unknown[]) => mockGetMfaStatus(...args),
+}))
+
+vi.mock('next/navigation', () => ({
+  redirect: (...args: unknown[]) => {
+    mockRedirect(...args)
+    throw new Error('NEXT_REDIRECT')
+  },
+}))
+
+vi.mock('./_components/MfaVerifyForm', () => ({
+  default: () => <div data-testid="mfa-verify-form">MfaVerifyForm</div>,
+}))
+
 import MfaVerifyPage, { metadata } from './page'
+import { render, screen } from '@testing-library/react'
+
+beforeEach(() => {
+  vi.clearAllMocks()
+})
 
 describe('MfaVerifyPage', () => {
-  it('[P2] should render MFA Verification heading', () => {
-    render(<MfaVerifyPage />)
+  it('should redirect to /auth/login if not authenticated', async () => {
+    mockGetCurrentUser.mockResolvedValue(null)
 
-    expect(screen.getByRole('heading', { name: 'MFA Verification' })).toBeInTheDocument()
+    await expect(MfaVerifyPage()).rejects.toThrow('NEXT_REDIRECT')
+    expect(mockRedirect).toHaveBeenCalledWith('/auth/login')
   })
 
-  it('[P2] should render story placeholder text', () => {
-    render(<MfaVerifyPage />)
+  it('should redirect to /auth/mfa-enroll if no MFA factors', async () => {
+    mockGetCurrentUser.mockResolvedValue({ id: 'user-1' })
+    mockGetMfaStatus.mockResolvedValue({
+      hasNoFactors: true,
+      needsMfaVerification: false,
+    })
 
-    expect(screen.getByText('MFA Verification coming in Story 2.4')).toBeInTheDocument()
+    await expect(MfaVerifyPage()).rejects.toThrow('NEXT_REDIRECT')
+    expect(mockRedirect).toHaveBeenCalledWith('/auth/mfa-enroll')
   })
 
-  it('[P2] should render Back to Login link pointing to /auth/login', () => {
-    render(<MfaVerifyPage />)
+  it('should redirect to /dashboard if already aal2', async () => {
+    mockGetCurrentUser.mockResolvedValue({ id: 'user-1' })
+    mockGetMfaStatus.mockResolvedValue({
+      hasNoFactors: false,
+      needsMfaVerification: false,
+    })
 
-    const link = screen.getByRole('link', { name: 'Back to Login' })
-    expect(link).toBeInTheDocument()
-    expect(link).toHaveAttribute('href', '/auth/login')
+    await expect(MfaVerifyPage()).rejects.toThrow('NEXT_REDIRECT')
+    expect(mockRedirect).toHaveBeenCalledWith('/dashboard')
   })
 
-  it('[P2] should export correct metadata', () => {
+  it('should render MfaVerifyForm when MFA verification needed', async () => {
+    mockGetCurrentUser.mockResolvedValue({ id: 'user-1' })
+    mockGetMfaStatus.mockResolvedValue({
+      hasNoFactors: false,
+      needsMfaVerification: true,
+    })
+
+    const result = await MfaVerifyPage()
+    render(result)
+
+    expect(screen.getByTestId('mfa-verify-form')).toBeInTheDocument()
+  })
+
+  it('should export correct metadata', () => {
     expect(metadata).toEqual({
-      title: 'MFA Verification | zyncdata',
-      description: 'Verify your identity with multi-factor authentication',
+      title: 'Verify Identity - zyncdata',
     })
   })
 })
