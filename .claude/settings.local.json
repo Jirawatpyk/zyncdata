@@ -44,7 +44,9 @@
       "Bash(npx vitest:*)",
       "Bash(npx eslint .)",
       "Bash(npx eslint:*)",
-      "Bash(npm run size:*)"
+      "Bash(npm run size:*)",
+      "Bash(node:*)",
+      "Bash(npm run test:coverage:*)"
     ]
   }
 }

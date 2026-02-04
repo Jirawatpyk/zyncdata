@@ -70,6 +70,14 @@ describe('healthUpdatePayloadSchema', () => {
       healthUpdatePayloadSchema.parse({ ...validPayload, checkedAt: 'not-a-date' }),
     ).toThrow()
   })
+
+  it('should accept responseTime of 0 (nonnegative boundary)', () => {
+    const result = healthUpdatePayloadSchema.parse({
+      ...validPayload,
+      responseTime: 0,
+    })
+    expect(result.responseTime).toBe(0)
+  })
 })
 
 describe('systemEventPayloadSchema', () => {
@@ -99,6 +107,14 @@ describe('systemEventPayloadSchema', () => {
 
   it('should reject missing fields', () => {
     expect(() => systemEventPayloadSchema.parse({})).toThrow()
+  })
+
+  it('should accept empty string for name (no minLength constraint)', () => {
+    const result = systemEventPayloadSchema.parse({
+      ...validPayload,
+      name: '',
+    })
+    expect(result.name).toBe('')
   })
 })
 

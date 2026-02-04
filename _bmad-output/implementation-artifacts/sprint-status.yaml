@@ -47,7 +47,7 @@ development_status:
   1-2-database-schema-seed-data: done
   1-3-public-landing-page-with-dxt-branding: done
   1-4-testing-infrastructure-error-boundaries-shared-utilities: done
-  epic-1-retrospective: optional
+  epic-1-retrospective: done
 
   # Epic 2: Authentication & Access Control (6 stories)
   epic-2: backlog

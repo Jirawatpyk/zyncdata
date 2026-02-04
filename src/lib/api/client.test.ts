@@ -89,6 +89,21 @@ describe('apiGet', () => {
 
     expect(result).toEqual({ data: null, error: null })
   })
+
+  it('should handle non-JSON response gracefully', async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: () => Promise.reject(new Error('Unexpected token < in JSON')),
+    })
+
+    const result = await apiGet('/api/test')
+
+    expect(result.data).toBeNull()
+    expect(result.error).toEqual({
+      message: 'Unexpected token < in JSON',
+      code: 'INTERNAL_ERROR',
+    })
+  })
 })
 
 describe('apiPost', () => {
@@ -156,5 +171,65 @@ describe('apiPost', () => {
 
     expect(result).toEqual({ data: { id: '1' }, error: null })
     expect(mockFetch).toHaveBeenCalledWith('/api/test', { method: 'POST' })
+  })
+
+  it('should handle non-JSON response gracefully', async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: () => Promise.reject(new Error('Unexpected token < in JSON')),
+    })
+
+    const result = await apiPost('/api/test', { name: 'Test' })
+
+    expect(result.data).toBeNull()
+    expect(result.error).toEqual({
+      message: 'Unexpected token < in JSON',
+      code: 'INTERNAL_ERROR',
+    })
+  })
+
+  it('should send body when body is null (null is not undefined)', async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ data: {} }),
+    })
+
+    await apiPost('/api/test', null)
+
+    expect(mockFetch).toHaveBeenCalledWith('/api/test', {
+      method: 'POST',
+      body: JSON.stringify(null),
+      headers: { 'Content-Type': 'application/json' },
+    })
+  })
+
+  it('should send body when body is empty string', async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ data: {} }),
+    })
+
+    await apiPost('/api/test', '')
+
+    expect(mockFetch).toHaveBeenCalledWith('/api/test', {
+      method: 'POST',
+      body: JSON.stringify(''),
+      headers: { 'Content-Type': 'application/json' },
+    })
+  })
+
+  it('should send body when body is 0', async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ data: {} }),
+    })
+
+    await apiPost('/api/test', 0)
+
+    expect(mockFetch).toHaveBeenCalledWith('/api/test', {
+      method: 'POST',
+      body: JSON.stringify(0),
+      headers: { 'Content-Type': 'application/json' },
+    })
   })
 })

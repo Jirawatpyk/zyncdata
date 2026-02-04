@@ -57,6 +57,30 @@ describe('toCamelCase', () => {
 
     expect(result).toEqual({ someLongFieldName: 'value' })
   })
+
+  it('should transform leading underscore followed by lowercase', () => {
+    // regex /_([a-z])/g matches _p and _f in _private_field
+    const input = { _private_field: 'secret' }
+    const result = toCamelCase<Record<string, string>>(input)
+
+    expect(result).toEqual({ PrivateField: 'secret' })
+  })
+
+  it('should preserve one underscore when consecutive underscores appear', () => {
+    // __d: first _ has no [a-z] after it (next char is _), stays; _d matches
+    const input = { some__double: 'value' }
+    const result = toCamelCase<Record<string, string>>(input)
+
+    expect(result).toEqual({ some_Double: 'value' })
+  })
+
+  it('should preserve trailing underscore', () => {
+    // trailing _ has no [a-z] after it, so it stays
+    const input = { field_: 'value' }
+    const result = toCamelCase<Record<string, string>>(input)
+
+    expect(result).toEqual({ field_: 'value' })
+  })
 })
 
 describe('toSnakeCase', () => {
@@ -94,6 +118,14 @@ describe('toSnakeCase', () => {
     const result = toSnakeCase(input)
 
     expect(result).toEqual({ top_level: { nestedKey: 'value' } })
+  })
+
+  it('should insert underscore before each uppercase letter in acronyms', () => {
+    // /[A-Z]/g matches each uppercase letter individually: X, M, L, P
+    const input = { XMLParser: 'value' }
+    const result = toSnakeCase(input)
+
+    expect(result).toEqual({ _x_m_l_parser: 'value' })
   })
 })
 
