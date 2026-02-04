@@ -1,52 +1,92 @@
-import Image from 'next/image'
+import { Suspense } from 'react'
+import type { Metadata } from 'next'
+import { getEnabledSystems } from '@/lib/systems/queries'
+import { getLandingPageContent } from '@/lib/content/queries'
+import Header from '@/components/layouts/Header'
+import Footer from '@/components/layouts/Footer'
+import Hero from '@/app/_components/Hero'
+import IntroSection from '@/app/_components/IntroSection'
+import SystemCard from '@/components/patterns/SystemCard'
+import GridSkeleton from '@/app/_components/GridSkeleton'
 
-export default function Home() {
+export const revalidate = 60
+
+export const metadata: Metadata = {
+  title: 'DxT AI Platform - Enterprise Access Management',
+  description:
+    'Your centralized hub for accessing and monitoring all DxT AI systems.',
+  openGraph: {
+    title: 'DxT AI Platform - Enterprise Access Management',
+    description:
+      'Your centralized hub for accessing and monitoring all DxT AI systems.',
+    type: 'website',
+  },
+}
+
+async function SystemGrid() {
+  const systems = await getEnabledSystems()
+
+  if (systems.length === 0) {
+    return (
+      <p className="py-12 text-center text-lg text-gray-600">
+        No systems available
+      </p>
+    )
+  }
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between bg-white px-16 py-32 sm:items-start">
-        <Image src="/next.svg" alt="Next.js logo" width={100} height={20} priority />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl leading-10 font-semibold tracking-tight text-black">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600">
-            Looking for a starting point or more instructions? Head over to{' '}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950"
-            >
-              Templates
-            </a>{' '}
-            or the{' '}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950"
-            >
-              Learning
-            </a>{' '}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="bg-foreground text-background flex h-12 w-full items-center justify-center gap-2 rounded-full px-5 transition-colors hover:bg-[#383838] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image src="/vercel.svg" alt="Vercel logomark" width={16} height={16} />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+      {systems.map((system) => (
+        <SystemCard
+          key={system.id}
+          name={system.name}
+          url={system.url}
+          logoUrl={system.logoUrl}
+          description={system.description}
+        />
+      ))}
     </div>
+  )
+}
+
+export default async function Home() {
+  const content = await getLandingPageContent()
+
+  return (
+    <>
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:bg-white focus:p-4 focus:text-dxt-primary"
+      >
+        Skip to content
+      </a>
+      <Header />
+      <main id="main-content">
+        <Hero
+          title={content.hero.title}
+          subtitle={content.hero.subtitle}
+          description={content.hero.description}
+        />
+        <IntroSection
+          heading={content.intro.heading}
+          body={content.intro.body}
+        />
+        <section className="py-12 md:py-16">
+          <div className="mx-auto max-w-7xl px-4 md:px-8">
+            <h2 className="mb-8 text-center text-4xl font-bold text-gray-800">
+              Our Systems
+            </h2>
+            <Suspense fallback={<GridSkeleton />}>
+              <SystemGrid />
+            </Suspense>
+          </div>
+        </section>
+      </main>
+      <Footer
+        copyright={content.footer.copyright}
+        contactEmail={content.footer.contactEmail}
+        links={content.footer.links}
+      />
+    </>
   )
 }
