@@ -44,8 +44,8 @@ development_status:
   # Epic 1: Project Foundation & Public Portal (4 stories)
   epic-1: in-progress
   1-1-project-initialization-ci-cd-foundation: done
-  1-2-database-schema-seed-data: backlog
-  1-3-public-landing-page-with-dxt-branding: backlog
+  1-2-database-schema-seed-data: done
+  1-3-public-landing-page-with-dxt-branding: ready-for-dev
   1-4-testing-infrastructure-error-boundaries-shared-utilities: backlog
   epic-1-retrospective: optional
 
