@@ -1,6 +1,6 @@
 # Story 2.4: MFA Login Verification
 
-Status: review
+Status: done
 
 ## Story
 
@@ -653,9 +653,20 @@ Claude Opus 4.5 (claude-opus-4-5-20251101)
 - `tests/e2e/mfa-verify.spec.ts` — E2E tests for MFA verify page
 
 **Modified Files:**
-- `src/app/auth/mfa-verify/page.tsx` — REPLACED placeholder with real RSC (auth guards + MfaVerifyForm)
+- `src/app/auth/mfa-verify/page.tsx` — REPLACED placeholder with real RSC (auth guards + MfaVerifyForm); padding normalized to `px-4`
 - `src/app/auth/mfa-verify/page.test.tsx` — REPLACED placeholder tests with 5 real page tests
+- `src/lib/auth/mutations.ts` — Refactored `verifyMfaEnrollment` to use atomic `challengeAndVerify` API
+- `src/lib/auth/mutations.test.ts` — Updated tests for `challengeAndVerify` API
 
 ### Change Log
 
-- **2026-02-05:** Story 2.4 implementation complete. Created MfaVerifyForm with TOTP verification and backup code fallback. Updated mfa-verify page with server-side auth guards. Reused existing server action, mutation, rate limiter, and validation from Stories 2.1-2.3. 328 tests passing, 0 regressions.
+- **2026-02-05:** Story 2.4 implementation complete. Created MfaVerifyForm with TOTP verification and backup code fallback. Updated mfa-verify page with server-side auth guards. Reused existing server action, mutation, rate limiter, and validation from Stories 2.1-2.3.
+- **2026-02-05:** Code review fixes applied (8 issues found, 6 fixed):
+  - [H1] `verifyMfaEnrollment` refactored to use atomic `challengeAndVerify` API (spec compliance)
+  - [H2] Split duplicate `data-testid="mfa-verify-toggle-mode"` into `mfa-verify-toggle-totp` / `mfa-verify-toggle-backup`
+  - [H3] TOTP input now disabled during client verification (prevents code modification during submit)
+  - [M1] Page padding normalized to `px-4` matching login page pattern
+  - [M3] E2E test file annotated with TODO for authenticated MFA flow coverage (deferred to Story 2.6+)
+  - [L1] Removed redundant `aria-live="polite"` from error div (`role="alert"` implies assertive)
+  - [L2] Test count documentation corrected
+  - 331 tests passing, type-check clean, lint clean

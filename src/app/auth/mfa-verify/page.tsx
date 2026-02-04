@@ -25,7 +25,7 @@ export default async function MfaVerifyPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center p-4">
+    <main className="flex min-h-screen items-center justify-center px-4">
       <MfaVerifyForm />
     </main>
   )

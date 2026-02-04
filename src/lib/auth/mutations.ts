@@ -11,16 +11,10 @@ export async function enrollMfaFactor() {
 
 export async function verifyMfaEnrollment(factorId: string, code: string) {
   const supabase = createClient()
-  const { data: challenge, error: challengeError } = await supabase.auth.mfa.challenge({
+  const { data, error } = await supabase.auth.mfa.challengeAndVerify({
     factorId,
-  })
-  if (challengeError) throw challengeError
-
-  const { data, error: verifyError } = await supabase.auth.mfa.verify({
-    factorId,
-    challengeId: challenge.id,
     code,
   })
-  if (verifyError) throw verifyError
+  if (error) throw error
   return data
 }

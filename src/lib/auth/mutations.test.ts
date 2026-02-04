@@ -1,16 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 const mockEnroll = vi.fn()
-const mockChallenge = vi.fn()
-const mockVerify = vi.fn()
+const mockChallengeAndVerify = vi.fn()
 
 vi.mock('@/lib/supabase/client', () => ({
   createClient: () => ({
     auth: {
       mfa: {
         enroll: (...args: unknown[]) => mockEnroll(...args),
-        challenge: (...args: unknown[]) => mockChallenge(...args),
-        verify: (...args: unknown[]) => mockVerify(...args),
+        challengeAndVerify: (...args: unknown[]) => mockChallengeAndVerify(...args),
       },
     },
   }),
@@ -49,40 +47,22 @@ describe('enrollMfaFactor', () => {
 })
 
 describe('verifyMfaEnrollment', () => {
-  it('should challenge then verify with correct params', async () => {
-    mockChallenge.mockResolvedValue({
-      data: { id: 'challenge-456' },
-      error: null,
-    })
+  it('should call challengeAndVerify with correct params', async () => {
     const mockVerifyData = { user: { id: 'user-1' }, session: {} }
-    mockVerify.mockResolvedValue({ data: mockVerifyData, error: null })
+    mockChallengeAndVerify.mockResolvedValue({ data: mockVerifyData, error: null })
 
     const result = await verifyMfaEnrollment('factor-123', '123456')
 
-    expect(mockChallenge).toHaveBeenCalledWith({ factorId: 'factor-123' })
-    expect(mockVerify).toHaveBeenCalledWith({
+    expect(mockChallengeAndVerify).toHaveBeenCalledWith({
       factorId: 'factor-123',
-      challengeId: 'challenge-456',
       code: '123456',
     })
     expect(result).toEqual(mockVerifyData)
   })
 
-  it('should throw when challenge fails', async () => {
-    const error = new Error('Challenge failed')
-    mockChallenge.mockResolvedValue({ data: null, error })
-
-    await expect(verifyMfaEnrollment('factor-123', '123456')).rejects.toThrow('Challenge failed')
-    expect(mockVerify).not.toHaveBeenCalled()
-  })
-
-  it('should throw when verify fails (invalid code)', async () => {
-    mockChallenge.mockResolvedValue({
-      data: { id: 'challenge-456' },
-      error: null,
-    })
+  it('should throw when challengeAndVerify fails (invalid code)', async () => {
     const error = new Error('Invalid TOTP code')
-    mockVerify.mockResolvedValue({ data: null, error })
+    mockChallengeAndVerify.mockResolvedValue({ data: null, error })
 
     await expect(verifyMfaEnrollment('factor-123', '000000')).rejects.toThrow('Invalid TOTP code')
   })

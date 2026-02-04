@@ -1,6 +1,9 @@
 import { test, expect } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
 
+// TODO: Add authenticated MFA verify E2E tests (TOTP input rendering, backup code toggle, AC #1/#6)
+// Requires mock auth session setup — deferred until auth test harness is available (Story 2.6+)
+
 test.describe('MFA Verify Page', () => {
   test('[P1] unauthenticated user should be redirected to login', async ({ page }) => {
     await page.goto('/auth/mfa-verify')

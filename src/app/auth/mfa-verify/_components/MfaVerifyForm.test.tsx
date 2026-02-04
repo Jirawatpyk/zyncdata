@@ -122,10 +122,10 @@ describe('MfaVerifyForm', () => {
       render(<MfaVerifyForm />)
 
       await waitFor(() => {
-        expect(screen.getByTestId('mfa-verify-toggle-mode')).toBeInTheDocument()
+        expect(screen.getByTestId('mfa-verify-toggle-backup')).toBeInTheDocument()
       })
 
-      expect(screen.getByTestId('mfa-verify-toggle-mode')).toHaveTextContent('Use backup code')
+      expect(screen.getByTestId('mfa-verify-toggle-backup')).toHaveTextContent('Use backup code')
     })
   })
 
@@ -240,10 +240,10 @@ describe('MfaVerifyForm', () => {
       render(<MfaVerifyForm />)
 
       await waitFor(() => {
-        expect(screen.getByTestId('mfa-verify-toggle-mode')).toBeInTheDocument()
+        expect(screen.getByTestId('mfa-verify-toggle-backup')).toBeInTheDocument()
       })
 
-      await user.click(screen.getByTestId('mfa-verify-toggle-mode'))
+      await user.click(screen.getByTestId('mfa-verify-toggle-backup'))
 
       expect(screen.getByTestId('backup-code-verify-form')).toBeInTheDocument()
       expect(screen.getByTestId('mfa-verify-backup-mode')).toBeInTheDocument()
@@ -254,15 +254,15 @@ describe('MfaVerifyForm', () => {
       render(<MfaVerifyForm />)
 
       await waitFor(() => {
-        expect(screen.getByTestId('mfa-verify-toggle-mode')).toBeInTheDocument()
+        expect(screen.getByTestId('mfa-verify-toggle-backup')).toBeInTheDocument()
       })
 
       // Switch to backup mode
-      await user.click(screen.getByTestId('mfa-verify-toggle-mode'))
+      await user.click(screen.getByTestId('mfa-verify-toggle-backup'))
       expect(screen.getByTestId('backup-code-verify-form')).toBeInTheDocument()
 
       // Switch back to TOTP mode
-      await user.click(screen.getByTestId('mfa-verify-toggle-mode'))
+      await user.click(screen.getByTestId('mfa-verify-toggle-totp'))
 
       await waitFor(() => {
         expect(screen.getByTestId('mfa-verify-form')).toBeInTheDocument()
@@ -277,11 +277,11 @@ describe('MfaVerifyForm', () => {
       render(<MfaVerifyForm />)
 
       await waitFor(() => {
-        expect(screen.getByTestId('mfa-verify-toggle-mode')).toBeInTheDocument()
+        expect(screen.getByTestId('mfa-verify-toggle-backup')).toBeInTheDocument()
       })
 
       // Switch to backup mode
-      await user.click(screen.getByTestId('mfa-verify-toggle-mode'))
+      await user.click(screen.getByTestId('mfa-verify-toggle-backup'))
 
       // Click mock backup success
       await user.click(screen.getByTestId('mock-backup-success'))
@@ -382,6 +382,10 @@ describe('MfaVerifyForm', () => {
 
       await waitFor(() => {
         expect(screen.getByTestId('mfa-verify-submit')).toBeDisabled()
+      })
+
+      await waitFor(() => {
+        expect(screen.getByTestId('mfa-verify-code-input')).toBeDisabled()
       })
     })
   })

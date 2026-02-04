@@ -185,7 +185,7 @@ export default function MfaVerifyForm() {
           <button
             type="button"
             onClick={() => setMode('totp')}
-            data-testid="mfa-verify-toggle-mode"
+            data-testid="mfa-verify-toggle-totp"
             className={cn(
               'text-sm text-dxt-primary hover:underline',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-dxt-primary focus-visible:ring-offset-2',
@@ -231,6 +231,7 @@ export default function MfaVerifyForm() {
               placeholder="000000"
               required
               autoFocus
+              disabled={verifying}
               aria-label="6-digit verification code"
               aria-describedby={displayError ? 'mfa-verify-error-message' : undefined}
               data-testid="mfa-verify-code-input"
@@ -242,7 +243,6 @@ export default function MfaVerifyForm() {
             <div
               id="mfa-verify-error-message"
               role="alert"
-              aria-live="polite"
               data-testid="mfa-verify-error"
               className={cn(
                 'rounded-md p-3 text-sm',
@@ -262,7 +262,7 @@ export default function MfaVerifyForm() {
           <button
             type="button"
             onClick={() => setMode('backup')}
-            data-testid="mfa-verify-toggle-mode"
+            data-testid="mfa-verify-toggle-backup"
             className={cn(
               'inline-flex items-center gap-1.5 text-sm text-dxt-primary hover:underline',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-dxt-primary focus-visible:ring-offset-2',
