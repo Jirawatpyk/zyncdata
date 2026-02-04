@@ -35,7 +35,7 @@ export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
 
   return (
-    <div className="w-full max-w-sm rounded-xl bg-gradient-to-br from-dxt-primary/25 via-white/10 to-dxt-secondary/25 p-px shadow-xl shadow-dxt-primary/10">
+    <div className="w-full max-w-sm rounded-xl bg-gradient-to-br from-dxt-primary/25 via-white/10 to-dxt-secondary/25 p-px shadow-xl shadow-dxt-primary/10 motion-safe:animate-fade-up">
     <div className="rounded-xl bg-white/95 p-8 backdrop-blur-sm space-y-6">
       <div className="space-y-2 text-center">
         <h1 className="text-2xl font-bold tracking-tight text-foreground">Sign in</h1>
