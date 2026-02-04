@@ -16,7 +16,7 @@ export default function Header() {
         </Link>
         <nav>
           <Link
-            href="/login"
+            href="/auth/login"
             className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 hover:border-dxt-primary/30 hover:text-gray-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-dxt-primary motion-safe:transition-colors motion-safe:duration-150"
           >
             Login

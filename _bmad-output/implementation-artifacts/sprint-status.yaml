@@ -51,7 +51,7 @@ development_status:
 
   # Epic 2: Authentication & Access Control (6 stories)
   epic-2: in-progress
-  2-1-initial-super-admin-account-login: ready-for-dev
+  2-1-initial-super-admin-account-login: done
   2-2-totp-mfa-setup: backlog
   2-3-backup-codes-generation-usage: backlog
   2-4-mfa-login-verification: backlog

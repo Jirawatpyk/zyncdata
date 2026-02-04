@@ -1,6 +1,6 @@
 # Story 2.1: Initial Super Admin Account & Login
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -28,19 +28,19 @@ So that I can access the CMS immediately after deployment without open registrat
 
 **Dependency: Epic 1 must be complete (all 4 stories done). Confirmed done.**
 
-- [ ] Task 0: Install shadcn/ui form components (prerequisite for Task 6)
-  - [ ] 0.1: Run `npx shadcn@latest add button input label` to install shadcn/ui Button, Input, and Label components into `src/components/ui/`
-  - [ ] 0.2: Verify the components are installed at `src/components/ui/button.tsx`, `src/components/ui/input.tsx`, `src/components/ui/label.tsx`
-  - [ ] 0.3: These provide consistent styling (Radix UI primitives), built-in accessibility, and establish the pattern for all future forms
+- [x] Task 0: Install shadcn/ui form components (prerequisite for Task 6)
+  - [x] 0.1: Run `npx shadcn@latest add button input label` to install shadcn/ui Button, Input, and Label components into `src/components/ui/`
+  - [x] 0.2: Verify the components are installed at `src/components/ui/button.tsx`, `src/components/ui/input.tsx`, `src/components/ui/label.tsx`
+  - [x] 0.3: These provide consistent styling (Radix UI primitives), built-in accessibility, and establish the pattern for all future forms
 
-- [ ] Task 1: Verify Super Admin seed account (AC: #1)
-  - [ ] 1.1: Confirm `supabase/seed-admin.ts` creates a super admin via `supabase.auth.admin.createUser()` with `email_confirm: true` and `app_metadata: { role: 'super_admin' }` — this was created in Story 1.2
-  - [ ] 1.2: Verify the seed script uses env vars `SEED_ADMIN_EMAIL` and `SEED_ADMIN_PASSWORD` from `.env.local`
-  - [ ] 1.3: Run `npx tsx supabase/seed-admin.ts` locally and verify the account exists in Supabase Auth dashboard
-  - [ ] 1.4: Verify the account has `role: 'super_admin'` in `app_metadata` (this is how RBAC is enforced later)
+- [x] Task 1: Verify Super Admin seed account (AC: #1)
+  - [x] 1.1: Confirm `supabase/seed-admin.ts` creates a super admin via `supabase.auth.admin.createUser()` with `email_confirm: true` and `app_metadata: { role: 'super_admin' }` — this was created in Story 1.2
+  - [x] 1.2: Verify the seed script uses env vars `SEED_ADMIN_EMAIL` and `SEED_ADMIN_PASSWORD` from `.env.local`
+  - [x] 1.3: Run `npx tsx supabase/seed-admin.ts` locally and verify the account exists in Supabase Auth dashboard
+  - [x] 1.4: Verify the account has `role: 'super_admin'` in `app_metadata` (this is how RBAC is enforced later)
 
-- [ ] Task 2: Create auth validation schemas (AC: #2, #3)
-  - [ ] 2.1: Create `src/lib/validations/auth.ts` with Zod login schema:
+- [x] Task 2: Create auth validation schemas (AC: #2, #3)
+  - [x] 2.1: Create `src/lib/validations/auth.ts` with Zod login schema:
     ```typescript
     import { z } from 'zod'
 
@@ -51,10 +51,10 @@ So that I can access the CMS immediately after deployment without open registrat
 
     export type LoginFormData = z.infer<typeof loginSchema>
     ```
-  - [ ] 2.2: Create `src/lib/validations/auth.test.ts` — test valid/invalid emails, empty password, edge cases
+  - [x] 2.2: Create `src/lib/validations/auth.test.ts` — test valid/invalid emails, empty password, edge cases
 
-- [ ] Task 3: Create auth domain module (AC: #2, #3)
-  - [ ] 3.1: Create `src/lib/auth/queries.ts` with functions:
+- [x] Task 3: Create auth domain module (AC: #2, #3)
+  - [x] 3.1: Create `src/lib/auth/queries.ts` with functions:
     ```typescript
     import { createClient } from '@/lib/supabase/server'
 
@@ -83,11 +83,11 @@ So that I can access the CMS immediately after deployment without open registrat
       return user
     }
     ```
-  - [ ] 3.2: Create `src/lib/auth/queries.test.ts` — mock Supabase client, test success/error paths, MFA status detection
-  - [ ] 3.3: Delete `src/lib/auth/.gitkeep` (replaced by real files)
+  - [x] 3.2: Create `src/lib/auth/queries.test.ts` — mock Supabase client, test success/error paths, MFA status detection
+  - [x] 3.3: Delete `src/lib/auth/.gitkeep` (replaced by real files)
 
-- [ ] Task 4: Create rate limiting infrastructure (AC: #4)
-  - [ ] 4.1: Create `src/lib/ratelimit/login.ts`:
+- [x] Task 4: Create rate limiting infrastructure (AC: #4)
+  - [x] 4.1: Create `src/lib/ratelimit/login.ts`:
     ```typescript
     import { Ratelimit } from '@upstash/ratelimit'
     import { Redis } from '@upstash/redis'
@@ -98,11 +98,11 @@ So that I can access the CMS immediately after deployment without open registrat
       prefix: '@upstash/ratelimit:login',
     })
     ```
-  - [ ] 4.2: Create `src/lib/ratelimit/login.test.ts` — test rate limit creation, verify config values
-  - [ ] 4.3: Delete `src/lib/ratelimit/.gitkeep` (replaced by real files)
+  - [x] 4.2: Create `src/lib/ratelimit/login.test.ts` — test rate limit creation, verify config values
+  - [x] 4.3: Delete `src/lib/ratelimit/.gitkeep` (replaced by real files)
 
-- [ ] Task 5: Create login Server Action (AC: #2, #3, #4)
-  - [ ] 5.1: Create `src/lib/actions/auth.ts`:
+- [x] Task 5: Create login Server Action (AC: #2, #3, #4)
+  - [x] 5.1: Create `src/lib/actions/auth.ts`:
     ```typescript
     'use server'
 
@@ -160,12 +160,12 @@ So that I can access the CMS immediately after deployment without open registrat
       }
     }
     ```
-  - [ ] 5.2: Create `src/lib/actions/auth.test.ts` — test validation failures, rate limiting, successful login with MFA redirect, incorrect credentials
-  - [ ] 5.3: **IMPORTANT:** The generic error "Invalid email or password" MUST be identical for wrong email AND wrong password — no credential enumeration
-  - [ ] 5.4: **IMPORTANT:** `redirect()` from `next/navigation` throws a special error internally. The try/catch MUST rethrow `NEXT_REDIRECT` errors. Check the actual error detection pattern — in Next.js 16, use `import { isRedirectError } from 'next/dist/client/components/redirect-error'` and `if (isRedirectError(err)) throw err` as the canonical check
+  - [x] 5.2: Create `src/lib/actions/auth.test.ts` — test validation failures, rate limiting, successful login with MFA redirect, incorrect credentials
+  - [x] 5.3: **IMPORTANT:** The generic error "Invalid email or password" MUST be identical for wrong email AND wrong password — no credential enumeration
+  - [x] 5.4: **IMPORTANT:** `redirect()` from `next/navigation` throws a special error internally. The try/catch MUST rethrow `NEXT_REDIRECT` errors. Check the actual error detection pattern — in Next.js 16, use `import { isRedirectError } from 'next/dist/client/components/redirect-error'` and `if (isRedirectError(err)) throw err` as the canonical check
 
-- [ ] Task 6: Create login page UI (AC: #2, #3, #6)
-  - [ ] 6.1: Create `src/app/auth/login/page.tsx` (Server Component) — URL: `/auth/login`:
+- [x] Task 6: Create login page UI (AC: #2, #3, #6)
+  - [x] 6.1: Create `src/app/auth/login/page.tsx` (Server Component) — URL: `/auth/login`:
     ```typescript
     import { redirect } from 'next/navigation'
     import { getCurrentUser } from '@/lib/auth/queries'
@@ -187,7 +187,7 @@ So that I can access the CMS immediately after deployment without open registrat
       )
     }
     ```
-  - [ ] 6.2: Create `src/app/auth/login/_components/LoginForm.tsx` (`'use client'`):
+  - [x] 6.2: Create `src/app/auth/login/_components/LoginForm.tsx` (`'use client'`):
     - Use `useActionState()` (React 19) with `loginAction`
     - Use `useFormStatus()` for submit button loading state
     - Use shadcn/ui `<Input>`, `<Button>`, `<Label>` components (installed in Task 0)
@@ -199,21 +199,21 @@ So that I can access the CMS immediately after deployment without open registrat
     - `aria-label` on all inputs, `aria-live="polite"` on error region
     - Keyboard: Enter submits form
     - Password visibility toggle (eye icon button) — toggles input `type` between `password` and `text`, use `aria-label` that updates to reflect current state ("Show password" / "Hide password")
-  - [ ] 6.3: Create `src/app/auth/login/_components/LoginForm.test.tsx` — test render, form submission, error display, loading state, accessibility (jest-axe)
-  - [ ] 6.4: Delete `src/app/(auth)/.gitkeep` (no longer needed — using `src/app/auth/` non-grouped directory instead)
+  - [x] 6.3: Create `src/app/auth/login/_components/LoginForm.test.tsx` — test render, form submission, error display, loading state, accessibility (jest-axe)
+  - [x] 6.4: Delete `src/app/(auth)/.gitkeep` (no longer needed — using `src/app/auth/` non-grouped directory instead)
 
-- [ ] Task 7: Create auth layout (AC: #2, #6)
-  - [ ] 7.1: Create `src/app/auth/layout.tsx` — minimal layout WITHOUT sidebar/navigation. All auth pages share this layout:
+- [x] Task 7: Create auth layout (AC: #2, #6)
+  - [x] 7.1: Create `src/app/auth/layout.tsx` — minimal layout WITHOUT sidebar/navigation. All auth pages share this layout:
     ```typescript
     export default function AuthLayout({ children }: { children: React.ReactNode }) {
       return <>{children}</>
     }
     ```
-  - [ ] 7.2: This layout is intentionally minimal — no header, no sidebar, just the auth content centered
-  - [ ] 7.3: **IMPORTANT:** Auth pages use `src/app/auth/` (non-grouped directory, NOT `(auth)` route group). URLs will be `/auth/login`, `/auth/register`, `/auth/mfa-enroll`, `/auth/mfa-verify`. This matches the architecture's proxy pattern (`request.nextUrl.pathname.startsWith('/auth')`) and keeps all auth routes under a consistent `/auth/` URL prefix
+  - [x] 7.2: This layout is intentionally minimal — no header, no sidebar, just the auth content centered
+  - [x] 7.3: **IMPORTANT:** Auth pages use `src/app/auth/` (non-grouped directory, NOT `(auth)` route group). URLs will be `/auth/login`, `/auth/register`, `/auth/mfa-enroll`, `/auth/mfa-verify`. This matches the architecture's proxy pattern (`request.nextUrl.pathname.startsWith('/auth')`) and keeps all auth routes under a consistent `/auth/` URL prefix
 
-- [ ] Task 8: Handle /auth/register route (AC: #6)
-  - [ ] 8.1: Create `src/app/auth/register/page.tsx` that immediately redirects to `/auth/login`:
+- [x] Task 8: Handle /auth/register route (AC: #6)
+  - [x] 8.1: Create `src/app/auth/register/page.tsx` that immediately redirects to `/auth/login`:
     ```typescript
     import { redirect } from 'next/navigation'
     export default function RegisterPage() {
@@ -222,13 +222,13 @@ So that I can access the CMS immediately after deployment without open registrat
     ```
     Alternative: use `not-found()` to return 404 — either approach is acceptable per AC. The redirect is preferred so users understand where to go
 
-- [ ] Task 9: Create MFA enrollment and verification stub pages (AC: #2)
-  - [ ] 9.1: Create `src/app/auth/mfa-enroll/page.tsx` — stub page with message "MFA Setup coming in Story 2.2". This page is the redirect target after first login. URL: `/auth/mfa-enroll`
-  - [ ] 9.2: Create `src/app/auth/mfa-verify/page.tsx` — stub page with message "MFA Verification coming in Story 2.4". This page is the redirect target when MFA is enrolled but not yet verified this session. URL: `/auth/mfa-verify`
-  - [ ] 9.3: Both stubs should display cleanly with DxT branding — they are NOT just blank pages. Include a "Back to Login" link pointing to `/auth/login`
+- [x] Task 9: Create MFA enrollment and verification stub pages (AC: #2)
+  - [x] 9.1: Create `src/app/auth/mfa-enroll/page.tsx` — stub page with message "MFA Setup coming in Story 2.2". This page is the redirect target after first login. URL: `/auth/mfa-enroll`
+  - [x] 9.2: Create `src/app/auth/mfa-verify/page.tsx` — stub page with message "MFA Verification coming in Story 2.4". This page is the redirect target when MFA is enrolled but not yet verified this session. URL: `/auth/mfa-verify`
+  - [x] 9.3: Both stubs should display cleanly with DxT branding — they are NOT just blank pages. Include a "Back to Login" link pointing to `/auth/login`
 
-- [ ] Task 10: Create auth callback route
-  - [ ] 10.1: Create `src/app/auth/callback/route.ts` — **MANDATORY** per architecture. Exchanges auth code for session:
+- [x] Task 10: Create auth callback route
+  - [x] 10.1: Create `src/app/auth/callback/route.ts` — **MANDATORY** per architecture. Exchanges auth code for session:
     ```typescript
     import { NextResponse } from 'next/server'
     import { createClient } from '@/lib/supabase/server'
@@ -249,33 +249,33 @@ So that I can access the CMS immediately after deployment without open registrat
       return NextResponse.redirect(`${origin}/auth/login?error=auth_callback_failed`)
     }
     ```
-  - [ ] 10.2: This sits at `app/auth/callback/` alongside the other auth pages (login, register, mfa-enroll, mfa-verify). URL: `/auth/callback`
+  - [x] 10.2: This sits at `app/auth/callback/` alongside the other auth pages (login, register, mfa-enroll, mfa-verify). URL: `/auth/callback`
 
-- [ ] Task 11: Create dashboard stub page (redirect target)
-  - [ ] 11.1: Create `src/app/dashboard/page.tsx` — stub page that displays "Dashboard coming in Epic 3+". This is the redirect target after successful MFA verification
-  - [ ] 11.2: This page does NOT need auth protection yet (Story 2.6 adds route protection)
+- [x] Task 11: Create dashboard stub page (redirect target)
+  - [x] 11.1: Create `src/app/dashboard/page.tsx` — stub page that displays "Dashboard coming in Epic 3+". This is the redirect target after successful MFA verification
+  - [x] 11.2: This page does NOT need auth protection yet (Story 2.6 adds route protection)
 
-- [ ] Task 12: Fix user factory role + verify Header login link
-  - [ ] 12.1: Update `tests/factories/user-factory.ts` — change role type from `'super_admin' | 'admin' | 'viewer'` to `'super_admin' | 'admin' | 'user'` to match architecture RBAC matrix. Change default role from `'viewer'` to `'user'`
-  - [ ] 12.2: Verify `src/components/layouts/Header.tsx` login link `href` points to `/auth/login` (the correct URL for the non-grouped auth directory). Update if it points elsewhere (e.g., `/login`)
-  - [ ] 12.3: Run existing tests to confirm no regressions from factory change
+- [x] Task 12: Fix user factory role + verify Header login link
+  - [x] 12.1: Update `tests/factories/user-factory.ts` — change role type from `'super_admin' | 'admin' | 'viewer'` to `'super_admin' | 'admin' | 'user'` to match architecture RBAC matrix. Change default role from `'viewer'` to `'user'`
+  - [x] 12.2: Verify `src/components/layouts/Header.tsx` login link `href` points to `/auth/login` (the correct URL for the non-grouped auth directory). Update if it points elsewhere (e.g., `/login`)
+  - [x] 12.3: Run existing tests to confirm no regressions from factory change
 
-- [ ] Task 13: E2E tests (AC: #2, #3, #4, #6)
-  - [ ] 13.1: Create `tests/e2e/login.spec.ts`:
+- [x] Task 13: E2E tests (AC: #2, #3, #4, #6)
+  - [x] 13.1: Create `tests/e2e/login.spec.ts`:
     - Test: login page renders with email and password fields
     - Test: successful login redirects (mock Supabase or use local instance)
     - Test: invalid credentials show error message
     - Test: `/auth/register` redirects to login page
     - Test: login page has no accessibility violations (`@axe-core/playwright`)
-  - [ ] 13.2: Use `data-testid` attributes (not CSS selectors) per code review learning from 1.3
+  - [x] 13.2: Use `data-testid` attributes (not CSS selectors) per code review learning from 1.3
 
-- [ ] Task 14: Final verification
-  - [ ] 14.1: Run `npm run type-check` — must pass
-  - [ ] 14.2: Run `npm run lint` — must pass (0 errors)
-  - [ ] 14.3: Run `npm run test:run` — all unit tests pass (existing + new)
-  - [ ] 14.4: Run `npm run build` — must pass
-  - [ ] 14.5: Run `npm run dev` — verify login page renders at `/auth/login`
-  - [ ] 14.6: Verify no regressions on landing page
+- [x] Task 14: Final verification
+  - [x] 14.1: Run `npm run type-check` — must pass
+  - [x] 14.2: Run `npm run lint` — must pass (0 errors)
+  - [x] 14.3: Run `npm run test:run` — all unit tests pass (existing + new)
+  - [x] 14.4: Run `npm run build` — must pass
+  - [x] 14.5: Run `npm run dev` — verify login page renders at `/auth/login`
+  - [x] 14.6: Verify no regressions on landing page
 
 ## Dev Notes
 
@@ -573,12 +573,81 @@ SEED_ADMIN_PASSWORD=changeme123!
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.5 (claude-opus-4-5-20251101)
 
 ### Debug Log References
 
+- Zod v4 uses `.issues` not `.errors` — updated loginAction and tests to use `.issues[0].message`
+- Stale `.next/dev/types/` caused false type-check failures — resolved by removing cached types
+- `@testing-library/user-event` was not installed — added as dev dependency
+- shadcn/ui components not previously installed — ran `npx shadcn@latest add button input label`
+
 ### Completion Notes List
+
+- Task 0: Installed shadcn/ui Button, Input, Label components into `src/components/ui/`
+- Task 1: Verified seed-admin.ts creates super admin with `email_confirm: true`, `app_metadata: { role: 'super_admin' }`, uses SEED_ADMIN_EMAIL/SEED_ADMIN_PASSWORD env vars
+- Task 2: Created loginSchema (Zod) with 10 validation tests covering valid/invalid emails, empty/missing fields, edge cases
+- Task 3: Created auth queries module (signInWithEmail, getMfaStatus, getCurrentUser) with 9 tests covering all AAL states and error paths. Deleted `.gitkeep`
+- Task 4: Created loginRatelimit (Upstash sliding window 5/15m) with 3 config verification tests. Deleted `.gitkeep`
+- Task 5: Created loginAction Server Action with rate limiting, Zod validation, MFA-aware redirect, and generic error messages. 11 tests covering rate limiting, validation, MFA redirect paths, and credential enumeration prevention
+- Task 6: Created login page (RSC with redirect if authenticated) and LoginForm client component using useActionState (React 19), password visibility toggle, shadcn/ui components, DxT branding, accessibility (aria-labels, aria-live). 12 tests including jest-axe accessibility audit. Deleted `(auth)/.gitkeep` and directory
+- Task 7: Created minimal auth layout (passthrough fragment)
+- Task 8: Created /auth/register → redirect to /auth/login
+- Task 9: Created MFA enrollment and verification stub pages with DxT branding and "Back to Login" links
+- Task 10: Created auth callback route for code exchange
+- Task 11: Created dashboard stub page. Deleted dashboard/.gitkeep
+- Task 12: Updated user factory role type from 'viewer' to 'user'. Updated Header login link from /login to /auth/login
+- Task 13: Created E2E tests (11 tests) covering login form render, input types, password toggle, invalid credentials, accessibility, /auth/register redirect, MFA stub pages
+- Task 14: All verifications pass — type-check (0 errors), lint (0 errors), 159 unit tests pass, build succeeds
+
+**Code Review Fixes Applied:**
+- H1: Fixed open redirect vulnerability in `src/app/auth/callback/route.ts` — validates `next` param starts with `/` and not `//`
+- H2: Stripped all `dark:` Tailwind classes from `src/components/ui/button.tsx` and `src/components/ui/input.tsx` per architecture rules
+- M1: Deleted spurious `nul` file from repository root
+- M2: Added test for `getMfaStatus` error path in `src/lib/actions/auth.test.ts`
+- M3: Changed `src/lib/ratelimit/login.ts` from module-level instantiation to lazy `getLoginRatelimit()` function. Updated `src/lib/actions/auth.ts` and tests
+- M4: Added prerequisite comments to `tests/e2e/login.spec.ts`
+- L1: Increased password toggle button touch target from 24px to 32px (h-8 w-8) in `src/app/auth/login/_components/LoginForm.tsx`
+- L2: Replaced inline SVGs with `lucide-react` Eye/EyeOff icons in `src/app/auth/login/_components/LoginForm.tsx`
 
 ### Change Log
 
+- 2026-02-04: Story 2.1 implementation complete — all 15 tasks (0-14) done, 159 unit tests passing, build clean
+- 2026-02-04: Code review complete — 8 issues found (2H, 4M, 2L), all fixed. 160 unit tests passing. Fixes: open redirect vulnerability in auth callback, dark: classes removed from shadcn/ui components, spurious `nul` file deleted, lazy ratelimit initialization, getMfaStatus error test added, E2E prereq comments added, password toggle touch target increased, inline SVGs replaced with lucide-react icons
+
 ### File List
+
+**New Files:**
+- src/components/ui/button.tsx (shadcn/ui)
+- src/components/ui/input.tsx (shadcn/ui)
+- src/components/ui/label.tsx (shadcn/ui)
+- src/lib/validations/auth.ts
+- src/lib/validations/auth.test.ts
+- src/lib/auth/queries.ts
+- src/lib/auth/queries.test.ts
+- src/lib/ratelimit/login.ts
+- src/lib/ratelimit/login.test.ts
+- src/lib/actions/auth.ts
+- src/lib/actions/auth.test.ts
+- src/app/auth/layout.tsx
+- src/app/auth/login/page.tsx
+- src/app/auth/login/_components/LoginForm.tsx
+- src/app/auth/login/_components/LoginForm.test.tsx
+- src/app/auth/register/page.tsx
+- src/app/auth/mfa-enroll/page.tsx
+- src/app/auth/mfa-verify/page.tsx
+- src/app/auth/callback/route.ts
+- src/app/dashboard/page.tsx
+- tests/e2e/login.spec.ts
+
+**Modified Files:**
+- tests/factories/user-factory.ts (role: 'viewer' → 'user')
+- src/components/layouts/Header.tsx (href="/login" → "/auth/login")
+- package.json (added @testing-library/user-event)
+- package-lock.json
+
+**Deleted Files:**
+- src/lib/auth/.gitkeep
+- src/lib/ratelimit/.gitkeep
+- src/app/(auth)/.gitkeep
+- src/app/dashboard/.gitkeep

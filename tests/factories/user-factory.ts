@@ -4,7 +4,7 @@ export type UserFactoryData = {
   id: string
   email: string
   name: string
-  role: 'super_admin' | 'admin' | 'viewer'
+  role: 'super_admin' | 'admin' | 'user'
   isActive: boolean
   createdAt: string
 }
@@ -16,7 +16,7 @@ export function buildUser(overrides: Partial<UserFactoryData> = {}): UserFactory
     id: faker.string.uuid(),
     email: faker.internet.email(),
     name: faker.person.fullName(),
-    role: 'viewer',
+    role: 'user',
     isActive: true,
     createdAt: new Date().toISOString(),
     ...overrides,
