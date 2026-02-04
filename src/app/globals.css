@@ -129,3 +129,33 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Hero floating orb animations */
+@keyframes float-a {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(30px, -20px) scale(1.05); }
+  66% { transform: translate(-20px, 15px) scale(0.95); }
+}
+
+@keyframes float-b {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(-25px, 20px) scale(0.95); }
+  66% { transform: translate(15px, -25px) scale(1.08); }
+}
+
+@keyframes float-c {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(20px, 10px) scale(1.03); }
+}
+
+@utility animate-float-a {
+  animation: float-a 18s ease-in-out infinite;
+}
+
+@utility animate-float-b {
+  animation: float-b 22s ease-in-out infinite;
+}
+
+@utility animate-float-c {
+  animation: float-c 15s ease-in-out infinite;
+}

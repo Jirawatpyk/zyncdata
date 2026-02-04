@@ -8,10 +8,10 @@ export default function Hero({ title, subtitle, description }: HeroProps) {
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 py-20 md:py-32">
       {/* Decorative background elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -left-20 -top-20 h-72 w-72 rounded-full bg-dxt-primary/20 blur-3xl" />
-        <div className="absolute -bottom-20 -right-20 h-72 w-72 rounded-full bg-dxt-secondary/20 blur-3xl" />
-        <div className="absolute left-1/2 top-1/2 h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full bg-dxt-accent/10 blur-3xl" />
+      <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
+        <div className="absolute -left-20 -top-20 h-72 w-72 rounded-full bg-dxt-primary/20 blur-3xl motion-safe:animate-float-a" />
+        <div className="absolute -bottom-20 -right-20 h-72 w-72 rounded-full bg-dxt-secondary/20 blur-3xl motion-safe:animate-float-b" />
+        <div className="absolute left-1/2 top-1/2 h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full bg-dxt-accent/10 blur-3xl motion-safe:animate-float-c" />
       </div>
 
       <div className="relative mx-auto max-w-3xl px-4 text-center">
