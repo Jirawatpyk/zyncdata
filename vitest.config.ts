@@ -9,6 +9,19 @@ export default defineConfig({
     setupFiles: ['./src/test-setup.ts'],
     globals: true,
     exclude: ['tests/e2e/**', 'node_modules/**'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'lcov', 'html'],
+      reportsDirectory: './coverage',
+      include: ['src/lib/**/*.ts', 'src/lib/**/*.tsx'],
+      exclude: ['src/lib/supabase/**'],
+      thresholds: {
+        statements: 80,
+        branches: 80,
+        functions: 80,
+        lines: 80,
+      },
+    },
   },
   resolve: {
     alias: {

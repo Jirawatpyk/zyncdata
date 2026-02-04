@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { systemSchema, type System } from '@/lib/validations/system'
+import { toCamelCase } from '@/lib/utils/transform'
 import { z } from 'zod'
 
 export async function getEnabledSystems(): Promise<System[]> {
@@ -12,14 +13,5 @@ export async function getEnabledSystems(): Promise<System[]> {
 
   if (error) throw error
 
-  return z.array(systemSchema).parse(
-    data.map((system) => ({
-      id: system.id,
-      name: system.name,
-      url: system.url,
-      logoUrl: system.logo_url,
-      description: system.description,
-      displayOrder: system.display_order,
-    })),
-  )
+  return z.array(systemSchema).parse(data.map((s) => toCamelCase<System>(s)))
 }

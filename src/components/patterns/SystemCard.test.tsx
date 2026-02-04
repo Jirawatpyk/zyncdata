@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import type { JSX } from 'react'
+import { render } from '@testing-library/react'
+import { axe } from 'jest-axe'
 import SystemCard from '@/components/patterns/SystemCard'
 
 describe('SystemCard', () => {
@@ -74,5 +76,18 @@ describe('SystemCard', () => {
 
     expect(props.className).toContain('motion-safe:hover:')
     expect(props.className).toContain('motion-safe:hover:shadow-')
+  })
+
+  it('should have no accessibility violations', async () => {
+    const { container } = render(
+      SystemCard({
+        name: 'TINEDY',
+        url: 'https://example.com',
+        logoUrl: null,
+        description: 'Test',
+      }),
+    )
+    const results = await axe(container)
+    expect(results).toHaveNoViolations()
   })
 })
