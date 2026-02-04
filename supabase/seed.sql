@@ -6,9 +6,9 @@
 -- Status is NULL until health checks are implemented (Epic 5)
 -- =============================================================================
 INSERT INTO systems (name, url, logo_url, description, status, display_order, enabled) VALUES
-  ('TINEDY', 'https://tinedy.dxt-ai.com', NULL, 'Intelligent task and calendar management platform for streamlined scheduling', NULL, 1, true),
+  ('TINEDY', 'https://tinedy.zyncdata.app', NULL, 'Intelligent task and calendar management platform for streamlined scheduling', NULL, 1, true),
   ('VOCA', 'https://voca.dxt-ai.com', NULL, 'AI-powered vocabulary learning and language acquisition system', NULL, 2, true),
-  ('ENEOS', 'https://eneos.dxt-ai.com', NULL, 'Energy monitoring and optimization system for smart resource management', NULL, 3, true),
+  ('ENEOS', 'https://eneos.zyncdata.app', NULL, 'Energy monitoring and optimization system for smart resource management', NULL, 3, true),
   ('rws', 'https://rws.dxt-ai.com', NULL, 'Real-time workspace collaboration and project management tool', NULL, 4, true),
   ('BINANCE', 'https://binance.dxt-ai.com', NULL, 'Cryptocurrency portfolio tracking and analytics dashboard', NULL, 5, true)
 ON CONFLICT (name) DO NOTHING;
