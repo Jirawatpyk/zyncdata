@@ -43,7 +43,7 @@ story_location: _bmad-output/implementation-artifacts
 development_status:
   # Epic 1: Project Foundation & Public Portal (4 stories)
   epic-1: in-progress
-  1-1-project-initialization-ci-cd-foundation: in-progress
+  1-1-project-initialization-ci-cd-foundation: review
   1-2-database-schema-seed-data: backlog
   1-3-public-landing-page-with-dxt-branding: backlog
   1-4-testing-infrastructure-error-boundaries-shared-utilities: backlog

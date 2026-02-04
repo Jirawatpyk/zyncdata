@@ -30,8 +30,20 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# Environment
+.env.local
+.env*.local
+
+# Testing
+coverage/
+playwright-report/
+test-results/
+
+# Supabase
+.supabase/
+
+# Sentry
+.sentryclirc
 
 # vercel
 .vercel
