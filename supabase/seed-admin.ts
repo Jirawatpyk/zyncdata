@@ -17,25 +17,7 @@ async function seedAdmin() {
     auth: { autoRefreshToken: false, persistSession: false },
   })
 
-  // Idempotent: check if user already exists
-  const { data: existingUsers, error: listError } =
-    await supabase.auth.admin.listUsers()
-
-  if (listError) {
-    console.error('Failed to list users:', listError.message)
-    process.exit(1)
-  }
-
-  const existingAdmin = existingUsers.users.find(
-    (u) => u.email === adminEmail,
-  )
-
-  if (existingAdmin) {
-    console.log(`Super Admin already exists: ${adminEmail} — skipping`)
-    process.exit(0)
-  }
-
-  // Create Super Admin
+  // Idempotent: try to create, handle duplicate gracefully
   const { data, error } = await supabase.auth.admin.createUser({
     email: adminEmail,
     password: adminPassword,
@@ -44,6 +26,10 @@ async function seedAdmin() {
   })
 
   if (error) {
+    if (error.message.includes('already been registered')) {
+      console.log(`Super Admin already exists: ${adminEmail} — skipping`)
+      process.exit(0)
+    }
     console.error('Failed to create Super Admin:', error.message)
     process.exit(1)
   }
