@@ -46,12 +46,11 @@ describe('Hero', () => {
     expect(h1!.props.children).toBe('DxT AI Platform')
   })
 
-  it('should render subtitle as H2', () => {
+  it('should render subtitle as styled paragraph', () => {
     const jsx = Hero(defaultProps)
-    const h2 = findByType(jsx, 'h2') as { props: { children: string } } | null
+    const text = extractText(jsx)
 
-    expect(h2).not.toBeNull()
-    expect(h2!.props.children).toBe('Enterprise Access Management')
+    expect(text).toContain('Enterprise Access Management')
   })
 
   it('should render description', () => {

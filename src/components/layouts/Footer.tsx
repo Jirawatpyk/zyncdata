@@ -13,7 +13,9 @@ interface FooterProps {
 
 export default function Footer({ copyright, contactEmail, links }: FooterProps) {
   return (
-    <footer className="border-t border-gray-200 bg-slate-900">
+    <footer className="bg-slate-900">
+      {/* Gradient accent line replacing hard border */}
+      <div className="h-px bg-gradient-to-r from-transparent via-dxt-primary/30 to-transparent" aria-hidden="true" />
       <div className="mx-auto max-w-7xl px-4 py-10 md:px-8">
         <div className="flex flex-col items-center gap-5 text-center">
           {/* Brand mark */}

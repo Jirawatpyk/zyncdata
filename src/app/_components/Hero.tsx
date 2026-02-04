@@ -1,3 +1,6 @@
+import Link from 'next/link'
+import { ArrowRight } from 'lucide-react'
+
 interface HeroProps {
   title: string
   subtitle: string
@@ -6,25 +9,39 @@ interface HeroProps {
 
 export default function Hero({ title, subtitle, description }: HeroProps) {
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 py-20 md:py-32">
+    <section className="relative overflow-x-clip bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 py-24 motion-safe:animate-gradient-shift md:py-36">
       {/* Decorative background elements */}
-      <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
+      <div className="absolute inset-0 overflow-x-clip" aria-hidden="true">
         <div className="absolute -left-20 -top-20 h-72 w-72 rounded-full bg-dxt-primary/20 blur-3xl motion-safe:animate-float-a" />
         <div className="absolute -bottom-20 -right-20 h-72 w-72 rounded-full bg-dxt-secondary/20 blur-3xl motion-safe:animate-float-b" />
         <div className="absolute left-1/2 top-1/2 h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full bg-dxt-accent/10 blur-3xl motion-safe:animate-float-c" />
+        {/* Radial spotlight for depth */}
+        <div className="absolute left-1/2 top-1/2 h-[800px] w-[800px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-dxt-primary/[0.04] blur-3xl" />
       </div>
 
       <div className="relative mx-auto max-w-3xl px-4 text-center">
-        <h1 className="text-4xl font-bold tracking-tight text-white md:text-6xl">
+        <h1 className="text-4xl font-bold tracking-tight text-white motion-safe:animate-fade-up md:text-6xl">
           {title}
         </h1>
-        <h2 className="mt-4 text-2xl font-semibold text-sky-300 md:text-3xl">
+        <p className="mt-4 bg-gradient-to-r from-dxt-accent to-dxt-primary bg-clip-text text-2xl font-semibold text-transparent motion-safe:animate-fade-up-delay-1 md:text-3xl">
           {subtitle}
-        </h2>
-        <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-slate-300">
+        </p>
+        <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-slate-300 motion-safe:animate-fade-up-delay-2">
           {description}
         </p>
+        <div className="mt-10 motion-safe:animate-fade-up-delay-3">
+          <Link
+            href="/auth/login"
+            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-dxt-primary to-dxt-secondary px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-dxt-primary/25 hover:shadow-xl hover:shadow-dxt-primary/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-dxt-primary focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 motion-safe:animate-glow-pulse motion-safe:transition-all motion-safe:duration-200"
+          >
+            Get Started
+            <ArrowRight size={16} aria-hidden="true" />
+          </Link>
+        </div>
       </div>
+
+      {/* Bottom gradient fade for smooth section transition */}
+      <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-slate-50 to-transparent" aria-hidden="true" />
     </section>
   )
 }
