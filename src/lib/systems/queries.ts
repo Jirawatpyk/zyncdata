@@ -7,7 +7,7 @@ export async function getEnabledSystems(): Promise<System[]> {
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('systems')
-    .select('id, name, url, logo_url, description, display_order')
+    .select('id, name, url, logo_url, description, status, display_order')
     .eq('enabled', true)
     .order('display_order', { ascending: true })
 

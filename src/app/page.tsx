@@ -44,6 +44,7 @@ async function SystemGrid() {
             url={system.url}
             logoUrl={system.logoUrl}
             description={system.description}
+            status={system.status}
           />
         </FadeInOnScroll>
       ))}

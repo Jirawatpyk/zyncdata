@@ -10,6 +10,7 @@ describe('SystemCard', () => {
     url: 'https://tinedy.dxt-ai.com',
     logoUrl: null,
     description: 'Task management system',
+    status: null,
   }
 
   it('should render system name and description', () => {
@@ -78,6 +79,22 @@ describe('SystemCard', () => {
     expect(props.className).toContain('motion-safe:hover:shadow-')
   })
 
+  it('should link to coming-soon page when status is coming_soon', () => {
+    const jsx = SystemCard({ ...defaultProps, status: 'coming_soon' }) as JSX.Element
+    const props = jsx.props as Record<string, unknown>
+
+    expect(props.href).toBe('/coming-soon?system=TINEDY')
+    expect(props.target).toBeUndefined()
+    expect(props.rel).toBeUndefined()
+  })
+
+  it('should render coming_soon ARIA label correctly', () => {
+    const jsx = SystemCard({ ...defaultProps, status: 'coming_soon' }) as JSX.Element
+    const props = jsx.props as Record<string, unknown>
+
+    expect(props['aria-label']).toBe('TINEDY - Coming Soon - Task management system')
+  })
+
   it('should have no accessibility violations', async () => {
     const { container } = render(
       SystemCard({
@@ -85,6 +102,21 @@ describe('SystemCard', () => {
         url: 'https://example.com',
         logoUrl: null,
         description: 'Test',
+        status: null,
+      }),
+    )
+    const results = await axe(container)
+    expect(results).toHaveNoViolations()
+  })
+
+  it('should have no accessibility violations for coming_soon card', async () => {
+    const { container } = render(
+      SystemCard({
+        name: 'VOCA',
+        url: 'https://voca.dxt-ai.com',
+        logoUrl: null,
+        description: 'AI vocabulary system',
+        status: 'coming_soon',
       }),
     )
     const results = await axe(container)

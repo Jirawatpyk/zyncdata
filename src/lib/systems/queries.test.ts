@@ -22,6 +22,7 @@ describe('getEnabledSystems', () => {
           url: 'https://tinedy.dxt-ai.com',
           logo_url: null,
           description: 'Task management',
+          status: null,
           display_order: 1,
         },
         {
@@ -30,6 +31,7 @@ describe('getEnabledSystems', () => {
           url: 'https://scopelabs.dxt-ai.com',
           logo_url: null,
           description: 'Analytics platform',
+          status: 'coming_soon',
           display_order: 2,
         },
       ],
@@ -47,7 +49,7 @@ describe('getEnabledSystems', () => {
     await getEnabledSystems()
 
     expect(mockSelect).toHaveBeenCalledWith(
-      'id, name, url, logo_url, description, display_order',
+      'id, name, url, logo_url, description, status, display_order',
     )
     expect(mockEq).toHaveBeenCalledWith('enabled', true)
     expect(mockOrder).toHaveBeenCalledWith('display_order', { ascending: true })
@@ -63,9 +65,11 @@ describe('getEnabledSystems', () => {
       url: 'https://tinedy.dxt-ai.com',
       logoUrl: null,
       description: 'Task management',
+      status: null,
       displayOrder: 1,
     })
     expect(result[1].logoUrl).toBeNull()
+    expect(result[1].status).toBe('coming_soon')
     expect(result[1].displayOrder).toBe(2)
   })
 

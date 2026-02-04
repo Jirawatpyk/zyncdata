@@ -5,9 +5,15 @@ interface SystemCardProps {
   url: string
   logoUrl: string | null
   description: string | null
+  status: string | null
 }
 
-export default function SystemCard({ name, url, logoUrl, description }: SystemCardProps) {
+export default function SystemCard({ name, url, logoUrl, description, status }: SystemCardProps) {
+  const isComingSoon = status === 'coming_soon'
+  const href = isComingSoon ? `/coming-soon?system=${encodeURIComponent(name)}` : url
+  const target = isComingSoon ? undefined : '_blank'
+  const rel = isComingSoon ? undefined : 'noopener noreferrer'
+
   return (
     <a
       className={cn(
@@ -16,10 +22,10 @@ export default function SystemCard({ name, url, logoUrl, description }: SystemCa
         'motion-safe:hover:-translate-y-1.5 motion-safe:hover:shadow-xl motion-safe:hover:shadow-dxt-primary/10 motion-safe:hover:border-dxt-primary/30',
         'focus-visible:ring-2 focus-visible:ring-dxt-primary focus-visible:outline-none',
       )}
-      href={url}
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label={`Visit ${name}${description ? ` - ${description}` : ''}`}
+      href={href}
+      target={target}
+      rel={rel}
+      aria-label={`${isComingSoon ? `${name} - Coming Soon` : `Visit ${name}`}${description ? ` - ${description}` : ''}`}
     >
       {/* Top accent bar */}
       <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-dxt-primary via-dxt-accent to-dxt-secondary opacity-0 motion-safe:transition-opacity motion-safe:duration-300 motion-safe:group-hover:opacity-100" />

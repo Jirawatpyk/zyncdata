@@ -6,6 +6,7 @@ export const systemSchema = z.object({
   url: z.string().url(),
   logoUrl: z.string().nullable(),
   description: z.string().nullable(),
+  status: z.string().nullable(),
   displayOrder: z.number().int(),
 })
 
