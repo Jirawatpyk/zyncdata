@@ -71,11 +71,17 @@ export default async function Home() {
           heading={content.intro.heading}
           body={content.intro.body}
         />
-        <section className="py-12 md:py-16">
+        <section className="py-16 md:py-20">
           <div className="mx-auto max-w-7xl px-4 md:px-8">
-            <h2 className="mb-8 text-center text-4xl font-bold text-gray-800">
-              Our Systems
-            </h2>
+            <div className="mb-10 text-center">
+              <div className="mx-auto mb-4 h-1 w-16 rounded-full bg-gradient-to-r from-dxt-primary to-dxt-accent" />
+              <h2 className="text-3xl font-bold text-gray-800 md:text-4xl">
+                Our Systems
+              </h2>
+              <p className="mx-auto mt-3 max-w-lg text-gray-500">
+                Access all DxT AI systems from a single portal
+              </p>
+            </div>
             <Suspense fallback={<GridSkeleton />}>
               <SystemGrid />
             </Suspense>

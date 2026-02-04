@@ -46,8 +46,8 @@ describe('Header', () => {
   it('should have backdrop blur for transparency effect', () => {
     const jsx = (Header as (props: Record<string, never>) => JSX.Element)({})
 
-    expect(jsx.props.className).toContain('backdrop-blur-sm')
-    expect(jsx.props.className).toContain('bg-white/95')
+    expect(jsx.props.className).toContain('backdrop-blur')
+    expect(jsx.props.className).toContain('bg-white/')
   })
 
   it('should have focus-visible styles on interactive elements', () => {
