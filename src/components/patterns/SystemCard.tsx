@@ -11,7 +11,7 @@ export default function SystemCard({ name, url, logoUrl, description }: SystemCa
   return (
     <a
       className={cn(
-        'group relative block overflow-hidden rounded-xl border border-gray-200/80 bg-white p-6 shadow-sm',
+        'group relative block h-full overflow-hidden rounded-xl border border-gray-200/80 bg-white p-6 shadow-sm',
         'motion-safe:transition-all motion-safe:duration-300 motion-safe:ease-out',
         'motion-safe:hover:-translate-y-1.5 motion-safe:hover:shadow-xl motion-safe:hover:shadow-dxt-primary/10 motion-safe:hover:border-dxt-primary/30',
         'focus-visible:ring-2 focus-visible:ring-dxt-primary focus-visible:outline-none',
