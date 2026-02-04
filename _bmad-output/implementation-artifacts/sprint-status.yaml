@@ -1,0 +1,114 @@
+# generated: 2026-02-04
+# project: zyncdata
+# project_key: NOKEY
+# tracking_system: file-system
+# story_location: _bmad-output/implementation-artifacts
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Epic Status Transitions:
+#   - backlog -> in-progress: Automatically when first story is created (via create-story)
+#   - in-progress -> done: Manually when all stories reach 'done' status
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review (via Dev's code-review workflow)
+#   - done: Story completed
+#   - deferred: Story moved to a future phase (not in MVP scope)
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when first story is created
+# - Stories can be worked in parallel if team capacity allows
+# - SM typically creates next story after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+
+generated: 2026-02-04
+project: zyncdata
+project_key: NOKEY
+tracking_system: file-system
+story_location: _bmad-output/implementation-artifacts
+
+development_status:
+  # Epic 1: Project Foundation & Public Portal (4 stories)
+  epic-1: in-progress
+  1-1-project-initialization-ci-cd-foundation: in-progress
+  1-2-database-schema-seed-data: backlog
+  1-3-public-landing-page-with-dxt-branding: backlog
+  1-4-testing-infrastructure-error-boundaries-shared-utilities: backlog
+  epic-1-retrospective: optional
+
+  # Epic 2: Authentication & Access Control (6 stories)
+  epic-2: backlog
+  2-1-initial-super-admin-account-login: backlog
+  2-2-totp-mfa-setup: backlog
+  2-3-backup-codes-generation-usage: backlog
+  2-4-mfa-login-verification: backlog
+  2-5-secure-logout: backlog
+  2-6-route-protection-rbac-enforcement: backlog
+  epic-2-retrospective: optional
+
+  # Epic 3: System Portfolio Management (8 stories)
+  epic-3: backlog
+  3-1-cms-admin-panel-layout-navigation: backlog
+  3-2-add-new-system: backlog
+  3-3-edit-system-information: backlog
+  3-4-delete-system-with-soft-delete: backlog
+  3-5-reorder-systems-display: backlog
+  3-6-toggle-system-visibility: backlog
+  3-7-system-logo-management: backlog
+  3-8-live-status-indicators-on-landing-page: backlog
+  epic-3-retrospective: optional
+
+  # Epic 4: Content & Branding Management (4 stories + 1 deferred)
+  epic-4: backlog
+  4-1-content-section-editor-with-wysiwyg: backlog
+  4-2-theme-branding-customization: backlog
+  4-3-preview-mode-client-side: backlog
+  4-4-publish-changes: backlog
+  4-5-content-version-history-restore: deferred  # DEFERRED TO PHASE 2 — FR74 excluded from MVP per PRD
+  epic-4-retrospective: optional
+
+  # Epic 5: Health Monitoring & Analytics Dashboard (8 stories)
+  epic-5: backlog
+  5-1-basic-health-check-service-status-updates: backlog
+  5-2-failure-detection-retry-logic-recovery: backlog
+  5-3-health-check-data-pruning-scalability: backlog
+  5-4-health-monitoring-dashboard: backlog
+  5-5-real-time-dashboard-updates: backlog
+  5-6-health-check-failure-notifications: backlog
+  5-7-configurable-health-check-settings: backlog
+  5-8-historical-health-check-data: backlog
+  epic-5-retrospective: optional
+
+  # Epic 6: User Management & Administration (5 stories)
+  epic-6: backlog
+  6-1-create-cms-user-accounts: backlog
+  6-2-assign-change-user-roles: backlog
+  6-3-reset-user-passwords: backlog
+  6-4-disable-delete-user-accounts: backlog
+  6-5-user-login-history-activity-tracking: backlog
+  epic-6-retrospective: optional
+
+  # Epic 7: Security, Audit & Operations (8 stories)
+  epic-7: backlog
+  7-1-audit-logging-infrastructure: backlog
+  7-2-system-content-audit-logging: backlog
+  7-3-user-management-authorization-audit-logging: backlog
+  7-4-audit-log-viewer: backlog
+  7-5-audit-log-retention-cleanup: backlog
+  7-6-error-tracking-performance-monitoring: backlog
+  7-7-database-backup-restore: backlog
+  7-8-deployment-rollback-system-configuration: backlog
+  epic-7-retrospective: optional

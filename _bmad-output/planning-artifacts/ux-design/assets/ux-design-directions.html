@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zyncdata Design Directions - UX Showcase</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f9fafb;
+            color: #1f2937;
+            line-height: 1.5;
+        }
+
+        .header {
+            background: white;
+            border-bottom: 2px solid #e5e7eb;
+            padding: 24px 32px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .navigation {
+            background: white;
+            padding: 16px 32px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            position: sticky;
+            top: 90px;
+            z-index: 99;
+        }
+
+        .nav-btn {
+            padding: 10px 20px;
+            border: 2px solid #41B9D5;
+            background: white;
+            color: #41B9D5;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 150ms ease-in-out;
+            font-family: 'Nunito', sans-serif;
+            font-size: 14px;
+        }
+
+        .nav-btn:hover {
+            background: #41B9D5;
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+        }
+
+        .nav-btn.active {
+            background: #41B9D5;
+            color: white;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 48px 32px;
+        }
+
+        .direction-section {
+            background: white;
+            border-radius: 12px;
+            padding: 48px;
+            margin-bottom: 48px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            display: none;
+        }
+
+        .direction-section.active {
+            display: block;
+        }
+
+        .direction-header {
+            margin-bottom: 32px;
+            padding-bottom: 24px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .direction-header h2 {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 12px;
+        }
+
+        .direction-header .subtitle {
+            font-size: 18px;
+            color: #6b7280;
+            margin-bottom: 16px;
+        }
+
+        .direction-header .tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .tag {
+            padding: 6px 12px;
+            background: #f3f4f6;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #4b5563;
+        }
+
+        .tag.recommended {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .view-toggle {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 32px;
+            padding: 16px;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+
+        .view-toggle-btn {
+            flex: 1;
+            padding: 12px 20px;
+            border: 2px solid #e5e7eb;
+            background: white;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 150ms ease-in-out;
+            font-family: 'Nunito', sans-serif;
+            font-size: 14px;
+        }
+
+        .view-toggle-btn:hover {
+            border-color: #41B9D5;
+            color: #41B9D5;
+        }
+
+        .view-toggle-btn.active {
+            background: #41B9D5;
+            border-color: #41B9D5;
+            color: white;
+        }
+
+        .mockup-container {
+            position: relative;
+            background: #f9fafb;
+            border-radius: 12px;
+            padding: 48px;
+            min-height: 600px;
+        }
+
+        .mockup-view {
+            display: none;
+        }
+
+        .mockup-view.active {
+            display: block;
+        }
+
+        .mockup-title {
+            text-align: center;
+            font-size: 36px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 12px;
+        }
+
+        .mockup-subtitle {
+            text-align: center;
+            font-size: 16px;
+            color: #6b7280;
+            margin-bottom: 48px;
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .system-card {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            transition: all 150ms ease-in-out;
+            cursor: pointer;
+            position: relative;
+            border: 2px solid transparent;
+        }
+
+        .system-card:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+            border-color: #41B9D5;
+        }
+
+        .system-card:active {
+            transform: translateY(0) scale(0.98);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .status-badge {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .card-logo {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, #41B9D5, #5371FF);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 16px;
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+
+        .card-description {
+            font-size: 14px;
+            color: #6b7280;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+
+        .card-meta {
+            font-size: 12px;
+            color: #9ca3af;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .login-cta {
+            text-align: center;
+            margin-top: 48px;
+        }
+
+        .login-btn {
+            display: inline-block;
+            padding: 16px 32px;
+            background: #41B9D5;
+            color: white;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            text-decoration: none;
+            transition: all 150ms ease-in-out;
+        }
+
+        .login-btn:hover {
+            background: #36A3C1;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        /* Direction-specific styles */
+        .direction-b .system-card {
+            padding: 32px;
+            gap: 32px;
+        }
+
+        .direction-b .card-grid {
+            gap: 32px;
+        }
+
+        .direction-c .system-card {
+            padding: 20px;
+        }
+
+        .direction-c .card-grid {
+            gap: 20px;
+        }
+
+        .direction-c .card-description {
+            font-size: 13px;
+        }
+
+        .direction-d .card-logo {
+            background: linear-gradient(135deg, #5371FF, #41B9D5);
+        }
+
+        .direction-d .system-card:hover {
+            border-color: #5371FF;
+        }
+
+        .direction-e .system-card {
+            border: 1px solid #e5e7eb;
+            box-shadow: none;
+        }
+
+        .direction-e .card-logo {
+            background: #f9fafb;
+            color: #41B9D5;
+            border: 2px solid #41B9D5;
+        }
+
+        .direction-f .system-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(65, 185, 213, 0.2);
+        }
+
+        .direction-g {
+            background: #111827;
+        }
+
+        .direction-g .mockup-container {
+            background: #1f2937;
+        }
+
+        .direction-g .mockup-title {
+            color: #f3f4f6;
+        }
+
+        .direction-g .mockup-subtitle {
+            color: #9ca3af;
+        }
+
+        .direction-g .system-card {
+            background: #374151;
+            border-color: #4b5563;
+        }
+
+        .direction-g .card-title {
+            color: #f3f4f6;
+        }
+
+        .direction-g .card-description {
+            color: #d1d5db;
+        }
+
+        .direction-g .card-meta {
+            color: #6b7280;
+        }
+
+        .direction-g .system-card:hover {
+            border-color: #52C9E5;
+        }
+
+        @media (max-width: 1024px) {
+            .card-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 640px) {
+            .card-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .container {
+                padding: 24px 16px;
+            }
+
+            .mockup-container {
+                padding: 24px;
+            }
+        }
+
+        .comparison-note {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 16px 20px;
+            border-radius: 8px;
+            margin-top: 32px;
+        }
+
+        .comparison-note strong {
+            color: #92400e;
+        }
+
+        .comparison-note p {
+            color: #78350f;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎨 Zyncdata Design Directions</h1>
+        <p>Explore 8 visual design variations for your Enterprise Access Management Platform</p>
+    </div>
+
+    <div class="navigation">
+        <button class="nav-btn active" onclick="showDirection('a')">Direction A: Balanced Grid ⭐</button>
+        <button class="nav-btn" onclick="showDirection('b')">Direction B: Spacious</button>
+        <button class="nav-btn" onclick="showDirection('c')">Direction C: Info-Rich</button>
+        <button class="nav-btn" onclick="showDirection('d')">Direction D: Bold Brand</button>
+        <button class="nav-btn" onclick="showDirection('e')">Direction E: Minimal</button>
+        <button class="nav-btn" onclick="showDirection('f')">Direction F: Modern</button>
+        <button class="nav-btn" onclick="showDirection('g')">Direction G: Dark Mode</button>
+        <button class="nav-btn" onclick="showDirection('h')">Direction H: Hybrid</button>
+    </div>
+
+    <div class="container">
+        <!-- Direction A: Balanced Grid (Recommended) -->
+        <div class="direction-section direction-a active">
+            <div class="direction-header">
+                <h2>Direction A: Balanced Grid</h2>
+                <p class="subtitle">The recommended approach - balanced density, scannable layout, professional feel</p>
+                <div class="tags">
+                    <span class="tag recommended">✅ Recommended</span>
+                    <span class="tag">Scannable</span>
+                    <span class="tag">Balanced Density</span>
+                    <span class="tag">Classic Design</span>
+                </div>
+            </div>
+
+            <div class="view-toggle">
+                <button class="view-toggle-btn active" onclick="toggleView('a', 'portfolio')">
+                    📱 Public Portfolio (Level 1)
+                </button>
+                <button class="view-toggle-btn" onclick="toggleView('a', 'dashboard')">
+                    📊 Dashboard (Level 2 - Jiraw)
+                </button>
+            </div>
+
+            <div class="mockup-container">
+                <!-- Public Portfolio View -->
+                <div class="mockup-view active" data-view="portfolio">
+                    <h3 class="mockup-title">Zyncdata</h3>
+                    <p class="mockup-subtitle">Your Gateway to DxT Solutions</p>
+
+                    <div class="card-grid">
+                        <div class="system-card">
+                            <div class="card-logo">EN</div>
+                            <h4 class="card-title">ENEOS</h4>
+                            <p class="card-description">Energy management and operations platform for efficient resource tracking</p>
+                            <div class="card-meta">Click to access →</div>
+                        </div>
+
+                        <div class="system-card">
+                            <div class="card-logo">VO</div>
+                            <h4 class="card-title">VOCA</h4>
+                            <p class="card-description">Voice and communication analytics system for customer insights</p>
+                            <div class="card-meta">Click to access →</div>
+                        </div>
+
+                        <div class="system-card">
+                            <div class="card-logo">TI</div>
+                            <h4 class="card-title">TINEDY</h4>
+                            <p class="card-description">Integrated business solutions platform for enterprise operations</p>
+                            <div class="card-meta">Click to access →</div>
+                        </div>
+
+                        <div class="system-card">
+                            <div class="card-logo">RW</div>
+                            <h4 class="card-title">rws</h4>
+                            <p class="card-description">Resource workflow system for team collaboration and productivity</p>
+                            <div class="card-meta">Click to access →</div>
+                        </div>
+
+                        <div class="system-card">
+                            <div class="card-logo">BI</div>
+                            <h4 class="card-title">BINANCE</h4>
+                            <p class="card-description">Financial operations and cryptocurrency management platform</p>
+                            <div class="card-meta">Click to access →</div>
+                        </div>
+                    </div>
+
+                    <div class="login-cta">
+                        <a href="#" class="login-btn">Login to Dashboard →</a>
+                    </div>
+                </div>
+
+                <!-- Dashboard View -->
+                <div class="mockup-view" data-view="dashboard">
+                    <h3 class="mockup-title">System Dashboard</h3>
+                    <p class="mockup-subtitle">Real-time monitoring for all your systems</p>
+
+                    <div class="card-grid">
+                        <div class="system-card">
+                            <div class="status-badge">🟢</div>
+                            <div class="card-logo">EN</div>
+                            <h4 class="card-title">ENEOS</h4>
+                            <p class="card-description">Energy management and operations platform</p>
+                            <div class="card-meta">🕐 Last checked: 2 min ago</div>
+                        </div>
+
+                        <div class="system-card">
+                            <div class="status-badge">🟢</div>
+                            <div class="card-logo">VO</div>
+                            <h4 class="card-title">VOCA</h4>
+                            <p class="card-description">Voice and communication analytics system</p>
+                            <div class="card-meta">🕐 Last checked: 1 min ago</div>
+                        </div>
+
+                        <div class="system-card">
+                            <div class="status-badge">🔴</div>
+                            <div class="card-logo">TI</div>
+                            <h4 class="card-title">TINEDY</h4>
+                            <p class="card-description">Integrated business solutions platform</p>
+                            <div class="card-meta">🕐 Last checked: 30 sec ago</div>
+                        </div>
+
+                        <div class="system-card">
+                            <div class="status-badge">🟢</div>
+                            <div class="card-logo">RW</div>
+                            <h4 class="card-title">rws</h4>
+                            <p class="card-description">Resource workflow system</p>
+                            <div class="card-meta">🕐 Last checked: 45 sec ago</div>
+                        </div>
+
+                        <div class="system-card">
+                            <div class="status-badge">🟡</div>
+                            <div class="card-logo">BI</div>
+                            <h4 class="card-title">BINANCE</h4>
+                            <p class="card-description">Financial operations platform</p>
+                            <div class="card-meta">🕐 Checking status...</div>
+                        </div>
+                    </div>
+
+                    <div class="comparison-note">
+                        <strong>💡 Key Differences:</strong>
+                        <p>Dashboard view adds real-time status badges (🟢🔴🟡) and timestamps. Public portfolio focuses on clean presentation without operational details.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Direction B: Spacious Grid -->
+        <div class="direction-section direction-b">
+            <div class="direction-header">
+                <h2>Direction B: Spacious Grid</h2>
+                <p class="subtitle">Maximum white space for a calm, uncluttered experience</p>
+                <div class="tags">
+                    <span class="tag">Airy</span>
+                    <span class="tag">Lighter Weight</span>
+                    <span class="tag">Calm</span>
+                </div>
+            </div>
+
+            <div class="view-toggle">
+                <button class="view-toggle-btn active" onclick="toggleView('b', 'portfolio')">
+                    📱 Public Portfolio (Level 1)
+                </button>
+                <button class="view-toggle-btn" onclick="toggleView('b', 'dashboard')">
+                    📊 Dashboard (Level 2 - Jiraw)
+                </button>
+            </div>
+
+            <div class="mockup-container">
+                <!-- Public Portfolio View -->
+                <div class="mockup-view active" data-view="portfolio">
+                    <h3 class="mockup-title">Zyncdata</h3>
+                    <p class="mockup-subtitle">Your Gateway to DxT Solutions</p>
+
+                    <div class="card-grid">
+                        <div class="system-card">
+                            <div class="card-logo">EN</div>
+                            <h4 class="card-title">ENEOS</h4>
+                            <p class="card-description">Energy management and operations platform for efficient resource tracking</p>
+                            <div class="card-meta">Click to access →</div>
+                        </div>
+
+                        <div class="system-card">
+                            <div class="card-logo">VO</div>
+                            <h4 class="card-title">VOCA</h4>
+                            <p class="card-description">Voice and communication analytics system for customer insights</p>
+                            <div class="card-meta">Click to access →</div>
+                        </div>
+
+                        <div class="system-card">
+                            <div class="card-logo">TI</div>
+                            <h4 class="card-title">TINEDY</h4>
+                            <p class="card-description">Integrated business solutions platform for enterprise operations</p>
+                            <div class="card-meta">Click to access →</div>
+                        </div>
+
+                        <div class="system-card">
+                            <div class="card-logo">RW</div>
+                            <h4 class="card-title">rws</h4>
+                            <p class="card-description">Resource workflow system for team collaboration</p>
+                            <div class="card-meta">Click to access →</div>
+                        </div>
+
+                        <div class="system-card">
+                            <div class="card-logo">BI</div>
+                            <h4 class="card-title">BINANCE</h4>
+                            <p class="card-description">Financial operations platform</p>
+                            <div class="card-meta">Click to access →</div>
+                        </div>
+                    </div>
+
+                    <div class="login-cta">
+                        <a href="#" class="login-btn">Login to Dashboard →</a>
+                    </div>
+                </div>
+
+                <!-- Dashboard View -->
+                <div class="mockup-view" data-view="dashboard">
+                    <h3 class="mockup-title">System Dashboard</h3>
+                    <p class="mockup-subtitle">Real-time monitoring for all your systems</p>
+
+                    <div class="card-grid">
+                        <div class="system-card">
+                            <div class="status-badge">🟢</div>
+                            <div class="card-logo">EN</div>
+                            <h4 class="card-title">ENEOS</h4>
+                            <p class="card-description">Energy management and operations platform</p>
+                            <div class="card-meta">🕐 Last checked: 2 min ago</div>
+                        </div>
+
+                        <div class="system-card">
+                            <div class="status-badge">🟢</div>
+                            <div class="card-logo">VO</div>
+                            <h4 class="card-title">VOCA</h4>
+                            <p class="card-description">Voice and communication analytics system</p>
+                            <div class="card-meta">🕐 Last checked: 1 min ago</div>
+                        </div>
+
+                        <div class="system-card">
+                            <div class="status-badge">🔴</div>
+                            <div class="card-logo">TI</div>
+                            <h4 class="card-title">TINEDY</h4>
+                            <p class="card-description">Integrated business solutions platform</p>
+                            <div class="card-meta">🕐 Last checked: 30 sec ago</div>
+                        </div>
+
+                        <div class="system-card">
+                            <div class="status-badge">🟢</div>
+                            <div class="card-logo">RW</div>
+                            <h4 class="card-title">rws</h4>
+                            <p class="card-description">Resource workflow system</p>
+                            <div class="card-meta">🕐 Last checked: 45 sec ago</div>
+                        </div>
+
+                        <div class="system-card">
+                            <div class="status-badge">🟡</div>
+                            <div class="card-logo">BI</div>
+                            <h4 class="card-title">BINANCE</h4>
+                            <p class="card-description">Financial operations platform</p>
+                            <div class="card-meta">🕐 Checking status...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Directions C-H would follow similar pattern -->
+        <!-- For brevity, showing structure for remaining directions -->
+
+        <!-- Direction C: Info-Rich -->
+        <div class="direction-section direction-c">
+            <div class="direction-header">
+                <h2>Direction C: Info-Rich Grid</h2>
+                <p class="subtitle">Pack more details per card for power users</p>
+                <div class="tags">
+                    <span class="tag">Dense</span>
+                    <span class="tag">Information-Heavy</span>
+                    <span class="tag">Power User</span>
+                </div>
+            </div>
+            <p style="padding: 48px; text-align: center; color: #6b7280;">
+                Similar grid layout with tighter spacing and more detailed information per card.
+                <br><br>
+                <strong>Key Differences:</strong> Smaller padding (20px), tighter gaps, more metadata visible.
+            </p>
+        </div>
+
+        <!-- Direction D: Bold Brand -->
+        <div class="direction-section direction-d">
+            <div class="direction-header">
+                <h2>Direction D: Bold Brand</h2>
+                <p class="subtitle">DxT colors prominent throughout</p>
+                <div class="tags">
+                    <span class="tag">Brand-Forward</span>
+                    <span class="tag">Bold Colors</span>
+                    <span class="tag">Memorable</span>
+                </div>
+            </div>
+            <p style="padding: 48px; text-align: center; color: #6b7280;">
+                Emphasizes DxT brand colors (#41B9D5, #5371FF) throughout the interface.
+                <br><br>
+                <strong>Key Differences:</strong> Vibrant gradients, secondary color prominent, brand-heavy.
+            </p>
+        </div>
+
+        <!-- Direction E: Minimal -->
+        <div class="direction-section direction-e">
+            <div class="direction-header">
+                <h2>Direction E: Minimal Clean</h2>
+                <p class="subtitle">Subtle brand presence, timeless simplicity</p>
+                <div class="tags">
+                    <span class="tag">Minimal</span>
+                    <span class="tag">Timeless</span>
+                    <span class="tag">Clean</span>
+                </div>
+            </div>
+            <p style="padding: 48px; text-align: center; color: #6b7280;">
+                Stripped-down aesthetic with subtle borders and minimal shadows.
+                <br><br>
+                <strong>Key Differences:</strong> Outlined logos, flat design, no heavy shadows.
+            </p>
+        </div>
+
+        <!-- Direction F: Modern Touch -->
+        <div class="direction-section direction-f">
+            <div class="direction-header">
+                <h2>Direction F: Modern Touch</h2>
+                <p class="subtitle">Soft shadows and contemporary effects</p>
+                <div class="tags">
+                    <span class="tag">Modern</span>
+                    <span class="tag">Glassmorphism</span>
+                    <span class="tag">Trendy</span>
+                </div>
+            </div>
+            <p style="padding: 48px; text-align: center; color: #6b7280;">
+                Subtle glassmorphism effects with backdrop blur and translucent cards.
+                <br><br>
+                <strong>Key Differences:</strong> Backdrop blur, translucent backgrounds, modern aesthetic.
+                <br>
+                <strong>⚠️ Note:</strong> May impact performance budget - use with caution.
+            </p>
+        </div>
+
+        <!-- Direction G: Dark Mode -->
+        <div class="direction-section direction-g">
+            <div class="direction-header">
+                <h2>Direction G: Dark Mode</h2>
+                <p class="subtitle">Optimized for low-light environments</p>
+                <div class="tags">
+                    <span class="tag">Dark Theme</span>
+                    <span class="tag">Eye Strain Reduction</span>
+                    <span class="tag">Phase 2</span>
+                </div>
+            </div>
+
+            <div class="view-toggle">
+                <button class="view-toggle-btn active" onclick="toggleView('g', 'portfolio')">
+                    📱 Public Portfolio (Level 1)
+                </button>
+                <button class="view-toggle-btn" onclick="toggleView('g', 'dashboard')">
+                    📊 Dashboard (Level 2 - Jiraw)
+                </button>
+            </div>
+
+            <div class="mockup-container">
+                <div class="mockup-view active" data-view="portfolio">
+                    <h3 class="mockup-title">Zyncdata</h3>
+                    <p class="mockup-subtitle">Your Gateway to DxT Solutions</p>
+
+                    <div class="card-grid">
+                        <div class="system-card">
+                            <div class="card-logo">EN</div>
+                            <h4 class="card-title">ENEOS</h4>
+                            <p class="card-description">Energy management and operations platform</p>
+                            <div class="card-meta">Click to access →</div>
+                        </div>
+
+                        <div class="system-card">
+                            <div class="card-logo">VO</div>
+                            <h4 class="card-title">VOCA</h4>
+                            <p class="card-description">Voice and communication analytics system</p>
+                            <div class="card-meta">Click to access →</div>
+                        </div>
+
+                        <div class="system-card">
+                            <div class="card-logo">TI</div>
+                            <h4 class="card-title">TINEDY</h4>
+                            <p class="card-description">Integrated business solutions platform</p>
+                            <div class="card-meta">Click to access →</div>
+                        </div>
+
+                        <div class="system-card">
+                            <div class="card-logo">RW</div>
+                            <h4 class="card-title">rws</h4>
+                            <p class="card-description">Resource workflow system</p>
+                            <div class="card-meta">Click to access →</div>
+                        </div>
+
+                        <div class="system-card">
+                            <div class="card-logo">BI</div>
+                            <h4 class="card-title">BINANCE</h4>
+                            <p class="card-description">Financial operations platform</p>
+                            <div class="card-meta">Click to access →</div>
+                        </div>
+                    </div>
+
+                    <div class="login-cta">
+                        <a href="#" class="login-btn">Login to Dashboard →</a>
+                    </div>
+                </div>
+
+                <div class="mockup-view" data-view="dashboard">
+                    <h3 class="mockup-title">System Dashboard</h3>
+                    <p class="mockup-subtitle">Real-time monitoring for all your systems</p>
+
+                    <div class="card-grid">
+                        <div class="system-card">
+                            <div class="status-badge">🟢</div>
+                            <div class="card-logo">EN</div>
+                            <h4 class="card-title">ENEOS</h4>
+                            <p class="card-description">Energy management and operations platform</p>
+                            <div class="card-meta">🕐 Last checked: 2 min ago</div>
+                        </div>
+
+                        <div class="system-card">
+                            <div class="status-badge">🟢</div>
+                            <div class="card-logo">VO</div>
+                            <h4 class="card-title">VOCA</h4>
+                            <p class="card-description">Voice and communication analytics system</p>
+                            <div class="card-meta">🕐 Last checked: 1 min ago</div>
+                        </div>
+
+                        <div class="system-card">
+                            <div class="status-badge">🔴</div>
+                            <div class="card-logo">TI</div>
+                            <h4 class="card-title">TINEDY</h4>
+                            <p class="card-description">Integrated business solutions platform</p>
+                            <div class="card-meta">🕐 Last checked: 30 sec ago</div>
+                        </div>
+
+                        <div class="system-card">
+                            <div class="status-badge">🟢</div>
+                            <div class="card-logo">RW</div>
+                            <h4 class="card-title">rws</h4>
+                            <p class="card-description">Resource workflow system</p>
+                            <div class="card-meta">🕐 Last checked: 45 sec ago</div>
+                        </div>
+
+                        <div class="system-card">
+                            <div class="status-badge">🟡</div>
+                            <div class="card-logo">BI</div>
+                            <h4 class="card-title">BINANCE</h4>
+                            <p class="card-description">Financial operations platform</p>
+                            <div class="card-meta">🕐 Checking status...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Direction H: Hybrid Best -->
+        <div class="direction-section direction-h">
+            <div class="direction-header">
+                <h2>Direction H: Hybrid Best</h2>
+                <p class="subtitle">Combines the best elements from all directions</p>
+                <div class="tags">
+                    <span class="tag">Best of All</span>
+                    <span class="tag">Refined</span>
+                    <span class="tag">Optimized</span>
+                </div>
+            </div>
+            <p style="padding: 48px; text-align: center; color: #6b7280;">
+                Takes the scannable grid from A, balanced spacing from B, subtle brand from D.
+                <br><br>
+                <strong>Key Features:</strong> Optimized for both public showcase and dashboard efficiency.
+                <br>
+                This direction will be refined based on your feedback from other directions.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        function showDirection(direction) {
+            // Hide all sections
+            document.querySelectorAll('.direction-section').forEach(section => {
+                section.classList.remove('active');
+            });
+
+            // Show selected section
+            document.querySelector(`.direction-${direction}`).classList.add('active');
+
+            // Update navigation buttons
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function toggleView(direction, view) {
+            const container = document.querySelector(`.direction-${direction}`);
+
+            // Hide all views in this direction
+            container.querySelectorAll('.mockup-view').forEach(v => {
+                v.classList.remove('active');
+            });
+
+            // Show selected view
+            container.querySelector(`[data-view="${view}"]`).classList.add('active');
+
+            // Update toggle buttons
+            container.querySelectorAll('.view-toggle-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>
