@@ -60,11 +60,11 @@ _This document builds collaboratively through step-by-step discovery. Sections a
 ### Technical Constraints & Decisions
 
 **Pre-Selected Technology Stack:**
-- **Frontend Framework:** Next.js 14+ (App Router, React Server Components)
+- **Frontend Framework:** Next.js 16.x (App Router, React Server Components)
 - **Database:** Supabase (Managed PostgreSQL with PostgREST API)
 - **Hosting & Deployment:** Vercel (Serverless Functions + Edge CDN)
 - **UI Component Library:** shadcn/ui (accessible, customizable components)
-- **Styling:** Tailwind CSS (utility-first, mobile-first approach)
+- **Styling:** Tailwind CSS v4 (utility-first, CSS-based @theme configuration)
 - **Authentication:** Supabase Auth with TOTP MFA integration
 - **Real-time:** WebSocket (primary) with polling fallback
 
@@ -169,7 +169,7 @@ _This document builds collaboratively through step-by-step discovery. Sections a
 ### Technical Stack Foundation (Pre-Selected)
 
 **Frontend:**
-- Framework: Next.js 14+ (App Router, React Server Components)
+- Framework: Next.js 16.x (App Router, React Server Components)
 - Language: TypeScript
 - UI Library: shadcn/ui (Radix UI primitives)
 - Styling: Tailwind CSS (utility-first, mobile-first)
@@ -255,7 +255,7 @@ npx create-next-app@latest zyncdata \
 - `--typescript`: Enable TypeScript for type safety
 - `--tailwind`: Install and configure Tailwind CSS
 - `--eslint`: Set up ESLint for code quality
-- `--app`: Use App Router (Next.js 13+)
+- `--app`: Use App Router
 - `--src-dir`: Create `src/` directory for code organization
 - `--import-alias "@/*"`: Enable `@/` imports for cleaner paths
 
@@ -286,7 +286,7 @@ After initialization, implement these integrations in order:
 
 4. **Performance Optimization Setup**
    - Configure bundle analyzer
-   - Set up performance budgets in next.config.js
+   - Set up performance budgets in next.config.ts
    - Implement image optimization patterns
 
 5. **Accessibility Tooling**
@@ -303,14 +303,14 @@ After initialization, implement these integrations in order:
 #### Language & Runtime
 - **TypeScript**: Full type safety across frontend and backend
 - **Node.js**: Runtime for Next.js server and build processes
-- **React 18+**: Server Components, Suspense, Streaming
+- **React 19.x**: Server Components, Suspense, Streaming, Actions
 
 #### Styling Solution
-- **Tailwind CSS**: Utility-first CSS framework
+- **Tailwind CSS v4**: Utility-first CSS framework
   - Mobile-first responsive design
-  - JIT (Just-In-Time) compilation
-  - PurgeCSS for production builds
-  - Custom DxT tokens via tailwind.config.ts
+  - CSS-based `@theme` configuration (no `tailwind.config.ts`)
+  - Automatic content detection (no `content` array needed)
+  - Custom DxT tokens via `@theme` block in CSS
 - **CSS Modules**: Available for component-specific styles if needed
 - **PostCSS**: For CSS processing and optimization
 
@@ -436,7 +436,7 @@ After initialization, implement these integrations in order:
 
 #### Decision: Data Validation Strategy
 - **Choice:** Zod
-- **Version:** Latest stable (^3.x)
+- **Version:** Latest stable (^4.x)
 - **Rationale:**
   - TypeScript-first schema validation with excellent type inference
   - Seamless integration with React Hook Form (used by shadcn/ui)
@@ -548,7 +548,7 @@ After initialization, implement these integrations in order:
   - Global edge network (low latency)
   - Sliding window algorithm (accurate limiting)
   - Free tier: 10,000 requests/day (sufficient for MVP with 50 concurrent users)
-  - Easy integration with Next.js Middleware
+  - Easy integration with Next.js proxy.ts (Node.js runtime)
 - **Implementation:**
   ```bash
   npm install @upstash/redis @upstash/ratelimit
@@ -561,7 +561,7 @@ After initialization, implement these integrations in order:
   - Public endpoints: 20 requests per minute per IP
 - **Pattern:**
   ```typescript
-  // middleware.ts
+  // proxy.ts (Next.js 16 — replaces middleware.ts)
   import { Ratelimit } from '@upstash/ratelimit'
   import { Redis } from '@upstash/redis'
 
@@ -570,38 +570,59 @@ After initialization, implement these integrations in order:
     limiter: Ratelimit.slidingWindow(5, '15 m'),
   })
 
-  export async function middleware(request: NextRequest) {
+  export async function proxy(request: NextRequest) {
     const ip = request.ip ?? '127.0.0.1'
     const { success } = await ratelimit.limit(ip)
     if (!success) return new Response('Too Many Requests', { status: 429 })
   }
   ```
 
-#### Authorization Pattern (Pre-Decided)
-- **Choice:** Supabase Row Level Security (RLS) + Next.js Middleware
-- **Rationale:** Already established in Step 2 technical constraints
+#### Authorization Pattern (Updated for Next.js 16)
+- **Choice:** Supabase RLS + Layered Defense (proxy.ts + Server Layout Guards)
+- **Rationale:** Next.js 16 renamed `middleware.ts` → `proxy.ts` (CVE-2025-29927 middleware bypass). Auth enforcement uses 3-layer defense-in-depth pattern.
 - **Implementation:**
-  - RLS policies enforce database-level access control
-  - Next.js Middleware protects routes (redirect unauthenticated users)
-  - Role-based checks: Super Admin, Admin, User
+  - **Layer 1: `proxy.ts`** — Optimistic session cookie check + token refresh (lightweight)
+  - **Layer 2: Server Layout Guards** — Real auth validation via `getUser()` + RBAC enforcement
+  - **Layer 3: RLS policies** — Database-level access control (final guard)
+- **Critical:** Always use `supabase.auth.getUser()`, NEVER `getSession()` for auth validation on server. `getSession()` reads from cookies and can be spoofed.
 - **Pattern:**
   ```typescript
-  // middleware.ts
-  export async function middleware(request: NextRequest) {
-    const supabase = createMiddlewareClient({ req, res })
-    const { data: { session } } = await supabase.auth.getSession()
+  // proxy.ts (Layer 1 — optimistic check + session refresh)
+  import { updateSession } from '@/lib/supabase/proxy'
+  import type { NextRequest } from 'next/server'
 
-    if (!session && request.nextUrl.pathname.startsWith('/dashboard')) {
-      return NextResponse.redirect('/login')
-    }
+  export async function proxy(request: NextRequest) {
+    return await updateSession(request)
+  }
+  ```
+  ```typescript
+  // src/lib/auth/guard.ts (Layer 2 — real auth + RBAC)
+  import { redirect } from 'next/navigation'
+  import { createServerClient } from '@/lib/supabase/server'
 
-    // Check role for admin routes
-    if (request.nextUrl.pathname.startsWith('/admin')) {
-      const role = session?.user?.user_metadata?.role
-      if (role !== 'admin' && role !== 'super_admin') {
-        return NextResponse.redirect('/unauthorized')
-      }
+  type Role = 'super_admin' | 'admin' | 'user'
+
+  export async function requireAuth(minimumRole?: Role) {
+    const supabase = await createServerClient()
+    const { data: { user }, error } = await supabase.auth.getUser()
+
+    if (error || !user) redirect('/login')
+
+    const role = (user.app_metadata?.role as Role) ?? 'user'
+    if (minimumRole) {
+      const hierarchy: Record<Role, number> = { user: 1, admin: 2, super_admin: 3 }
+      if (hierarchy[role] < hierarchy[minimumRole]) redirect('/unauthorized')
     }
+    return { user, role }
+  }
+  ```
+  ```typescript
+  // app/admin/layout.tsx (usage example)
+  import { requireAuth } from '@/lib/auth/guard'
+
+  export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+    await requireAuth('admin')
+    return <>{children}</>
   }
   ```
 
@@ -838,12 +859,12 @@ After initialization, implement these integrations in order:
 
 3. **Authentication Foundation (AUTH-001):**
    - Supabase Auth integration
-   - Next.js Middleware for route protection
-   - TOTP MFA setup
+   - proxy.ts for session refresh + Server Layout Guards for RBAC
+   - TOTP MFA setup (via `supabase.auth.mfa.*` namespace)
 
 4. **Rate Limiting (SEC-001):**
    - Upstash Redis setup
-   - Middleware rate limiting
+   - Rate limiting in proxy.ts (Node.js runtime)
    - Auth endpoint protection
 
 5. **Data Fetching Patterns (DATA-001):**
@@ -869,7 +890,7 @@ After initialization, implement these integrations in order:
 #### Cross-Component Dependencies
 
 **Authentication affects:**
-- All protected routes (Middleware)
+- All protected routes (proxy.ts + Server Layout Guards)
 - All data queries (RLS context)
 - Rate limiting (user identification)
 - Audit logging (user context)
@@ -902,23 +923,25 @@ After initialization, implement these integrations in order:
 
 ### Technology Version Summary
 
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| Next.js | 16.x (latest) | Framework |
-| TypeScript | 5.x (latest) | Language |
-| React | 19.x | UI Library |
-| Tailwind CSS | 3.x | Styling |
-| shadcn/ui | Latest | Component Library |
-| Supabase JS | Latest | Database Client |
-| Supabase SSR | Latest | Auth for App Router |
-| Zod | ^3.x | Validation |
-| React Hook Form | ^7.x | Form Handling |
-| TanStack Query | ^5.x | Server State (CMS) |
-| Upstash Redis | Latest | Rate Limiting |
-| Upstash Ratelimit | Latest | Rate Limiting Logic |
-| Sentry Next.js | Latest | Error Tracking |
-| Vercel Analytics | Latest | Performance Monitoring |
-| Supabase CLI | Latest | Migrations |
+| Technology | Version | Purpose | Notes |
+|------------|---------|---------|-------|
+| Next.js | 16.x | Framework | Uses `proxy.ts` (not `middleware.ts`) |
+| TypeScript | 5.x | Language | Strict mode |
+| React | 19.x | UI Library | Server Components, Actions |
+| Tailwind CSS | 4.x | Styling | CSS-based `@theme` (no `tailwind.config.ts`) |
+| shadcn/ui | Latest | Component Library | New York style |
+| Supabase JS | Latest | Database Client | |
+| Supabase SSR | Latest | Auth for App Router | `PUBLISHABLE_KEY` (dashboard renamed from `ANON_KEY`) |
+| Zod | ^4.x | Validation | `.parse()` mandatory at all data boundaries |
+| React Hook Form | ^7.x | Form Handling | |
+| TanStack Query | ^5.x | Server State (CMS) | Admin routes only |
+| Upstash Redis | Latest | Rate Limiting | |
+| Upstash Ratelimit | Latest | Rate Limiting Logic | |
+| Sentry Next.js | ^10.x | Error Tracking | Tree-shaking recommended (see D2 tech debt) |
+| Vercel Analytics | Latest | Performance Monitoring | |
+| Supabase CLI | Latest | Migrations | |
+
+> **Version Update Log (2026-02-04):** Updated from Epic 1 Retrospective findings. Previous doc referenced Tailwind v3, Next.js 14, middleware.ts, ANON_KEY, Zod v3. All corrected to match installed versions.
 
 ---
 
@@ -1189,7 +1212,7 @@ All detailed in Core Architectural Decisions section.
 - npm run type-check
 - npm run lint  
 - npm run test
-- Bundle size check (fail if > 150KB JS)
+- Bundle size check (fail if > 200KB JS; target 150KB after Sentry tree-shaking — see D2 tech debt)
 - Accessibility check (jest-axe)
 - npm run build
 ```
@@ -1330,7 +1353,7 @@ zyncdata/
 │   │   └── ratelimit/       # Rate limiting config
 │   ├── types/
 │   │   └── database.ts      # Supabase generated only
-│   └── middleware.ts
+│   └── proxy.ts              # Next.js 16 (replaces middleware.ts)
 ├── supabase/migrations/
 ├── tests/e2e/
 └── package.json             # Enhanced scripts
@@ -1343,7 +1366,7 @@ zyncdata/
 - **Content & Branding (9 FRs):** `app/admin/cms`, `api/content`, `lib/content`
 - **Health Monitoring (9 FRs):** `app/dashboard`, `api/health`, `lib/health`, `lib/websocket`
 - **CMS Admin (8 FRs):** `app/admin/cms/_components`
-- **Security & Audit (8 FRs):** `middleware.ts`, `api/audit`, `lib/ratelimit`
+- **Security & Audit (8 FRs):** `proxy.ts`, `lib/auth/guard.ts`, `api/audit`, `lib/ratelimit`
 - **Operations (7 FRs):** `api/admin/backup`, `supabase/migrations`
 
 ### Key Patterns
@@ -1412,7 +1435,7 @@ export type User = z.infer<typeof userSchema>  // Single source of truth
 **Complete .env.local:**
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbG...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbG...  # Supabase dashboard shows as "publishable key"
 SUPABASE_SERVICE_ROLE_KEY=eyJhbG...
 UPSTASH_REDIS_REST_URL=https://xxxxx.upstash.io
 UPSTASH_REDIS_REST_TOKEN=AXXXxxxx...
@@ -1431,7 +1454,8 @@ NEXT_PUBLIC_SENTRY_DSN=https://xxxxx@xxxxx.ingest.sentry.io/xxxxx
 **Complete Files (Ready to Copy):**
 - `lib/api/client.ts` - API client with error handling
 - `lib/supabase/server.ts` - Server Supabase client
-- `middleware.ts` - Auth + rate limiting
+- `proxy.ts` - Session refresh + rate limiting (optimistic layer)
+- `lib/auth/guard.ts` - Server Layout Guard with RBAC (authoritative layer)
 - `lib/validations/user.ts` - Zod schemas + types
 
 See full implementations in validation section.
@@ -1461,7 +1485,7 @@ See full implementations in validation section.
 ```json
 // .size-limit.json
 [
-  { "path": ".next/static/**/*.js", "limit": "150 KB", "gzip": true },
+  { "path": ".next/static/**/*.js", "limit": "200 KB", "gzip": true },  // Target: 150KB after Sentry tree-shaking (D2)
   { "path": ".next/static/**/*.css", "limit": "50 KB", "gzip": true }
 ]
 ```
@@ -1475,7 +1499,7 @@ See full implementations in validation section.
 
 ### 6.6 Security Hardening
 
-**CSP Headers (next.config.js):**
+**CSP Headers (next.config.ts):**
 ```javascript
 Content-Security-Policy: default-src 'self';
   script-src 'self' 'unsafe-eval' 'unsafe-inline';
@@ -1545,8 +1569,9 @@ npx husky init
 
 # 4. Copy reference implementations
 # - Create lib/api/client.ts (from reference)
-# - Create middleware.ts (from reference)
-# - Create lib/supabase/*.ts (from reference)
+# - Create proxy.ts (from reference — Next.js 16, replaces middleware.ts)
+# - Create lib/auth/guard.ts (from reference — Server Layout Guard with RBAC)
+# - Create lib/supabase/*.ts (from reference — server.ts, client.ts, proxy.ts)
 # - Create .env.local (from template)
 
 # 5. Start development
