@@ -31,7 +31,7 @@ export default function Footer({ copyright, contactEmail, links }: FooterProps) 
                   <Link
                     key={link.label}
                     href={link.url}
-                    className="text-sm text-slate-400 hover:text-white motion-safe:transition-colors"
+                    className="rounded-sm text-sm text-slate-400 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-dxt-primary motion-safe:transition-colors"
                   >
                     {link.label}
                   </Link>
@@ -41,7 +41,7 @@ export default function Footer({ copyright, contactEmail, links }: FooterProps) 
                     href={link.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm text-slate-400 hover:text-white motion-safe:transition-colors"
+                    className="rounded-sm text-sm text-slate-400 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-dxt-primary motion-safe:transition-colors"
                   >
                     {link.label}
                   </a>
@@ -53,7 +53,7 @@ export default function Footer({ copyright, contactEmail, links }: FooterProps) 
             Contact:{' '}
             <a
               href={`mailto:${contactEmail}`}
-              className="text-dxt-accent hover:text-white motion-safe:transition-colors"
+              className="rounded-sm text-dxt-accent hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-dxt-primary motion-safe:transition-colors"
             >
               {contactEmail}
             </a>

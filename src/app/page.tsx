@@ -74,8 +74,9 @@ export default async function Home() {
         <section className="py-16 md:py-20">
           <div className="mx-auto max-w-7xl px-4 md:px-8">
             <div className="mb-10 text-center">
-              <h2 className="text-3xl font-bold text-gray-800 md:text-4xl">
+              <h2 className="inline-block text-3xl font-bold text-gray-800 md:text-4xl">
                 Our Systems
+                <span className="mt-2 block h-0.5 w-full rounded-full bg-gradient-to-r from-transparent via-dxt-primary/40 to-transparent" />
               </h2>
             </div>
             <Suspense fallback={<GridSkeleton />}>

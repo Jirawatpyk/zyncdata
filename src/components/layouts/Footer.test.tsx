@@ -57,4 +57,22 @@ describe('Footer', () => {
 
     expect(text).toContain('Privacy')
   })
+
+  it('should have focus-visible styles on interactive elements', () => {
+    const jsx = Footer({
+      ...defaultProps,
+      links: [{ label: 'Privacy', url: '/privacy' }],
+    })
+    const seen = new WeakSet()
+    const rendered = JSON.stringify(jsx, (_key, value) => {
+      if (typeof value === 'object' && value !== null) {
+        if (seen.has(value)) return undefined
+        seen.add(value)
+      }
+      return value
+    })
+
+    expect(rendered).toContain('focus-visible:ring-2')
+    expect(rendered).toContain('focus-visible:ring-dxt-primary')
+  })
 })
