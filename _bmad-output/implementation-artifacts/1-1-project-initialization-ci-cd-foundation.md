@@ -1,6 +1,6 @@
 # Story 1.1: Project Initialization & CI/CD Foundation
 
-Status: review
+Status: done
 
 ## Story
 
@@ -580,7 +580,7 @@ Claude Opus 4.5 (claude-opus-4-5-20251101)
 - `create-next-app` doesn't allow scaffolding in non-empty directories — used temp directory approach (scaffold in `zyncdata-temp/`, copy files, delete temp)
 - `next lint` command broken in Next.js 16.1.6 — switched to `eslint .` for lint script
 - Sentry `disableLogger` and `automaticVercelMonitors` deprecated in @sentry/nextjs v10 — removed from config
-- Next.js 16 deprecates `middleware.ts` in favor of `proxy.ts` — kept `middleware.ts` per story spec, to be addressed in Story 2.6
+- Next.js 16 deprecates `middleware.ts` in favor of `proxy.ts` — implemented as `proxy.ts` per Next.js 16 convention (confirmed in code review)
 - `nul` device file existed in directory (Windows artifact) — removed before git init
 
 ### Completion Notes List
@@ -603,11 +603,38 @@ Claude Opus 4.5 (claude-opus-4-5-20251101)
 - Task 17: Husky initialized, pre-commit hook runs type-check && lint
 - Task 18: Build passes, type-check clean, lint clean (1 warning: unused middleware param), smoke test passes
 
+### Senior Developer Review (AI)
+
+**Reviewer:** Amelia (Dev Agent) — Claude Opus 4.5
+**Date:** 2026-02-04
+**Outcome:** Approved with fixes applied
+
+**Issues Found & Fixed (9 total):**
+
+| # | Severity | Issue | Fix Applied |
+|---|----------|-------|-------------|
+| H1 | HIGH | `.prettierrc` contradicted project-context.md (semi:true→false, trailingComma:es5→all, missing printWidth:100, missing prettier-plugin-tailwindcss) | Updated .prettierrc, installed plugin, reformatted all files |
+| H2 | RECLASSIFIED | `middleware.ts` missing, only `proxy.ts` exists | `proxy.ts` is correct for Next.js 16 — user confirmed. Story note updated. |
+| H3 | HIGH | `layout.tsx` imported unused `Geist_Mono`, used `font-sans` instead of `font-nunito` | Removed Geist_Mono, changed body class to `font-nunito antialiased` |
+| H4 | HIGH | `page.tsx` used `dark:` Tailwind classes (forbidden by project-context) | Removed all `dark:` classes from page.tsx |
+| M1 | MEDIUM | Pre-commit hook missing `npm run test:run` per project-context standard | Added `npm run test:run` to `.husky/pre-commit` |
+| M2 | MEDIUM | `globals.css` circular variable `--font-nunito: var(--font-nunito)`, redundant `--font-mono` | Removed both lines |
+| M3 | MEDIUM | Smoke test had no real assertions (`expect(true).toBe(true)`) | Replaced with tests verifying @/ alias resolution and cn() utility |
+| M4 | MEDIUM | Sentry configs used 100% trace sampling for all environments | Added environment-conditional sampling (0.1 production, 1.0 dev) |
+| L2 | LOW | Missing `SENTRY_ORG` and `SENTRY_PROJECT` in `.env.local.example` | Added both vars |
+
+**Additional fixes:**
+- Created `.prettierignore` to exclude `_bmad/`, `_bmad-output/`, `.claude/`, `CLAUDE.md` from Prettier
+- All files reformatted with corrected Prettier config (semi:false, trailingComma:all)
+
+**Verification:** type-check pass, lint pass, test pass (2/2), build pass, format:check pass
+
 ### Change Log
 - 2026-02-04: Story created by SM agent with full context analysis
 - 2026-02-04: Quality review R1 applied — 5 critical fixes, 4 enhancements, 2 optimizations
 - 2026-02-04: Quality review R2 applied — 3 critical fixes, 3 enhancements, 1 optimization
 - 2026-02-04: Story implementation completed by Dev Agent — all 18 tasks done, build/lint/type-check/tests pass
+- 2026-02-04: Code review by Amelia (Dev Agent) — 9 issues found, all fixed. Status → done
 
 ### File List
 - package.json (modified — scripts, dependencies, size-limit config)
@@ -657,3 +684,4 @@ Claude Opus 4.5 (claude-opus-4-5-20251101)
 - src/lib/errors/.gitkeep (new)
 - src/lib/ratelimit/.gitkeep (new)
 - tests/e2e/.gitkeep (new)
+- .prettierignore (new — review fix: exclude _bmad/, _bmad-output/, .claude/ from Prettier)

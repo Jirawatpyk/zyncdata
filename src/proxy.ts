@@ -1,8 +1,8 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server'
 
 export async function proxy() {
   // TODO: Story 2.6 will add auth + RBAC enforcement
-  return NextResponse.next();
+  return NextResponse.next()
 }
 
 export const config = {
@@ -16,4 +16,4 @@ export const config = {
      */
     '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
-};
+}

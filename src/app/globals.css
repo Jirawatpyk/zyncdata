@@ -1,5 +1,5 @@
-@import "tailwindcss";
-@import "tw-animate-css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -7,17 +7,13 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-nunito);
-  --font-mono: var(--font-geist-mono);
 
   /* DxT Brand Colors */
-  --color-dxt-primary: #41B9D5;
-  --color-dxt-secondary: #5371FF;
-  --color-dxt-accent: #6CE6E9;
+  --color-dxt-primary: #41b9d5;
+  --color-dxt-secondary: #5371ff;
+  --color-dxt-accent: #6ce6e9;
   --color-dxt-dark: #545454;
-  --color-dxt-light: #FFFFFF;
-
-  /* DxT Font */
-  --font-nunito: var(--font-nunito);
+  --color-dxt-light: #ffffff;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);

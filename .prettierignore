@@ -1,0 +1,10 @@
+_bmad/
+_bmad-output/
+.claude/
+CLAUDE.md
+node_modules/
+.next/
+coverage/
+playwright-report/
+test-results/
+package-lock.json
