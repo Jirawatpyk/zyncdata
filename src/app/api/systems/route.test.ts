@@ -295,4 +295,109 @@ describe('POST /api/systems', () => {
       expect.objectContaining({ enabled: true }),
     )
   })
+
+  // ===============================================
+  // GUARDRAIL TESTS - Additional Error Cases
+  // ===============================================
+
+  describe('validation edge cases', () => {
+    it('should return 400 for name over 100 characters', async () => {
+      mockRequireApiAuth.mockResolvedValue(createMockAuth())
+      mockIsAuthError.mockReturnValue(false)
+
+      const request = createRequest({
+        name: 'A'.repeat(101),
+        url: 'https://example.com',
+        enabled: true,
+      })
+      const response = await POST(request)
+      const body = await response.json()
+
+      expect(response.status).toBe(400)
+      expect(body.error.code).toBe('VALIDATION_ERROR')
+      expect(mockCreateSystem).not.toHaveBeenCalled()
+    })
+
+    it('should return 400 for description over 500 characters', async () => {
+      mockRequireApiAuth.mockResolvedValue(createMockAuth())
+      mockIsAuthError.mockReturnValue(false)
+
+      const request = createRequest({
+        name: 'Test System',
+        url: 'https://example.com',
+        description: 'A'.repeat(501),
+        enabled: true,
+      })
+      const response = await POST(request)
+      const body = await response.json()
+
+      expect(response.status).toBe(400)
+      expect(body.error.code).toBe('VALIDATION_ERROR')
+      expect(mockCreateSystem).not.toHaveBeenCalled()
+    })
+
+    it('should accept empty description string', async () => {
+      const createdSystem = createMockSystem({ description: '' })
+
+      mockRequireApiAuth.mockResolvedValue(createMockAuth())
+      mockIsAuthError.mockReturnValue(false)
+      mockCreateSystem.mockResolvedValue(createdSystem)
+
+      const request = createRequest({
+        name: 'Test System',
+        url: 'https://example.com',
+        description: '',
+        enabled: true,
+      })
+      const response = await POST(request)
+
+      expect(response.status).toBe(201)
+    })
+
+    it('should strip unknown fields from request body', async () => {
+      const createdSystem = createMockSystem()
+
+      mockRequireApiAuth.mockResolvedValue(createMockAuth())
+      mockIsAuthError.mockReturnValue(false)
+      mockCreateSystem.mockResolvedValue(createdSystem)
+
+      const request = createRequest({
+        name: 'Test System',
+        url: 'https://example.com',
+        enabled: true,
+        unknownField: 'should be stripped',
+        anotherUnknown: 123,
+      })
+      const response = await POST(request)
+
+      expect(response.status).toBe(201)
+      // Verify createSystem was called without unknown fields
+      expect(mockCreateSystem).toHaveBeenCalledWith({
+        name: 'Test System',
+        url: 'https://example.com',
+        enabled: true,
+      })
+    })
+  })
+
+  describe('authorization edge cases', () => {
+    it('should return 403 for non-admin roles', async () => {
+      const forbiddenResponse = NextResponse.json(
+        { data: null, error: { message: 'Forbidden', code: 'FORBIDDEN' } },
+        { status: 403 },
+      )
+      mockRequireApiAuth.mockResolvedValue(forbiddenResponse)
+      mockIsAuthError.mockReturnValue(true)
+
+      const request = createRequest({
+        name: 'Test',
+        url: 'https://test.com',
+        enabled: true,
+      })
+      const response = await POST(request)
+
+      expect(response).toBe(forbiddenResponse)
+      expect(mockCreateSystem).not.toHaveBeenCalled()
+    })
+  })
 })

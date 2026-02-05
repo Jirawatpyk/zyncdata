@@ -169,8 +169,8 @@ export default function AddSystemDialog({
               control={form.control}
               name="enabled"
               render={({ field }) => (
-                <FormItem className="flex items-center justify-between rounded-lg border p-3">
-                  <FormLabel className="mb-0 cursor-pointer">
+                <FormItem className="flex items-center justify-between space-y-0 rounded-lg border p-3">
+                  <FormLabel className="cursor-pointer">
                     Visible on landing page
                   </FormLabel>
                   <FormControl>

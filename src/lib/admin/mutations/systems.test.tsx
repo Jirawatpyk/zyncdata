@@ -277,4 +277,164 @@ describe('useCreateSystem', () => {
       })
     })
   })
+
+  // ===============================================
+  // GUARDRAIL TESTS - Optimistic Update & Rollback
+  // ===============================================
+
+  describe('optimistic update rollback (AC #5)', () => {
+    it('should rollback optimistic insert on error', async () => {
+      const queryClient = createTestQueryClient()
+      const existingSystems = [
+        createMockSystem({ id: 'existing-1', name: 'Existing' }),
+      ]
+
+      // Pre-populate cache with existing systems
+      queryClient.setQueryData(['admin', 'systems'], existingSystems)
+
+      // Simulate server error
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        json: () =>
+          Promise.resolve({
+            data: null,
+            error: { message: 'Server error', code: 'CREATE_ERROR' },
+          }),
+      })
+
+      const wrapper = ({ children }: { children: React.ReactNode }) => (
+        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      )
+
+      const { result } = renderHook(() => useCreateSystem(), { wrapper })
+
+      // Mutate and wait for error
+      result.current.mutate({
+        name: 'New System',
+        url: 'https://new.example.com',
+        enabled: true,
+      })
+
+      await waitFor(() => {
+        expect(result.current.isError).toBe(true)
+      })
+
+      // Wait for rollback to complete (onError runs after error is set)
+      await waitFor(() => {
+        const cachedSystems = queryClient.getQueryData<System[]>(['admin', 'systems'])
+        // Rollback should restore to previous state OR invalidate clears cache
+        // When no initial data, rollback to undefined is expected
+        expect(cachedSystems === undefined || cachedSystems?.length === 1).toBe(true)
+      })
+    })
+
+    it('should not leave temp ID in cache after rollback', async () => {
+      const queryClient = createTestQueryClient()
+      // Set initial empty array so rollback returns to empty array
+      queryClient.setQueryData(['admin', 'systems'], [])
+
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 409,
+        json: () =>
+          Promise.resolve({
+            data: null,
+            error: { message: 'A system with this name already exists', code: 'DUPLICATE_NAME' },
+          }),
+      })
+
+      const wrapper = ({ children }: { children: React.ReactNode }) => (
+        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      )
+
+      const { result } = renderHook(() => useCreateSystem(), { wrapper })
+
+      result.current.mutate({
+        name: 'Duplicate',
+        url: 'https://duplicate.example.com',
+        enabled: true,
+      })
+
+      await waitFor(() => {
+        expect(result.current.isError).toBe(true)
+      })
+
+      // Wait for rollback to complete
+      await waitFor(() => {
+        const cachedSystems = queryClient.getQueryData<System[]>(['admin', 'systems'])
+        // After rollback, should be empty array (no temp IDs) or undefined
+        const hasTempId = cachedSystems?.some((s) => s.id.startsWith('temp-')) ?? false
+        expect(hasTempId).toBe(false)
+      })
+    })
+
+    it('should invalidate queries on error (onSettled still runs)', async () => {
+      const queryClient = createTestQueryClient()
+      const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries')
+
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        json: () =>
+          Promise.resolve({
+            data: null,
+            error: { message: 'Server error', code: 'CREATE_ERROR' },
+          }),
+      })
+
+      const wrapper = ({ children }: { children: React.ReactNode }) => (
+        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      )
+
+      const { result } = renderHook(() => useCreateSystem(), { wrapper })
+
+      result.current.mutate({
+        name: 'Error Test',
+        url: 'https://error.example.com',
+        enabled: true,
+      })
+
+      await waitFor(() => {
+        expect(result.current.isError).toBe(true)
+      })
+
+      // onSettled should still be called to invalidate queries
+      await waitFor(() => {
+        expect(invalidateSpy).toHaveBeenCalledWith({
+          queryKey: ['admin', 'systems'],
+        })
+      })
+    })
+  })
+
+  describe('duplicate name error (409) handling', () => {
+    it('should return specific error message for duplicate name', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 409,
+        json: () =>
+          Promise.resolve({
+            data: null,
+            error: { message: 'A system with this name already exists', code: 'DUPLICATE_NAME' },
+          }),
+      })
+
+      const { result } = renderHook(() => useCreateSystem(), {
+        wrapper: createQueryWrapper(),
+      })
+
+      result.current.mutate({
+        name: 'Existing Name',
+        url: 'https://example.com',
+        enabled: true,
+      })
+
+      await waitFor(() => {
+        expect(result.current.isError).toBe(true)
+      })
+
+      expect(result.current.error?.message).toBe('A system with this name already exists')
+    })
+  })
 })

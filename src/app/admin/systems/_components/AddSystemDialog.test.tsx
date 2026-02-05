@@ -430,4 +430,166 @@ describe('AddSystemDialog', () => {
     const results = await axe(container)
     expect(results).toHaveNoViolations()
   })
+
+  // ===============================================
+  // GUARDRAIL TESTS - Error Handling (AC #5)
+  // ===============================================
+
+  describe('duplicate name error (409) handling', () => {
+    it('should show duplicate name error in toast', async () => {
+      const user = userEvent.setup()
+      const { toast } = await import('sonner')
+
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 409,
+        json: () =>
+          Promise.resolve({
+            data: null,
+            error: { message: 'A system with this name already exists', code: 'DUPLICATE_NAME' },
+          }),
+      })
+
+      render(<AddSystemDialog />, { wrapper: createQueryWrapper() })
+
+      await user.click(screen.getByTestId('add-system-button'))
+
+      await waitFor(() => {
+        expect(screen.getByTestId('add-system-form')).toBeInTheDocument()
+      })
+
+      await user.type(screen.getByTestId('system-name-input'), 'Duplicate System')
+      await user.type(
+        screen.getByTestId('system-url-input'),
+        'https://duplicate.example.com',
+      )
+      await user.click(screen.getByTestId('submit-button'))
+
+      await waitFor(() => {
+        expect(toast.error).toHaveBeenCalledWith('Unable to add system', {
+          description: 'A system with this name already exists',
+        })
+      })
+
+      // Dialog should stay open so user can change name
+      expect(screen.getByTestId('add-system-dialog')).toBeInTheDocument()
+    })
+  })
+
+  describe('network/timeout handling', () => {
+    it('should show generic error for network failure', async () => {
+      const user = userEvent.setup()
+      const { toast } = await import('sonner')
+
+      // Simulate network error
+      mockFetch.mockRejectedValueOnce(new Error('Network error'))
+
+      render(<AddSystemDialog />, { wrapper: createQueryWrapper() })
+
+      await user.click(screen.getByTestId('add-system-button'))
+
+      await waitFor(() => {
+        expect(screen.getByTestId('add-system-form')).toBeInTheDocument()
+      })
+
+      await user.type(screen.getByTestId('system-name-input'), 'Network Test')
+      await user.type(
+        screen.getByTestId('system-url-input'),
+        'https://network.example.com',
+      )
+      await user.click(screen.getByTestId('submit-button'))
+
+      await waitFor(() => {
+        expect(toast.error).toHaveBeenCalledWith('Unable to add system', {
+          description: expect.stringContaining('Network'),
+        })
+      })
+    })
+
+    it('should re-enable submit button after error', async () => {
+      const user = userEvent.setup()
+
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        json: () =>
+          Promise.resolve({
+            data: null,
+            error: { message: 'Server error', code: 'CREATE_ERROR' },
+          }),
+      })
+
+      render(<AddSystemDialog />, { wrapper: createQueryWrapper() })
+
+      await user.click(screen.getByTestId('add-system-button'))
+
+      await waitFor(() => {
+        expect(screen.getByTestId('add-system-form')).toBeInTheDocument()
+      })
+
+      await user.type(screen.getByTestId('system-name-input'), 'Retry Test')
+      await user.type(
+        screen.getByTestId('system-url-input'),
+        'https://retry.example.com',
+      )
+      await user.click(screen.getByTestId('submit-button'))
+
+      // Wait for error state - submit button should be re-enabled
+      await waitFor(() => {
+        expect(screen.getByTestId('submit-button')).not.toBeDisabled()
+      })
+
+      // Verify submit button shows "Add System" text (not "Adding...")
+      // Use within() to scope to the dialog content to avoid matching trigger button
+      const submitButton = screen.getByTestId('submit-button')
+      expect(submitButton).toHaveTextContent('Add System')
+    })
+  })
+
+  describe('form field retention on error', () => {
+    it('should retain form values after submission error', async () => {
+      const user = userEvent.setup()
+
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 409,
+        json: () =>
+          Promise.resolve({
+            data: null,
+            error: { message: 'A system with this name already exists', code: 'DUPLICATE_NAME' },
+          }),
+      })
+
+      render(<AddSystemDialog />, { wrapper: createQueryWrapper() })
+
+      await user.click(screen.getByTestId('add-system-button'))
+
+      await waitFor(() => {
+        expect(screen.getByTestId('add-system-form')).toBeInTheDocument()
+      })
+
+      // Fill form with values
+      await user.type(screen.getByTestId('system-name-input'), 'My System Name')
+      await user.type(
+        screen.getByTestId('system-url-input'),
+        'https://mysystem.example.com',
+      )
+      await user.type(
+        screen.getByTestId('system-description-input'),
+        'My description',
+      )
+
+      await user.click(screen.getByTestId('submit-button'))
+
+      // Wait for error
+      await waitFor(() => {
+        expect(screen.getByTestId('submit-button')).not.toBeDisabled()
+      })
+
+      // Form values should be retained so user can edit
+      expect(screen.getByTestId('system-name-input')).toHaveValue('My System Name')
+      expect(screen.getByTestId('system-url-input')).toHaveValue('https://mysystem.example.com')
+      expect(screen.getByTestId('system-description-input')).toHaveValue('My description')
+    })
+  })
 })
