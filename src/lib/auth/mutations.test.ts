@@ -34,7 +34,7 @@ describe('enrollMfaFactor', () => {
 
     const result = await enrollMfaFactor()
 
-    expect(mockEnroll).toHaveBeenCalledWith({ factorType: 'totp' })
+    expect(mockEnroll).toHaveBeenCalledWith({ factorType: 'totp', issuer: 'zyncdata' })
     expect(result).toEqual(mockData)
   })
 

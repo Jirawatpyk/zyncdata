@@ -4,6 +4,7 @@ export async function enrollMfaFactor() {
   const supabase = createClient()
   const { data, error } = await supabase.auth.mfa.enroll({
     factorType: 'totp',
+    issuer: 'zyncdata',
   })
   if (error) throw error
   return data
