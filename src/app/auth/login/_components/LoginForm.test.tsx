@@ -36,6 +36,15 @@ describe('LoginForm', () => {
     expect(screen.getByTestId('login-submit')).toBeInTheDocument()
   })
 
+  it('should render home link with logo above the form', () => {
+    render(<LoginForm />)
+
+    const homeLink = screen.getByTestId('login-home-link')
+    expect(homeLink).toBeInTheDocument()
+    expect(homeLink).toHaveAttribute('href', '/')
+    expect(homeLink).toHaveAttribute('aria-label', 'DxT AI Platform - Home')
+  })
+
   it('should render heading and description', () => {
     render(<LoginForm />)
 

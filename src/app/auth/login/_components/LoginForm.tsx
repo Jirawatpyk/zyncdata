@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from 'react'
 import { useFormStatus } from 'react-dom'
+import Link from 'next/link'
 import { loginAction } from '@/lib/actions/auth'
 import type { LoginState } from '@/lib/actions/auth'
 import { Button } from '@/components/ui/button'
@@ -37,9 +38,24 @@ export default function LoginForm() {
   return (
     <div className="w-full max-w-sm rounded-xl bg-gradient-to-br from-dxt-primary/25 via-white/10 to-dxt-secondary/25 p-px shadow-xl shadow-dxt-primary/10 motion-safe:animate-fade-up">
     <div className="rounded-xl bg-white/95 p-8 backdrop-blur-sm space-y-6">
-      <div className="space-y-2 text-center">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">Sign in</h1>
-        <p className="text-sm text-muted-foreground">Enter your credentials to access the CMS</p>
+      <div className="space-y-4 text-center">
+        <Link
+          href="/"
+          className="mx-auto flex w-fit flex-col items-center gap-1.5 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-dxt-primary focus-visible:ring-offset-4"
+          aria-label="DxT AI Platform - Home"
+          data-testid="login-home-link"
+        >
+          <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-dxt-primary to-dxt-secondary font-bold text-white shadow-sm shadow-dxt-primary/25">
+            Dx
+          </span>
+          <span className="text-sm font-medium text-muted-foreground">
+            DxT AI Platform
+          </span>
+        </Link>
+        <div className="space-y-1">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">Sign in</h1>
+          <p className="text-sm text-muted-foreground">Enter your credentials to access the CMS</p>
+        </div>
       </div>
 
       <form action={formAction} className="space-y-4">
