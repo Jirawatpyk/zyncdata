@@ -49,7 +49,7 @@ export default function SystemCard({ name, url, logoUrl, description, status }: 
           </div>
         )}
         <div className="min-w-0 flex-1">
-          <h4 className="text-xl font-semibold text-gray-800">{name}</h4>
+          <h3 className="text-xl font-semibold text-gray-800">{name}</h3>
           {description && (
             <p className="mt-1.5 text-sm leading-relaxed text-gray-500">
               {description}

@@ -60,7 +60,7 @@ export default function Footer({ copyright, contactEmail, links }: FooterProps) 
               {contactEmail}
             </a>
           </p>
-          <p className="text-xs text-slate-500">&copy; {copyright}</p>
+          <p className="text-xs text-slate-400">&copy; {copyright}</p>
         </div>
       </div>
     </footer>
