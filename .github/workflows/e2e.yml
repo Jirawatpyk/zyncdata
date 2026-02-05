@@ -54,6 +54,14 @@ jobs:
       - name: Run E2E tests
         run: npx playwright test
 
+      # Save TOTP secret from enrollment so it can be set as GitHub secret
+      - name: Export TOTP secret (if newly enrolled)
+        if: always()
+        run: |
+          if [ -f playwright/.auth/totp-secret.txt ]; then
+            echo "::notice::TOTP secret generated — update TEST_TOTP_SECRET GitHub secret with the value from the e2e-auth artifact"
+          fi
+
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
@@ -63,3 +71,12 @@ jobs:
             test-results/
             playwright-report/
           retention-days: 7
+
+      - name: Upload auth state (TOTP secret for future runs)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-auth
+          path: playwright/.auth/totp-secret.txt
+          retention-days: 30
+          if-no-files-found: ignore
