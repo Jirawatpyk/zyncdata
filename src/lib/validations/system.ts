@@ -1,5 +1,23 @@
 import { z } from 'zod'
 
+// Input schema for creating a new system (AC: #3, #4)
+export const createSystemSchema = z.object({
+  name: z.string().min(1, 'Name required').max(100, 'Name must be 100 characters or less'),
+  url: z.string().url('Valid URL required'),
+  description: z
+    .string()
+    .max(500, 'Description must be 500 characters or less')
+    .optional()
+    .or(z.literal('')),
+  enabled: z.boolean().default(true),
+})
+
+// Use z.input for form input type (allows optional with defaults)
+// Use z.infer for API output type (resolved with defaults applied)
+export type CreateSystemInput = z.input<typeof createSystemSchema>
+export type CreateSystemOutput = z.output<typeof createSystemSchema>
+
+// Full system schema (database response)
 export const systemSchema = z.object({
   id: z.string().uuid(),
   name: z.string(),

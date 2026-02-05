@@ -84,8 +84,9 @@ describe('SystemsList', () => {
     render(<SystemsList />, { wrapper: createQueryWrapper() })
 
     await waitFor(() => {
-      expect(screen.getByTestId('empty-state')).toBeInTheDocument()
+      expect(screen.getByText('No Systems Yet')).toBeInTheDocument()
     })
+    expect(screen.getByTestId('empty-state-add-button')).toBeInTheDocument()
   })
 
   it('should render error state when fetch fails', async () => {
@@ -183,5 +184,53 @@ describe('SystemsList', () => {
 
     const results = await axe(container)
     expect(results).toHaveNoViolations()
+  })
+
+  it('should display Add System button when systems exist', async () => {
+    vi.useRealTimers()
+    const systems = [createMockSystem()]
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ data: systems, error: null }),
+    })
+
+    render(<SystemsList />, { wrapper: createQueryWrapper() })
+
+    await waitFor(() => {
+      expect(screen.getByTestId('add-system-button')).toBeInTheDocument()
+    })
+  })
+
+  it('should display system count in header', async () => {
+    vi.useRealTimers()
+    const systems = [
+      createMockSystem({ id: 'id-1', name: 'System 1' }),
+      createMockSystem({ id: 'id-2', name: 'System 2' }),
+    ]
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ data: systems, error: null }),
+    })
+
+    render(<SystemsList />, { wrapper: createQueryWrapper() })
+
+    await waitFor(() => {
+      expect(screen.getByText('2 systems')).toBeInTheDocument()
+    })
+  })
+
+  it('should display singular when only 1 system', async () => {
+    vi.useRealTimers()
+    const systems = [createMockSystem()]
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ data: systems, error: null }),
+    })
+
+    render(<SystemsList />, { wrapper: createQueryWrapper() })
+
+    await waitFor(() => {
+      expect(screen.getByText('1 system')).toBeInTheDocument()
+    })
   })
 })
