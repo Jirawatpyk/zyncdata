@@ -47,7 +47,7 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
 
     if (ageMinutes < 30) {
       // Validate the stored JWT session is still alive (Supabase restart clears sessions)
-      const isValid = await validateStoredSession(AUTH_STATE_PATH, baseURL)
+      const isValid = await validateStoredSession(AUTH_STATE_PATH)
       if (isValid) {
         console.log('✓ Reusing existing admin auth state')
         return
@@ -118,7 +118,7 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
  * Validate that stored auth state has a valid session.
  * Supabase restart clears all sessions, making stored JWT invalid.
  */
-async function validateStoredSession(authStatePath: string, baseURL: string): Promise<boolean> {
+async function validateStoredSession(authStatePath: string): Promise<boolean> {
   try {
     const stateData = JSON.parse(fs.readFileSync(authStatePath, 'utf-8'))
     const cookie = stateData.cookies?.find((c: { name: string }) => c.name.startsWith('sb-'))
