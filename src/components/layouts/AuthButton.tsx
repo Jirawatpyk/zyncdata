@@ -16,15 +16,19 @@ export default function AuthButton() {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null)
 
   useEffect(() => {
+    let cancelled = false
     const supabase = createClient()
     supabase.auth
       .getUser()
       .then(({ data: { user } }) => {
-        setIsLoggedIn(!!user)
+        if (!cancelled) setIsLoggedIn(!!user)
       })
       .catch(() => {
-        setIsLoggedIn(false)
+        if (!cancelled) setIsLoggedIn(false)
       })
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   // Skeleton placeholder while checking auth
