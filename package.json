@@ -22,6 +22,7 @@
     "db:types": "supabase gen types typescript --local > src/types/database.ts",
     "db:seed-admin": "npx tsx supabase/seed-admin.ts",
     "db:reset": "supabase db reset",
+    "story-metrics": "tsx scripts/story-metrics.ts",
     "size": "size-limit",
     "prepare": "husky"
   },

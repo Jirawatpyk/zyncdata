@@ -57,10 +57,10 @@ development_status:
   2-4-mfa-login-verification: done
   2-5-secure-logout: done
   2-6-route-protection-rbac-enforcement: done
-  epic-2-retrospective: optional
+  epic-2-retrospective: done
 
   # Epic 3: System Portfolio Management (8 stories)
-  epic-3: backlog
+  epic-3: in-progress
   3-1-cms-admin-panel-layout-navigation: backlog
   3-2-add-new-system: backlog
   3-3-edit-system-information: backlog

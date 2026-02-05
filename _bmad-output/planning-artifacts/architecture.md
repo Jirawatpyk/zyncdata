@@ -505,7 +505,7 @@ After initialization, implement these integrations in order:
   - `@tanstack/react-query`: ^5.x
   - `@supabase/ssr`: Latest for App Router
 - **Rationale:**
-  - Optimizes for performance budget (< 150KB JS)
+  - Optimizes for performance budget (< 350KB JS gzip, enforced by size-limit)
   - Server Components reduce client-side JS
   - React Query only where complexity justifies bundle cost
   - Aligns with Next.js App Router best practices
@@ -1228,6 +1228,7 @@ npm run type-check && npm run lint && npm run test
 - `@typescript-eslint/no-explicit-any`: No 'any' types
 - `@typescript-eslint/naming-convention`: Enforce naming
 - `jsx-a11y/*`: Accessibility rules
+- `local/no-dark-classes`: Flags `dark:` prefixed Tailwind classes (custom rule in `eslint-rules/no-dark-classes.mjs`)
 
 **Code Review Checklist:**
 - [ ] Database: snake_case
@@ -1395,7 +1396,8 @@ export type User = z.infer<typeof userSchema>  // Single source of truth
 {
   "dev": "next dev",
   "dev:db": "supabase start",
-  "db:types": "supabase gen types typescript --local > src/types/database.ts"
+  "db:types": "supabase gen types typescript --local > src/types/database.ts",
+  "story-metrics": "tsx scripts/story-metrics.ts"
 }
 ```
 

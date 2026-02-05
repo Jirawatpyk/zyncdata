@@ -228,6 +228,7 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - `npm run test:e2e` - Playwright
 - `npm run test:coverage` - Vitest with coverage report
 - `npm run test:a11y` - Playwright accessibility suite
+- `npm run story-metrics` - Generate File List from git diff + test counts for story documentation
 
 #### Test Data Factories
 - Location: `tests/factories/` with factory functions per domain
@@ -327,6 +328,7 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - `@typescript-eslint/no-explicit-any` - no `any` types
 - `@typescript-eslint/naming-convention` - enforce naming patterns
 - `jsx-a11y/*` - accessibility rules (all enabled)
+- `local/no-dark-classes` - flags any `dark:` prefixed Tailwind classes (custom rule in `eslint-rules/no-dark-classes.mjs`)
 
 #### Immutability
 - All React state updates: spread/map - never mutate directly
@@ -361,12 +363,12 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - All interactive elements: keyboard navigable
 - All images: meaningful `alt` text
 - Color contrast: 4.5:1 (text), 3:1 (UI components)
-- Touch targets: minimum 44x44px
+- Touch targets: minimum 44x44px — enforced via `min-h-11` in Button/Input component defaults
 - Reduced motion: respect `prefers-reduced-motion`
 - ARIA labels on all icon-only buttons
 
 #### Performance Budgets (Enforced in CI)
-- JavaScript bundle: < 150KB (gzipped)
+- JavaScript bundle: < 350KB (gzipped) — size-limit enforced in CI
 - CSS bundle: < 50KB (gzipped)
 - LCP: < 2.5s, FID: < 100ms, CLS: < 0.1
 - System logos: < 10KB each

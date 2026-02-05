@@ -152,6 +152,7 @@ npm run test:a11y    # Playwright accessibility
 npm run db:types     # Regenerate Supabase types
 npm run type-check   # TypeScript check
 npm run lint         # ESLint
+npm run story-metrics # File list + test counts for story docs
 ```
 
 ### Supabase Cloud Deployment

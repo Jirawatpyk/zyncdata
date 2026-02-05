@@ -1,6 +1,9 @@
 import type { NextConfig } from 'next'
 import { withSentryConfig } from '@sentry/nextjs'
 
+// TECH DEBT D1: unsafe-eval/unsafe-inline required by Next.js runtime.
+// Monitor Next.js releases for nonce-based CSP support to remove these.
+// @see Epic 2 Retro — priority: LOW
 const securityHeaders = [
   { key: 'X-Frame-Options', value: 'DENY' },
   { key: 'X-Content-Type-Options', value: 'nosniff' },

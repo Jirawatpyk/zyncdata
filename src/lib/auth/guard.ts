@@ -39,8 +39,9 @@ export async function requireAuth(minimumRole?: Role): Promise<AuthResult> {
     redirect('/auth/login')
   }
 
-  // Verify MFA is complete (AAL2) — prevents bypassing MFA by navigating directly
-  // A user at AAL1 (password only, MFA not verified) should not access protected routes
+  // Verify MFA is complete (AAL2) — prevents bypassing MFA by navigating directly.
+  // TECH DEBT D3: Backup code login remains at aal1 (Supabase limitation).
+  // RBAC guard workaround is in place. Revisit if Supabase adds native backup code AAL2 support.
   const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
   if (aalData?.currentLevel === 'aal1' && aalData?.nextLevel === 'aal2') {
     redirect('/auth/mfa-verify')
