@@ -19,6 +19,23 @@ const ROLE_HIERARCHY: Record<Role, number> = {
   super_admin: 3,
 }
 
+interface MfaCheckResult {
+  needsMfaVerification: boolean
+  hasVerifiedFactor: boolean
+}
+
+async function checkMfaStatus(supabase: Awaited<ReturnType<typeof createClient>>): Promise<MfaCheckResult> {
+  const [{ data: aalData }, { data: factors }] = await Promise.all([
+    supabase.auth.mfa.getAuthenticatorAssuranceLevel(),
+    supabase.auth.mfa.listFactors(),
+  ])
+
+  return {
+    needsMfaVerification: aalData?.currentLevel === 'aal1' && aalData?.nextLevel === 'aal2',
+    hasVerifiedFactor: (factors?.totp?.length ?? 0) > 0,
+  }
+}
+
 /**
  * Server-side auth guard for layout components.
  * Validates user authentication and optionally enforces minimum role.
@@ -42,9 +59,14 @@ export async function requireAuth(minimumRole?: Role): Promise<AuthResult> {
   // Verify MFA is complete (AAL2) — prevents bypassing MFA by navigating directly.
   // TECH DEBT D3: Backup code login remains at aal1 (Supabase limitation).
   // RBAC guard workaround is in place. Revisit if Supabase adds native backup code AAL2 support.
-  const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
-  if (aalData?.currentLevel === 'aal1' && aalData?.nextLevel === 'aal2') {
+  const { needsMfaVerification, hasVerifiedFactor } = await checkMfaStatus(supabase)
+
+  if (needsMfaVerification) {
     redirect('/auth/mfa-verify')
+  }
+
+  if (!hasVerifiedFactor) {
+    redirect('/auth/mfa-enroll')
   }
 
   const role = (user.app_metadata?.role as Role) ?? 'user'
@@ -88,10 +110,18 @@ export async function requireApiAuth(
   }
 
   // Verify MFA is complete (AAL2) — same enforcement as requireAuth()
-  const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
-  if (aalData?.currentLevel === 'aal1' && aalData?.nextLevel === 'aal2') {
+  const { needsMfaVerification, hasVerifiedFactor } = await checkMfaStatus(supabase)
+
+  if (needsMfaVerification) {
     return NextResponse.json(
       { data: null, error: { message: 'MFA verification required', code: ErrorCode.FORBIDDEN } },
+      { status: 403 },
+    )
+  }
+
+  if (!hasVerifiedFactor) {
+    return NextResponse.json(
+      { data: null, error: { message: 'MFA enrollment required', code: ErrorCode.FORBIDDEN } },
       { status: 403 },
     )
   }

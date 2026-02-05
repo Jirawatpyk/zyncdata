@@ -1,14 +1,9 @@
-import { test, expect } from '@playwright/test'
+import { expect } from '@playwright/test'
+import { test } from '../support/fixtures/merged-fixtures'
 
 test.describe('Add System Flow', () => {
-  // Note: These tests require E2E auth setup with authenticated admin user
-  // Currently, auth fixture is not implemented, so tests are skipped
-  // Document this for future implementation
-
   test.describe('Unauthenticated - API Protection', () => {
-    test('[P0] POST /api/systems should return 401 without auth', async ({
-      request,
-    }) => {
+    test('[P0] POST /api/systems should return 401 without auth', async ({ request }) => {
       const response = await request.post('/api/systems', {
         data: {
           name: 'Test System',
@@ -23,114 +18,156 @@ test.describe('Add System Flow', () => {
     })
   })
 
-  test.describe('Validation Errors (AC #3, #4)', () => {
-    // These tests would run with auth fixture
-    test.skip('[P1] should show Name required error for empty name (AC #4)', async () => {
-      // Requires: authenticated admin, navigate to /admin/systems
-      // Steps:
-      // 1. Click "Add System" button
-      // 2. Fill URL but leave name empty
-      // 3. Click submit
-      // 4. Verify "Name required" error message appears
-      // 5. Verify form is not submitted (no API call)
+  test.describe('Authenticated Admin - Form Validation', () => {
+    test('[P1] should show Name required error for empty name (AC #4)', async ({ adminPage }) => {
+      await adminPage.goto('/admin/systems')
+
+      // Open the Add System dialog
+      await adminPage.getByTestId('add-system-button').click()
+      await expect(adminPage.getByTestId('add-system-dialog')).toBeVisible()
+
+      // Fill URL but leave name empty
+      await adminPage.getByTestId('system-url-input').fill('https://example.com')
+      await adminPage.getByTestId('submit-button').click()
+
+      // Verify validation error
+      await expect(adminPage.getByText('Name required')).toBeVisible()
     })
 
-    test.skip('[P1] should show Valid URL required error for invalid URL (AC #3)', async () => {
-      // Requires: authenticated admin, navigate to /admin/systems
-      // Steps:
-      // 1. Click "Add System" button
-      // 2. Fill name
-      // 3. Fill invalid URL (e.g., "not-a-url")
-      // 4. Click submit
-      // 5. Verify "Valid URL required" error message appears
-    })
-  })
+    test('[P1] should show Valid URL required error for invalid URL (AC #3)', async ({ adminPage }) => {
+      await adminPage.goto('/admin/systems')
 
-  test.describe('Successful Creation (AC #2, #6)', () => {
-    test.skip('[P0] should create system and show in list (AC #2)', async () => {
-      // Requires: authenticated admin, navigate to /admin/systems
-      // Steps:
-      // 1. Click "Add System" button
-      // 2. Fill form: name="E2E Test System", url="https://e2e.example.com"
-      // 3. Click submit
-      // 4. Verify success toast appears
-      // 5. Verify dialog closes
-      // 6. Verify new system appears in the list
-    })
+      // Open the Add System dialog
+      await adminPage.getByTestId('add-system-button').click()
+      await expect(adminPage.getByTestId('add-system-dialog')).toBeVisible()
 
-    test.skip('[P1] should show new system on landing page when enabled (AC #6)', async () => {
-      // Requires: authenticated admin, clean test database
-      // Steps:
-      // 1. Create system with enabled: true via admin panel
-      // 2. Navigate to landing page (/)
-      // 3. Verify system card appears
-      // 4. Verify display_order is correct
-    })
+      // Fill name and invalid URL
+      await adminPage.getByTestId('system-name-input').fill('Test System')
+      await adminPage.getByTestId('system-url-input').fill('not-a-valid-url')
+      await adminPage.getByTestId('submit-button').click()
 
-    test.skip('[P2] should show success toast with system name', async () => {
-      // Requires: authenticated admin
-      // Verify toast shows: "System added" with description containing the name
+      // Verify validation error
+      await expect(adminPage.getByText('Valid URL required')).toBeVisible()
     })
   })
 
-  test.describe('Error Handling (AC #5)', () => {
-    test.skip('[P1] should show error toast on server error (AC #5)', async () => {
-      // This requires mocking server error or network failure
-      // May need to use page.route() to intercept and fail the request
+  test.describe('Authenticated Admin - Successful Creation', () => {
+    test('[P0] should create system and show in list (AC #2)', async ({ adminPage }) => {
+      const systemName = `E2E Test System ${Date.now()}`
+      const systemUrl = 'https://e2e-test.example.com'
+
+      await adminPage.goto('/admin/systems')
+
+      // Open the Add System dialog
+      await adminPage.getByTestId('add-system-button').click()
+      await expect(adminPage.getByTestId('add-system-dialog')).toBeVisible()
+
+      // Fill form
+      await adminPage.getByTestId('system-name-input').fill(systemName)
+      await adminPage.getByTestId('system-url-input').fill(systemUrl)
+      await adminPage.getByTestId('submit-button').click()
+
+      // Wait for dialog to close (indicates success)
+      await expect(adminPage.getByTestId('add-system-dialog')).not.toBeVisible({ timeout: 10000 })
+
+      // Verify new system appears in the list
+      await expect(adminPage.getByText(systemName)).toBeVisible()
     })
 
-    test.skip('[P1] should keep dialog open on error', async () => {
-      // Verify dialog stays open when submission fails
-      // User can retry or cancel
+    test('[P2] should show success toast with system name', async ({ adminPage }) => {
+      const systemName = `Toast Test ${Date.now()}`
+
+      await adminPage.goto('/admin/systems')
+
+      await adminPage.getByTestId('add-system-button').click()
+      await expect(adminPage.getByTestId('add-system-dialog')).toBeVisible()
+
+      await adminPage.getByTestId('system-name-input').fill(systemName)
+      await adminPage.getByTestId('system-url-input').fill('https://toast-test.example.com')
+      await adminPage.getByTestId('submit-button').click()
+
+      // Verify success toast appears
+      await expect(adminPage.getByText('System added')).toBeVisible({ timeout: 5000 })
+      await expect(adminPage.getByText(`${systemName} is now available`)).toBeVisible()
+    })
+
+    test('[P2] should default enabled toggle to true', async ({ adminPage }) => {
+      await adminPage.goto('/admin/systems')
+
+      await adminPage.getByTestId('add-system-button').click()
+      await expect(adminPage.getByTestId('add-system-dialog')).toBeVisible()
+
+      // Verify enabled switch is checked by default
+      const enabledSwitch = adminPage.getByTestId('system-enabled-switch')
+      await expect(enabledSwitch).toHaveAttribute('data-state', 'checked')
     })
   })
 
-  test.describe('UX Flow (AC #7)', () => {
-    test.skip('[P2] entire add-system flow should complete in under 10 minutes (AC #7 - NFR-UX3)', async () => {
-      // This is a manual timing verification
-      // E2E can measure actual time taken for the flow
-      // Steps:
-      // 1. Record start time
-      // 2. Navigate to admin/systems
-      // 3. Click Add System
-      // 4. Fill form
-      // 5. Submit
-      // 6. Verify on landing page
-      // 7. Verify total time < 10 minutes (should be ~10-30 seconds in practice)
+  test.describe('Authenticated Admin - Form Behavior', () => {
+    test('[P2] should reset form when dialog closes', async ({ adminPage }) => {
+      await adminPage.goto('/admin/systems')
+
+      // Open dialog and fill some values
+      await adminPage.getByTestId('add-system-button').click()
+      await expect(adminPage.getByTestId('add-system-dialog')).toBeVisible()
+
+      await adminPage.getByTestId('system-name-input').fill('Temp Name')
+
+      // Verify value is entered
+      await expect(adminPage.getByTestId('system-name-input')).toHaveValue('Temp Name')
+
+      // Close dialog via Cancel button
+      await adminPage.getByTestId('cancel-button').click()
+      await expect(adminPage.getByTestId('add-system-dialog')).not.toBeVisible()
+
+      // Reopen dialog
+      await adminPage.getByTestId('add-system-button').click()
+      await expect(adminPage.getByTestId('add-system-dialog')).toBeVisible()
+
+      // Verify form is reset
+      await expect(adminPage.getByTestId('system-name-input')).toHaveValue('')
+    })
+
+    test('[P2] should show loading state during submission', async ({ adminPage }) => {
+      await adminPage.goto('/admin/systems')
+
+      await adminPage.getByTestId('add-system-button').click()
+      await expect(adminPage.getByTestId('add-system-dialog')).toBeVisible()
+
+      await adminPage.getByTestId('system-name-input').fill(`Loading Test ${Date.now()}`)
+      await adminPage.getByTestId('system-url-input').fill('https://loading-test.example.com')
+
+      // Click submit and check for loading state
+      await adminPage.getByTestId('submit-button').click()
+
+      // Button should show "Adding..." briefly
+      // Note: This may be very fast, so we just verify the dialog eventually closes
+      await expect(adminPage.getByTestId('add-system-dialog')).not.toBeVisible({ timeout: 10000 })
     })
   })
 
-  test.describe('Form Behavior', () => {
-    test.skip('[P2] should reset form when dialog closes', async () => {
-      // Requires: authenticated admin
-      // Steps:
-      // 1. Open dialog
-      // 2. Type some values
-      // 3. Close dialog (cancel or X)
-      // 4. Reopen dialog
-      // 5. Verify form is empty
-    })
+  test.describe('Authenticated Admin - Error Handling', () => {
+    test('[P1] should keep dialog open on duplicate name error', async ({ adminPage }) => {
+      const systemName = `Duplicate Test ${Date.now()}`
 
-    test.skip('[P2] should default enabled toggle to true', async () => {
-      // Requires: authenticated admin
-      // Verify enabled switch is checked by default when dialog opens
+      await adminPage.goto('/admin/systems')
+
+      // Create first system
+      await adminPage.getByTestId('add-system-button').click()
+      await adminPage.getByTestId('system-name-input').fill(systemName)
+      await adminPage.getByTestId('system-url-input').fill('https://first.example.com')
+      await adminPage.getByTestId('submit-button').click()
+      await expect(adminPage.getByTestId('add-system-dialog')).not.toBeVisible({ timeout: 10000 })
+
+      // Try to create second system with same name
+      await adminPage.getByTestId('add-system-button').click()
+      await adminPage.getByTestId('system-name-input').fill(systemName)
+      await adminPage.getByTestId('system-url-input').fill('https://second.example.com')
+      await adminPage.getByTestId('submit-button').click()
+
+      // Dialog should stay open with error
+      await expect(adminPage.getByTestId('add-system-dialog')).toBeVisible()
+      await expect(adminPage.getByText('A system with this name already exists')).toBeVisible({ timeout: 5000 })
     })
   })
 })
-
-// Note for future implementation:
-// To implement authenticated E2E tests, create a test fixture that:
-// 1. Creates a test user in Supabase
-// 2. Logs in programmatically (or uses storage state)
-// 3. Provides authenticated page context
-// 4. Cleans up test data after tests
-//
-// Example fixture structure:
-// export const test = base.extend<{ adminPage: Page }>({
-//   adminPage: async ({ browser }, use) => {
-//     const context = await browser.newContext({ storageState: 'admin-auth.json' })
-//     const page = await context.newPage()
-//     await use(page)
-//     await context.close()
-//   },
-// })

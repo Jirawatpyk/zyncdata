@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook, waitFor } from '@testing-library/react'
-import { useCreateSystem } from './systems'
+import { useCreateSystem, useUpdateSystem } from './systems'
 import { createQueryWrapper, createTestQueryClient } from '@/lib/test-utils'
 import { QueryClientProvider } from '@tanstack/react-query'
 import type { System } from '@/lib/validations/system'
@@ -435,6 +435,414 @@ describe('useCreateSystem', () => {
       })
 
       expect(result.current.error?.message).toBe('A system with this name already exists')
+    })
+  })
+})
+
+// =========================================
+// useUpdateSystem Tests (Story 3.3, AC #2)
+// =========================================
+
+describe('useUpdateSystem', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  const existingSystem = createMockSystem({
+    id: 'existing-system-uuid',
+    name: 'Original Name',
+    url: 'https://original.example.com',
+    description: 'Original description',
+    enabled: true,
+  })
+
+  it('should call PATCH /api/systems/:id on mutate', async () => {
+    const updatedSystem = createMockSystem({
+      ...existingSystem,
+      name: 'Updated Name',
+      url: 'https://updated.example.com',
+    })
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ data: updatedSystem, error: null }),
+    })
+
+    const { result } = renderHook(() => useUpdateSystem(), {
+      wrapper: createQueryWrapper(),
+    })
+
+    result.current.mutate({
+      id: 'existing-system-uuid',
+      name: 'Updated Name',
+      url: 'https://updated.example.com',
+      description: 'Updated description',
+      enabled: true,
+    })
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true)
+    })
+
+    expect(mockFetch).toHaveBeenCalledWith('/api/systems/existing-system-uuid', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: 'Updated Name',
+        url: 'https://updated.example.com',
+        description: 'Updated description',
+        enabled: true,
+      }),
+    })
+  })
+
+  it('should return updated system data on success', async () => {
+    const updatedSystem = createMockSystem({
+      id: 'existing-system-uuid',
+      name: 'Updated Name',
+      updatedAt: '2026-02-05T15:00:00Z',
+    })
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ data: updatedSystem, error: null }),
+    })
+
+    const { result } = renderHook(() => useUpdateSystem(), {
+      wrapper: createQueryWrapper(),
+    })
+
+    result.current.mutate({
+      id: 'existing-system-uuid',
+      name: 'Updated Name',
+      url: 'https://example.com',
+      enabled: true,
+    })
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true)
+    })
+
+    expect(result.current.data).toEqual(updatedSystem)
+  })
+
+  it('should set error state on failure', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 500,
+      json: () =>
+        Promise.resolve({
+          data: null,
+          error: { message: 'Failed to update system', code: 'UPDATE_ERROR' },
+        }),
+    })
+
+    const { result } = renderHook(() => useUpdateSystem(), {
+      wrapper: createQueryWrapper(),
+    })
+
+    result.current.mutate({
+      id: 'existing-system-uuid',
+      name: 'Update Attempt',
+      url: 'https://example.com',
+      enabled: true,
+    })
+
+    await waitFor(() => {
+      expect(result.current.isError).toBe(true)
+    })
+
+    expect(result.current.error?.message).toBe('Failed to update system')
+  })
+
+  it('should handle enabled: false correctly', async () => {
+    const updatedSystem = createMockSystem({ enabled: false })
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ data: updatedSystem, error: null }),
+    })
+
+    const { result } = renderHook(() => useUpdateSystem(), {
+      wrapper: createQueryWrapper(),
+    })
+
+    result.current.mutate({
+      id: 'existing-system-uuid',
+      name: 'Disabled System',
+      url: 'https://example.com',
+      enabled: false,
+    })
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true)
+    })
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      '/api/systems/existing-system-uuid',
+      expect.objectContaining({
+        body: expect.stringContaining('"enabled":false'),
+      }),
+    )
+  })
+
+  it('should invalidate queries on settled', async () => {
+    const queryClient = createTestQueryClient()
+    const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries')
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () =>
+        Promise.resolve({ data: createMockSystem(), error: null }),
+    })
+
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    )
+
+    const { result } = renderHook(() => useUpdateSystem(), { wrapper })
+
+    result.current.mutate({
+      id: 'existing-system-uuid',
+      name: 'Test',
+      url: 'https://example.com',
+      enabled: true,
+    })
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true)
+    })
+
+    await waitFor(() => {
+      expect(invalidateSpy).toHaveBeenCalledWith({
+        queryKey: ['admin', 'systems'],
+      })
+    })
+  })
+
+  // ===============================================
+  // GUARDRAIL TESTS - Optimistic Update & Rollback
+  // ===============================================
+
+  describe('optimistic update rollback (AC #2)', () => {
+    it('should optimistically update the system in cache', async () => {
+      const queryClient = createTestQueryClient()
+      const existingSystems = [
+        createMockSystem({ id: 'system-1', name: 'Original' }),
+      ]
+
+      queryClient.setQueryData(['admin', 'systems'], existingSystems)
+
+      let optimisticUpdateApplied = false
+
+      // Delay server response to observe optimistic state
+      mockFetch.mockImplementationOnce(async () => {
+        // Check optimistic state before server responds
+        const cachedSystems = queryClient.getQueryData<System[]>(['admin', 'systems'])
+        const updatedSystem = cachedSystems?.find((s) => s.id === 'system-1')
+        if (updatedSystem?.name === 'Updated') {
+          optimisticUpdateApplied = true
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, 50))
+        return {
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              data: createMockSystem({ id: 'system-1', name: 'Updated' }),
+              error: null,
+            }),
+        }
+      })
+
+      const wrapper = ({ children }: { children: React.ReactNode }) => (
+        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      )
+
+      const { result } = renderHook(() => useUpdateSystem(), { wrapper })
+
+      result.current.mutate({
+        id: 'system-1',
+        name: 'Updated',
+        url: 'https://updated.example.com',
+        enabled: true,
+      })
+
+      await waitFor(() => {
+        expect(result.current.isSuccess).toBe(true)
+      })
+
+      // Verify optimistic update was applied during the mutation
+      expect(optimisticUpdateApplied).toBe(true)
+    })
+
+    it('should rollback optimistic update on error', async () => {
+      const queryClient = createTestQueryClient()
+      const existingSystems = [
+        createMockSystem({ id: 'system-1', name: 'Original', url: 'https://original.example.com' }),
+      ]
+
+      queryClient.setQueryData(['admin', 'systems'], existingSystems)
+
+      let rollbackApplied = false
+      let optimisticWasApplied = false
+
+      mockFetch.mockImplementationOnce(async () => {
+        // Check optimistic state was applied before error
+        const cachedSystems = queryClient.getQueryData<System[]>(['admin', 'systems'])
+        const system = cachedSystems?.find((s) => s.id === 'system-1')
+        if (system?.name === 'Failed Update') {
+          optimisticWasApplied = true
+        }
+
+        return {
+          ok: false,
+          status: 500,
+          json: () =>
+            Promise.resolve({
+              data: null,
+              error: { message: 'Server error', code: 'UPDATE_ERROR' },
+            }),
+        }
+      })
+
+      // Spy on setQueryData to verify rollback is called
+      const setQueryDataSpy = vi.spyOn(queryClient, 'setQueryData')
+
+      const wrapper = ({ children }: { children: React.ReactNode }) => (
+        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      )
+
+      const { result } = renderHook(() => useUpdateSystem(), { wrapper })
+
+      result.current.mutate({
+        id: 'system-1',
+        name: 'Failed Update',
+        url: 'https://failed.example.com',
+        enabled: true,
+      })
+
+      await waitFor(() => {
+        expect(result.current.isError).toBe(true)
+      })
+
+      // Check that onError was called (rollback via setQueryData)
+      // The rollback restores the previous snapshot
+      await waitFor(() => {
+        // setQueryData was called with the previous snapshot (the rollback)
+        const rollbackCall = setQueryDataSpy.mock.calls.find(
+          (call) =>
+            JSON.stringify(call[0]) === JSON.stringify(['admin', 'systems']) &&
+            Array.isArray(call[1]) &&
+            call[1].length === 1 &&
+            (call[1] as System[])[0]?.name === 'Original'
+        )
+        if (rollbackCall) {
+          rollbackApplied = true
+        }
+        expect(optimisticWasApplied).toBe(true)
+        expect(rollbackApplied).toBe(true)
+      })
+    })
+
+    it('should invalidate queries on error (onSettled still runs)', async () => {
+      const queryClient = createTestQueryClient()
+      const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries')
+
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        json: () =>
+          Promise.resolve({
+            data: null,
+            error: { message: 'Server error', code: 'UPDATE_ERROR' },
+          }),
+      })
+
+      const wrapper = ({ children }: { children: React.ReactNode }) => (
+        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      )
+
+      const { result } = renderHook(() => useUpdateSystem(), { wrapper })
+
+      result.current.mutate({
+        id: 'system-1',
+        name: 'Error Test',
+        url: 'https://error.example.com',
+        enabled: true,
+      })
+
+      await waitFor(() => {
+        expect(result.current.isError).toBe(true)
+      })
+
+      await waitFor(() => {
+        expect(invalidateSpy).toHaveBeenCalledWith({
+          queryKey: ['admin', 'systems'],
+        })
+      })
+    })
+  })
+
+  describe('duplicate name error (409) handling', () => {
+    it('should return specific error message for duplicate name', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 409,
+        json: () =>
+          Promise.resolve({
+            data: null,
+            error: { message: 'A system with this name already exists', code: 'DUPLICATE_NAME' },
+          }),
+      })
+
+      const { result } = renderHook(() => useUpdateSystem(), {
+        wrapper: createQueryWrapper(),
+      })
+
+      result.current.mutate({
+        id: 'existing-system-uuid',
+        name: 'Duplicate Name',
+        url: 'https://example.com',
+        enabled: true,
+      })
+
+      await waitFor(() => {
+        expect(result.current.isError).toBe(true)
+      })
+
+      expect(result.current.error?.message).toBe('A system with this name already exists')
+    })
+  })
+
+  describe('not found error (404) handling', () => {
+    it('should return specific error message for not found', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+        json: () =>
+          Promise.resolve({
+            data: null,
+            error: { message: 'System not found', code: 'NOT_FOUND' },
+          }),
+      })
+
+      const { result } = renderHook(() => useUpdateSystem(), {
+        wrapper: createQueryWrapper(),
+      })
+
+      result.current.mutate({
+        id: 'non-existent-uuid',
+        name: 'Test',
+        url: 'https://example.com',
+        enabled: true,
+      })
+
+      await waitFor(() => {
+        expect(result.current.isError).toBe(true)
+      })
+
+      expect(result.current.error?.message).toBe('System not found')
     })
   })
 })

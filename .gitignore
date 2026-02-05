@@ -38,6 +38,7 @@ yarn-error.log*
 coverage/
 playwright-report/
 test-results/
+playwright/
 
 # Supabase
 .supabase/

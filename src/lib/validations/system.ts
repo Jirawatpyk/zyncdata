@@ -34,3 +34,18 @@ export const systemSchema = z.object({
 })
 
 export type System = z.infer<typeof systemSchema>
+
+// Input schema for updating an existing system (Story 3.3, AC: #3)
+export const updateSystemSchema = z.object({
+  id: z.string().uuid('Invalid system ID'),
+  name: z.string().min(1, 'Name required').max(100, 'Name must be 100 characters or less'),
+  url: z.string().url('Valid URL required'),
+  description: z
+    .string()
+    .max(500, 'Description must be 500 characters or less')
+    .optional()
+    .or(z.literal('')),
+  enabled: z.boolean(),
+})
+
+export type UpdateSystemInput = z.infer<typeof updateSystemSchema>

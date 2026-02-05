@@ -63,7 +63,7 @@ development_status:
   epic-3: in-progress
   3-1-cms-admin-panel-layout-navigation: done
   3-2-add-new-system: done
-  3-3-edit-system-information: backlog
+  3-3-edit-system-information: done
   3-4-delete-system-with-soft-delete: backlog
   3-5-reorder-systems-display: backlog
   3-6-toggle-system-visibility: backlog

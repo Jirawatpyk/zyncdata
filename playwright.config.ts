@@ -9,6 +9,10 @@ export default defineConfig({
   reporter: process.env.CI
     ? [['list'], ['junit', { outputFile: 'test-results/junit.xml' }], ['html', { open: 'never' }]]
     : [['list'], ['html', { open: 'on-failure' }]],
+
+  // Global setup for admin authentication
+  globalSetup: require.resolve('./tests/support/auth/global-setup.ts'),
+
   use: {
     baseURL: process.env.BASE_URL || 'http://localhost:3000',
     trace: 'retain-on-failure',

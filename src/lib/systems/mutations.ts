@@ -3,6 +3,7 @@ import {
   systemSchema,
   type System,
   type CreateSystemInput,
+  type UpdateSystemInput,
 } from '@/lib/validations/system'
 import { toCamelCase, toSnakeCase } from '@/lib/utils/transform'
 import { revalidatePath } from 'next/cache'
@@ -43,6 +44,35 @@ export async function createSystem(input: CreateSystemInput): Promise<System> {
   if (error) throw error
 
   // Bust ISR cache for landing page
+  revalidatePath('/')
+
+  return systemSchema.parse(toCamelCase<System>(data))
+}
+
+/**
+ * Update an existing system in the database.
+ * Note: updated_at is auto-set by database trigger — do not include in payload.
+ * Revalidates ISR cache for landing page.
+ */
+export async function updateSystem(input: UpdateSystemInput): Promise<System> {
+  const supabase = await createClient()
+  const { id, ...updateData } = input
+
+  const { data, error } = await supabase
+    .from('systems')
+    .update(toSnakeCase(updateData as unknown as Record<string, unknown>))
+    .eq('id', id)
+    .select(SYSTEM_SELECT_COLUMNS)
+    .single()
+
+  if (error) {
+    if (error.code === 'PGRST116') {
+      throw new Error('System not found')
+    }
+    throw error
+  }
+
+  // Bust ISR cache for landing page (AC #4)
   revalidatePath('/')
 
   return systemSchema.parse(toCamelCase<System>(data))

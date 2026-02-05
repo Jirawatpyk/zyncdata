@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 const mockEnroll = vi.fn()
 const mockChallengeAndVerify = vi.fn()
+const mockCleanup = vi.fn()
 
 vi.mock('@/lib/supabase/client', () => ({
   createClient: () => ({
@@ -14,10 +15,15 @@ vi.mock('@/lib/supabase/client', () => ({
   }),
 }))
 
+vi.mock('@/lib/actions/mfa', () => ({
+  cleanupUnverifiedFactorsAction: (...args: unknown[]) => mockCleanup(...args),
+}))
+
 import { enrollMfaFactor, verifyMfaEnrollment } from './mutations'
 
 beforeEach(() => {
   vi.clearAllMocks()
+  mockCleanup.mockResolvedValue({ error: null })
 })
 
 describe('enrollMfaFactor', () => {
@@ -43,6 +49,13 @@ describe('enrollMfaFactor', () => {
     mockEnroll.mockResolvedValue({ data: null, error })
 
     await expect(enrollMfaFactor()).rejects.toThrow('Enrollment failed')
+  })
+
+  it('should throw when cleanup of unverified factors fails', async () => {
+    mockCleanup.mockResolvedValue({ error: 'Failed to clean up MFA factors.' })
+
+    await expect(enrollMfaFactor()).rejects.toThrow('Failed to clean up MFA factors.')
+    expect(mockEnroll).not.toHaveBeenCalled()
   })
 })
 

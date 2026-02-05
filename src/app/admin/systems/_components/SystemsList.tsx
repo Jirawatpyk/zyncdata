@@ -5,6 +5,7 @@ import { systemsQueryOptions } from '@/lib/admin/queries/systems'
 import LoadingSpinner from '@/components/patterns/LoadingSpinner'
 import SystemsEmptyState from './SystemsEmptyState'
 import AddSystemDialog from './AddSystemDialog'
+import EditSystemDialog from './EditSystemDialog'
 import { cn } from '@/lib/utils'
 
 export default function SystemsList() {
@@ -55,6 +56,8 @@ export default function SystemsList() {
               </span>
             </div>
             <div className="flex items-center gap-3">
+              {/* Edit button */}
+              <EditSystemDialog system={system} />
               {system.status && (
                 <span
                   className={cn(

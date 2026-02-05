@@ -2,6 +2,7 @@
 
 import { redirect } from 'next/navigation'
 import { isRedirectError } from 'next/dist/client/components/redirect-error'
+import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { mfaVerifySchema } from '@/lib/validations/auth'
 import { getMfaRatelimit } from '@/lib/ratelimit/mfa'
 import { getCurrentUser } from '@/lib/auth/queries'
@@ -9,6 +10,38 @@ import { getCurrentUser } from '@/lib/auth/queries'
 export type MfaEnrollState = {
   error: string | null
   rateLimited: boolean
+}
+
+export async function cleanupUnverifiedFactorsAction(): Promise<{ error: string | null }> {
+  try {
+    const user = await getCurrentUser()
+    if (!user) {
+      redirect('/auth/login')
+    }
+
+    const supabase = createAdminClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    )
+
+    // List all factors for this user via admin API
+    const { data: userData } = await supabase.auth.admin.getUserById(user.id)
+    const factors = userData?.user?.factors ?? []
+
+    for (const factor of factors) {
+      if (factor.status === 'unverified') {
+        await supabase.auth.admin.mfa.deleteFactor({
+          userId: user.id,
+          id: factor.id,
+        })
+      }
+    }
+
+    return { error: null }
+  } catch (err) {
+    if (isRedirectError(err)) throw err
+    return { error: 'Failed to clean up MFA factors.' }
+  }
 }
 
 export async function verifyMfaEnrollmentAction(

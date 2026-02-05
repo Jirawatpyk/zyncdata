@@ -5,6 +5,7 @@ import type { AuthResult, Role } from './guard'
 
 const mockGetUser = vi.fn()
 const mockGetAuthenticatorAssuranceLevel = vi.fn()
+const mockListFactors = vi.fn()
 const mockRedirect = vi.fn()
 
 vi.mock('@/lib/supabase/server', () => ({
@@ -14,6 +15,7 @@ vi.mock('@/lib/supabase/server', () => ({
         getUser: mockGetUser,
         mfa: {
           getAuthenticatorAssuranceLevel: mockGetAuthenticatorAssuranceLevel,
+          listFactors: mockListFactors,
         },
       },
     }),
@@ -36,12 +38,25 @@ function buildMockUser(overrides: Record<string, unknown> = {}) {
   }
 }
 
+// Default: user has a verified TOTP factor
+function mockVerifiedFactors() {
+  mockListFactors.mockResolvedValue({
+    data: { totp: [{ id: 'factor-1', status: 'verified' }] },
+  })
+}
+
+// User has no MFA factors enrolled
+function mockNoFactors() {
+  mockListFactors.mockResolvedValue({ data: { totp: [] } })
+}
+
 describe('requireAuth', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockRedirect.mockImplementation(() => {
       throw new Error('NEXT_REDIRECT')
     })
+    mockVerifiedFactors()
   })
 
   it('should return user and role when authenticated (AAL2 complete)', async () => {
@@ -83,6 +98,18 @@ describe('requireAuth', () => {
 
     await expect(requireAuth()).rejects.toThrow('NEXT_REDIRECT')
     expect(mockRedirect).toHaveBeenCalledWith('/auth/mfa-verify')
+  })
+
+  it('should redirect to /auth/mfa-enroll when user has no verified factors', async () => {
+    const mockUser = buildMockUser({ app_metadata: { role: 'admin' } })
+    mockGetUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockGetAuthenticatorAssuranceLevel.mockResolvedValue({
+      data: { currentLevel: 'aal1', nextLevel: 'aal1' },
+    })
+    mockNoFactors()
+
+    await expect(requireAuth()).rejects.toThrow('NEXT_REDIRECT')
+    expect(mockRedirect).toHaveBeenCalledWith('/auth/mfa-enroll')
   })
 
   it('should allow access when user is at AAL2 (MFA verified)', async () => {
@@ -186,6 +213,7 @@ describe('hasMinimumRole', () => {
 describe('requireApiAuth', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockVerifiedFactors()
   })
 
   it('should return AuthResult when authenticated with sufficient role', async () => {
@@ -244,6 +272,23 @@ describe('requireApiAuth', () => {
     expect(response.status).toBe(403)
     const body = await response.json()
     expect(body.error.message).toBe('MFA verification required')
+  })
+
+  it('should return 403 NextResponse when user has no verified factors', async () => {
+    const mockUser = buildMockUser({ app_metadata: { role: 'admin' } })
+    mockGetUser.mockResolvedValue({ data: { user: mockUser }, error: null })
+    mockGetAuthenticatorAssuranceLevel.mockResolvedValue({
+      data: { currentLevel: 'aal1', nextLevel: 'aal1' },
+    })
+    mockNoFactors()
+
+    const result = await requireApiAuth()
+
+    expect(isAuthError(result)).toBe(true)
+    const response = result as NextResponse
+    expect(response.status).toBe(403)
+    const body = await response.json()
+    expect(body.error.message).toBe('MFA enrollment required')
   })
 
   it('should return 403 NextResponse when role is insufficient', async () => {

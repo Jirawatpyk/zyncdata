@@ -233,4 +233,52 @@ describe('SystemsList', () => {
       expect(screen.getByText('1 system')).toBeInTheDocument()
     })
   })
+
+  // =======================
+  // Edit button integration (Story 3.3, AC #1)
+  // =======================
+
+  it('should display Edit button for each system (AC #1)', async () => {
+    vi.useRealTimers()
+    const systems = [
+      createMockSystem({ id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', name: 'System 1' }),
+      createMockSystem({ id: 'a23bc45d-67ef-8901-b234-5c6d7e8f9012', name: 'System 2' }),
+    ]
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ data: systems, error: null }),
+    })
+
+    render(<SystemsList />, { wrapper: createQueryWrapper() })
+
+    await waitFor(() => {
+      expect(
+        screen.getByTestId('edit-system-f47ac10b-58cc-4372-a567-0e02b2c3d479'),
+      ).toBeInTheDocument()
+    })
+    expect(
+      screen.getByTestId('edit-system-a23bc45d-67ef-8901-b234-5c6d7e8f9012'),
+    ).toBeInTheDocument()
+  })
+
+  it('should have Edit button positioned before status badges', async () => {
+    vi.useRealTimers()
+    const systems = [createMockSystem({ id: 'test-id', status: 'operational', enabled: true })]
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ data: systems, error: null }),
+    })
+
+    render(<SystemsList />, { wrapper: createQueryWrapper() })
+
+    await waitFor(() => {
+      expect(screen.getByTestId('edit-system-test-id')).toBeInTheDocument()
+    })
+
+    // Verify edit button and badges are in the same row
+    const row = screen.getByTestId('system-row-test-id')
+    expect(row).toContainElement(screen.getByTestId('edit-system-test-id'))
+    expect(row).toContainElement(screen.getByText('operational'))
+    expect(row).toContainElement(screen.getByText('Enabled'))
+  })
 })

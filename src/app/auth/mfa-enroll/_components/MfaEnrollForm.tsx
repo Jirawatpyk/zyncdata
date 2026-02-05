@@ -1,6 +1,6 @@
 'use client'
 
-import { useActionState, useCallback, useEffect, useRef, useState } from 'react'
+import { useActionState, useCallback, useEffect, useState } from 'react'
 import { useFormStatus } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
@@ -53,8 +53,6 @@ export default function MfaEnrollForm() {
   const [verifying, setVerifying] = useState(false)
   const [backupCodes, setBackupCodes] = useState<string[] | null>(null)
   const [showBackupCodes, setShowBackupCodes] = useState(false)
-  const enrollInProgress = useRef(false)
-
   const [actionState, formAction] = useActionState(
     async (prevState: MfaEnrollState, formData: FormData) => {
       setVerifyError(null)
@@ -97,10 +95,6 @@ export default function MfaEnrollForm() {
   const displayError = actionState.error || verifyError || enrollError
 
   const performEnrollment = useCallback(async (cancelled: { current: boolean }) => {
-    if (enrollInProgress.current) return
-    enrollInProgress.current = true
-    setEnrolling(true)
-    setEnrollError(null)
     try {
       const data = await enrollMfaFactor()
       if (!cancelled.current) {
@@ -114,13 +108,12 @@ export default function MfaEnrollForm() {
         setEnrollError('Failed to set up MFA. Please try again.')
         setEnrolling(false)
       }
-    } finally {
-      enrollInProgress.current = false
     }
   }, [])
 
   useEffect(() => {
     const cancelled = { current: false }
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- setState is async (after await), not synchronous
     performEnrollment(cancelled)
     return () => {
       cancelled.current = true
@@ -131,6 +124,8 @@ export default function MfaEnrollForm() {
     setFactorId(null)
     setQrCode(null)
     setSecret(null)
+    setEnrolling(true)
+    setEnrollError(null)
     performEnrollment({ current: false })
   }
 
