@@ -3,8 +3,9 @@ import { test } from '../support/fixtures/merged-fixtures'
 
 test.describe('Edit System Flow', () => {
   test.describe('Unauthenticated - API Protection', () => {
-    test('[P0] PATCH /api/systems/:id should return 401 without auth', async ({ request }) => {
-      const response = await request.patch('/api/systems/f47ac10b-58cc-4372-a567-0e02b2c3d479', {
+    test('[P0] PATCH /api/systems/:id should return 401 without auth', async ({ playwright, baseURL }) => {
+      const unauthRequest = await playwright.request.newContext({ baseURL: baseURL! })
+      const response = await unauthRequest.patch('/api/systems/f47ac10b-58cc-4372-a567-0e02b2c3d479', {
         data: {
           name: 'Updated System',
           url: 'https://updated.example.com',

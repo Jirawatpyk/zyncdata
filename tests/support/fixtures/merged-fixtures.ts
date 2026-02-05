@@ -2,7 +2,7 @@ import { test as base, mergeTests } from '@playwright/test'
 import type { Page } from '@playwright/test'
 import * as path from 'path'
 
-const AUTH_STATE_PATH = path.join(__dirname, '../../playwright/.auth/admin.json')
+const AUTH_STATE_PATH = path.join(__dirname, '../../../playwright/.auth/admin.json')
 
 // Custom project fixtures
 const customFixtures = base.extend<{

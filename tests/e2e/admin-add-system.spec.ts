@@ -3,8 +3,9 @@ import { test } from '../support/fixtures/merged-fixtures'
 
 test.describe('Add System Flow', () => {
   test.describe('Unauthenticated - API Protection', () => {
-    test('[P0] POST /api/systems should return 401 without auth', async ({ request }) => {
-      const response = await request.post('/api/systems', {
+    test('[P0] POST /api/systems should return 401 without auth', async ({ playwright, baseURL }) => {
+      const unauthRequest = await playwright.request.newContext({ baseURL: baseURL! })
+      const response = await unauthRequest.post('/api/systems', {
         data: {
           name: 'Test System',
           url: 'https://test.example.com',
