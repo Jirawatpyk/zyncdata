@@ -27,7 +27,8 @@ import { Button } from '@/components/ui/button'
 import { Loader2, Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import { createSystemSchema } from '@/lib/validations/system'
-import { useCreateSystem } from '@/lib/admin/mutations/systems'
+import { useCreateSystem, useUploadLogo } from '@/lib/admin/mutations/systems'
+import LogoUpload from './LogoUpload'
 
 // Form values type derived from schema
 type FormValues = z.infer<typeof createSystemSchema>
@@ -43,7 +44,17 @@ export default function AddSystemDialog({
 }: AddSystemDialogProps) {
   const [open, setOpen] = useState(false)
   const [serverError, setServerError] = useState<string | null>(null)
+  const [pendingLogoFile, setPendingLogoFile] = useState<File | null>(null)
   const createSystem = useCreateSystem()
+  const uploadLogo = useUploadLogo()
+
+  const handlePendingLogoSelect = (file: File) => {
+    setPendingLogoFile(file)
+  }
+
+  const handlePendingLogoRemove = () => {
+    setPendingLogoFile(null)
+  }
 
   const form = useForm<FormValues>({
     // Type cast required due to @hookform/resolvers generic inference limitation with Zod schemas
@@ -60,11 +71,22 @@ export default function AddSystemDialog({
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
     setServerError(null)
     try {
-      await createSystem.mutateAsync(data)
+      const created = await createSystem.mutateAsync(data)
+
+      // Upload logo if one was selected (two-step: create system → upload logo)
+      if (pendingLogoFile) {
+        try {
+          await uploadLogo.mutateAsync({ systemId: created.id, file: pendingLogoFile })
+        } catch {
+          toast.error('System created but logo upload failed. Edit the system to retry.')
+        }
+      }
+
       toast.success('System added', {
         description: `${data.name} is now available.`,
       })
       form.reset()
+      setPendingLogoFile(null)
       setOpen(false)
       onSuccess?.()
     } catch (error) {
@@ -84,6 +106,7 @@ export default function AddSystemDialog({
     setOpen(isOpen)
     if (!isOpen) {
       setServerError(null)
+      setPendingLogoFile(null)
       form.reset()
     }
   }
@@ -177,6 +200,15 @@ export default function AddSystemDialog({
                   <FormMessage data-testid="description-error" />
                 </FormItem>
               )}
+            />
+
+            {/* Logo upload */}
+            <LogoUpload
+              currentLogoUrl={null}
+              systemName={form.watch('name') || 'New System'}
+              isUploading={uploadLogo.isPending}
+              onUpload={handlePendingLogoSelect}
+              onRemove={handlePendingLogoRemove}
             />
 
             {/* Enabled toggle */}

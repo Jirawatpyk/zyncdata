@@ -240,6 +240,95 @@ export function useToggleSystem() {
   })
 }
 
+interface UploadLogoMutationContext {
+  previous: System[] | undefined
+}
+
+export function useUploadLogo() {
+  const queryClient = useQueryClient()
+
+  return useMutation<System, Error, { systemId: string; file: File }, UploadLogoMutationContext>({
+    mutationFn: async ({ systemId, file }) => {
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const res = await fetch(`/api/systems/${systemId}/logo`, {
+        method: 'POST',
+        body: formData,
+        // NOTE: Do NOT set Content-Type header — browser sets multipart boundary automatically
+      })
+      return unwrapResponse<System>(res)
+    },
+
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ['admin', 'systems'] })
+      const previous = queryClient.getQueryData<System[]>(['admin', 'systems'])
+      return { previous }
+    },
+
+    onSuccess: (serverData) => {
+      queryClient.setQueryData<System[]>(['admin', 'systems'], (old) =>
+        old?.map((s) => (s.id === serverData.id ? serverData : s)) ?? [],
+      )
+    },
+
+    onError: (_error, _variables, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(['admin', 'systems'], context.previous)
+      }
+    },
+
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'systems'] })
+    },
+  })
+}
+
+interface DeleteLogoMutationContext {
+  previous: System[] | undefined
+}
+
+export function useDeleteLogo() {
+  const queryClient = useQueryClient()
+
+  return useMutation<System, Error, string, DeleteLogoMutationContext>({
+    mutationFn: async (systemId) => {
+      const res = await fetch(`/api/systems/${systemId}/logo`, {
+        method: 'DELETE',
+      })
+      return unwrapResponse<System>(res)
+    },
+
+    onMutate: async (systemId) => {
+      await queryClient.cancelQueries({ queryKey: ['admin', 'systems'] })
+      const previous = queryClient.getQueryData<System[]>(['admin', 'systems'])
+
+      // Optimistic: clear logo immediately
+      queryClient.setQueryData<System[]>(['admin', 'systems'], (old) =>
+        old?.map((s) => (s.id === systemId ? { ...s, logoUrl: null } : s)) ?? [],
+      )
+
+      return { previous }
+    },
+
+    onSuccess: (serverData) => {
+      queryClient.setQueryData<System[]>(['admin', 'systems'], (old) =>
+        old?.map((s) => (s.id === serverData.id ? serverData : s)) ?? [],
+      )
+    },
+
+    onError: (_error, _variables, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(['admin', 'systems'], context.previous)
+      }
+    },
+
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'systems'] })
+    },
+  })
+}
+
 export function useDeleteSystem() {
   const queryClient = useQueryClient()
 

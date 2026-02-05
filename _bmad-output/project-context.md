@@ -513,6 +513,19 @@ steps:
 
 ---
 
+## Key Project Documents
+
+- **Architecture:** `_bmad-output/planning-artifacts/architecture.md`
+- **PRD:** `_bmad-output/planning-artifacts/prd.md`
+- **Epics & Stories:** `_bmad-output/planning-artifacts/epics.md`
+- **UX Design:** `_bmad-output/planning-artifacts/ux-design/README.md` (index → 5 docs)
+- **Sprint Status:** `_bmad-output/implementation-artifacts/sprint-status.yaml`
+- **React Query Patterns:** `_bmad-output/implementation-artifacts/react-query-patterns.md`
+- **CMS Testing Patterns:** `_bmad-output/implementation-artifacts/cms-testing-patterns.md`
+- **Security Checklist:** `_bmad-output/implementation-artifacts/security-pre-review-checklist.md`
+
+---
+
 ## Usage Guidelines
 
 **For AI Agents:**

@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import { cn } from '@/lib/utils'
 
 interface SystemCardProps {
@@ -32,13 +33,12 @@ export default function SystemCard({ name, url, logoUrl, description, status }: 
 
       <div className="flex items-start gap-4">
         {logoUrl ? (
-          /* eslint-disable-next-line @next/next/no-img-element -- next/image requires remotePatterns config (Story 3.7) */
-          <img
+          <Image
             src={logoUrl}
             alt={`${name} logo`}
             width={64}
             height={64}
-            className="h-16 w-16 rounded-xl"
+            className="h-16 w-16 rounded-xl object-contain"
           />
         ) : (
           <div

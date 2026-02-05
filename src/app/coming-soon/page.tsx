@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Image from 'next/image'
 import Link from 'next/link'
 import { getSystemByName } from '@/lib/systems/queries'
 
@@ -35,13 +36,12 @@ export default async function ComingSoonPage(props: {
               <div className="text-center">
                 {/* System logo or fallback */}
                 {system?.logoUrl ? (
-                  /* eslint-disable-next-line @next/next/no-img-element -- next/image requires remotePatterns config (Story 3.7) */
-                  <img
+                  <Image
                     src={system.logoUrl}
                     alt={`${systemName} logo`}
                     width={80}
                     height={80}
-                    className="mx-auto h-20 w-20 rounded-2xl"
+                    className="mx-auto h-20 w-20 rounded-2xl object-contain"
                   />
                 ) : (
                   <div

@@ -27,7 +27,8 @@ import { Button } from '@/components/ui/button'
 import { Loader2, Pencil } from 'lucide-react'
 import { toast } from 'sonner'
 import { updateSystemSchema, type System } from '@/lib/validations/system'
-import { useUpdateSystem } from '@/lib/admin/mutations/systems'
+import { useUpdateSystem, useUploadLogo, useDeleteLogo } from '@/lib/admin/mutations/systems'
+import LogoUpload from './LogoUpload'
 
 // Form values type derived from schema
 type FormValues = z.infer<typeof updateSystemSchema>
@@ -46,6 +47,25 @@ export default function EditSystemDialog({
   const [open, setOpen] = useState(false)
   const [serverError, setServerError] = useState<string | null>(null)
   const updateSystem = useUpdateSystem()
+  const uploadLogo = useUploadLogo()
+  const deleteLogo = useDeleteLogo()
+
+  const handleLogoUpload = (file: File) => {
+    uploadLogo.mutate(
+      { systemId: system.id, file },
+      {
+        onSuccess: () => toast.success('Logo uploaded'),
+        onError: (err) => toast.error(`Upload failed: ${err.message}`),
+      },
+    )
+  }
+
+  const handleLogoRemove = () => {
+    deleteLogo.mutate(system.id, {
+      onSuccess: () => toast.success('Logo removed'),
+      onError: () => toast.error('Failed to remove logo'),
+    })
+  }
 
   const form = useForm<FormValues>({
     // Type cast required due to @hookform/resolvers generic inference limitation with Zod schemas.
@@ -202,6 +222,16 @@ export default function EditSystemDialog({
                   <FormMessage data-testid="description-error" />
                 </FormItem>
               )}
+            />
+
+            {/* Logo upload */}
+            <LogoUpload
+              currentLogoUrl={system.logoUrl}
+              systemName={form.watch('name') || system.name}
+              isUploading={uploadLogo.isPending}
+              onUpload={handleLogoUpload}
+              onRemove={handleLogoRemove}
+              error={uploadLogo.isError ? uploadLogo.error.message : null}
             />
 
             {/* Enabled toggle */}

@@ -324,6 +324,15 @@
     <action>Verify ALL tasks and subtasks are marked [x] (re-scan the story document now)</action>
     <action>Run the full regression suite (do not skip)</action>
     <action>Confirm File List includes every changed file</action>
+
+    <!-- Security Pre-Review Checklist (Epic 2 Retro Action Item P4) -->
+    <critical>MUST complete security checklist BEFORE marking story as review</critical>
+    <action>Load security checklist: {security_checklist}</action>
+    <action>Evaluate EVERY section of the checklist against the changes made in this story</action>
+    <action>For each applicable check: verify the code satisfies it</action>
+    <action>For each non-applicable check: note "N/A" with brief reason</action>
+    <action if="ANY applicable security check fails">HALT: "Security issue found — fix before submitting for review"</action>
+
     <action>Execute enhanced definition-of-done validation</action>
     <action>Update the story Status to: "review"</action>
 

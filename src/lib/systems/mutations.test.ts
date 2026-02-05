@@ -859,6 +859,30 @@ describe('uploadSystemLogo', () => {
 
     expect(revalidatePath).toHaveBeenCalledWith('/')
   })
+
+  it('should throw when DB update fails after successful storage upload', async () => {
+    const dbError = { message: 'DB connection lost', code: 'PGRST000' }
+
+    mockSelectSingle.mockResolvedValueOnce({
+      data: { logo_url: null },
+      error: null,
+    })
+    mockStorageUpload.mockResolvedValueOnce({ error: null })
+    mockStorageGetPublicUrl.mockReturnValueOnce({
+      data: { publicUrl: 'https://abc.supabase.co/storage/v1/object/public/system-logos/id/123.png' },
+    })
+    mockUpdateSingle.mockResolvedValueOnce({
+      data: null,
+      error: dbError,
+    })
+
+    await expect(
+      uploadSystemLogo(TEST_UUID, Buffer.from('test'), 'logo.png', 'image/png'),
+    ).rejects.toEqual(dbError)
+
+    // Storage upload was called (file is orphaned in storage)
+    expect(mockStorageUpload).toHaveBeenCalledTimes(1)
+  })
 })
 
 describe('deleteSystemLogo', () => {

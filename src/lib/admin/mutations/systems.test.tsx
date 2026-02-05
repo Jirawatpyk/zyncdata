@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook, waitFor } from '@testing-library/react'
-import { useCreateSystem, useUpdateSystem, useDeleteSystem, useReorderSystems, useToggleSystem } from './systems'
+import { useCreateSystem, useUpdateSystem, useDeleteSystem, useReorderSystems, useToggleSystem, useUploadLogo, useDeleteLogo } from './systems'
 import { createQueryWrapper, createTestQueryClient } from '@/lib/test-utils'
 import { QueryClientProvider } from '@tanstack/react-query'
 import type { System } from '@/lib/validations/system'
@@ -1557,6 +1557,490 @@ describe('useDeleteSystem', () => {
         ['admin', 'systems'],
         existingSystems,
       )
+    })
+  })
+})
+
+// =========================================
+// useUploadLogo Tests (Story 3.7, AC #1, #2)
+// =========================================
+
+describe('useUploadLogo', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  function createMockFile(name = 'logo.png', type = 'image/png', size = 1024): File {
+    const content = new Uint8Array(size)
+    return new File([content], name, { type })
+  }
+
+  it('should call POST /api/systems/:id/logo with FormData on mutate', async () => {
+    const updatedSystem = createMockSystem({
+      id: 'system-1',
+      logoUrl: 'https://abc.supabase.co/storage/v1/object/public/system-logos/system-1/123.png',
+    })
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ data: updatedSystem, error: null }),
+    })
+
+    const { result } = renderHook(() => useUploadLogo(), {
+      wrapper: createQueryWrapper(),
+    })
+
+    const file = createMockFile()
+    result.current.mutate({ systemId: 'system-1', file })
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true)
+    })
+
+    expect(mockFetch).toHaveBeenCalledWith('/api/systems/system-1/logo', {
+      method: 'POST',
+      body: expect.any(FormData),
+    })
+  })
+
+  it('should NOT set Content-Type header (browser sets multipart boundary)', async () => {
+    const updatedSystem = createMockSystem({ id: 'system-1' })
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ data: updatedSystem, error: null }),
+    })
+
+    const { result } = renderHook(() => useUploadLogo(), {
+      wrapper: createQueryWrapper(),
+    })
+
+    result.current.mutate({ systemId: 'system-1', file: createMockFile() })
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true)
+    })
+
+    // Verify no Content-Type header was set
+    const fetchCall = mockFetch.mock.calls[0]
+    expect(fetchCall[1]).not.toHaveProperty('headers')
+  })
+
+  it('should return updated system with logoUrl on success', async () => {
+    const updatedSystem = createMockSystem({
+      id: 'system-1',
+      logoUrl: 'https://abc.supabase.co/storage/v1/object/public/system-logos/system-1/123.png',
+    })
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ data: updatedSystem, error: null }),
+    })
+
+    const { result } = renderHook(() => useUploadLogo(), {
+      wrapper: createQueryWrapper(),
+    })
+
+    const mutationResult = await result.current.mutateAsync({
+      systemId: 'system-1',
+      file: createMockFile(),
+    })
+
+    expect(mutationResult.logoUrl).toBe(
+      'https://abc.supabase.co/storage/v1/object/public/system-logos/system-1/123.png',
+    )
+  })
+
+  it('should set error state on failure', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 500,
+      json: () =>
+        Promise.resolve({
+          data: null,
+          error: { message: 'Failed to upload logo', code: 'UPLOAD_ERROR' },
+        }),
+    })
+
+    const { result } = renderHook(() => useUploadLogo(), {
+      wrapper: createQueryWrapper(),
+    })
+
+    result.current.mutate({ systemId: 'system-1', file: createMockFile() })
+
+    await waitFor(() => {
+      expect(result.current.isError).toBe(true)
+    })
+
+    expect(result.current.error?.message).toBe('Failed to upload logo')
+  })
+
+  it('should invalidate queries on settled', async () => {
+    const queryClient = createTestQueryClient()
+    const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries')
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () =>
+        Promise.resolve({ data: createMockSystem({ logoUrl: 'https://example.com/logo.png' }), error: null }),
+    })
+
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    )
+
+    const { result } = renderHook(() => useUploadLogo(), { wrapper })
+
+    result.current.mutate({ systemId: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', file: createMockFile() })
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true)
+    })
+
+    await waitFor(() => {
+      expect(invalidateSpy).toHaveBeenCalledWith({
+        queryKey: ['admin', 'systems'],
+      })
+    })
+  })
+
+  describe('optimistic update & rollback', () => {
+    it('should rollback cache on error', async () => {
+      const queryClient = createTestQueryClient()
+      const existingSystems = [
+        createMockSystem({ id: 'system-1', logoUrl: null }),
+      ]
+
+      queryClient.setQueryData(['admin', 'systems'], existingSystems)
+
+      const setQueryDataSpy = vi.spyOn(queryClient, 'setQueryData')
+
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        json: () =>
+          Promise.resolve({
+            data: null,
+            error: { message: 'Upload failed', code: 'UPLOAD_ERROR' },
+          }),
+      })
+
+      const wrapper = ({ children }: { children: React.ReactNode }) => (
+        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      )
+
+      const { result } = renderHook(() => useUploadLogo(), { wrapper })
+
+      result.current.mutate({ systemId: 'system-1', file: createMockFile() })
+
+      await waitFor(() => {
+        expect(result.current.isError).toBe(true)
+      })
+
+      // Verify rollback was called with original data
+      expect(setQueryDataSpy).toHaveBeenCalledWith(
+        ['admin', 'systems'],
+        existingSystems,
+      )
+    })
+
+    it('should replace with server data on success', async () => {
+      const queryClient = createTestQueryClient()
+      const existingSystems = [
+        createMockSystem({ id: 'system-1', logoUrl: null }),
+      ]
+
+      queryClient.setQueryData(['admin', 'systems'], existingSystems)
+
+      const serverSystem = createMockSystem({
+        id: 'system-1',
+        logoUrl: 'https://abc.supabase.co/storage/v1/object/public/system-logos/system-1/new.png',
+      })
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ data: serverSystem, error: null }),
+      })
+
+      const wrapper = ({ children }: { children: React.ReactNode }) => (
+        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      )
+
+      const { result } = renderHook(() => useUploadLogo(), { wrapper })
+
+      result.current.mutate({ systemId: 'system-1', file: createMockFile() })
+
+      await waitFor(() => {
+        expect(result.current.isSuccess).toBe(true)
+      })
+
+      await waitFor(() => {
+        const cachedSystems = queryClient.getQueryData<System[]>(['admin', 'systems'])
+        const system = cachedSystems?.find((s) => s.id === 'system-1')
+        expect(
+          system === undefined ||
+          system?.logoUrl === 'https://abc.supabase.co/storage/v1/object/public/system-logos/system-1/new.png',
+        ).toBe(true)
+      })
+    })
+
+    it('should invalidate queries on error (onSettled still runs)', async () => {
+      const queryClient = createTestQueryClient()
+      const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries')
+
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        json: () =>
+          Promise.resolve({
+            data: null,
+            error: { message: 'Server error', code: 'UPLOAD_ERROR' },
+          }),
+      })
+
+      const wrapper = ({ children }: { children: React.ReactNode }) => (
+        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      )
+
+      const { result } = renderHook(() => useUploadLogo(), { wrapper })
+
+      result.current.mutate({ systemId: 'system-1', file: createMockFile() })
+
+      await waitFor(() => {
+        expect(result.current.isError).toBe(true)
+      })
+
+      await waitFor(() => {
+        expect(invalidateSpy).toHaveBeenCalledWith({
+          queryKey: ['admin', 'systems'],
+        })
+      })
+    })
+  })
+})
+
+// =========================================
+// useDeleteLogo Tests (Story 3.7, AC #3)
+// =========================================
+
+describe('useDeleteLogo', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('should call DELETE /api/systems/:id/logo on mutate', async () => {
+    const updatedSystem = createMockSystem({ id: 'system-1', logoUrl: null })
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ data: updatedSystem, error: null }),
+    })
+
+    const { result } = renderHook(() => useDeleteLogo(), {
+      wrapper: createQueryWrapper(),
+    })
+
+    result.current.mutate('system-1')
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true)
+    })
+
+    expect(mockFetch).toHaveBeenCalledWith('/api/systems/system-1/logo', {
+      method: 'DELETE',
+    })
+  })
+
+  it('should return system with null logoUrl on success', async () => {
+    const updatedSystem = createMockSystem({ id: 'system-1', logoUrl: null })
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ data: updatedSystem, error: null }),
+    })
+
+    const { result } = renderHook(() => useDeleteLogo(), {
+      wrapper: createQueryWrapper(),
+    })
+
+    const mutationResult = await result.current.mutateAsync('system-1')
+
+    expect(mutationResult.logoUrl).toBeNull()
+  })
+
+  it('should set error state on failure', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 500,
+      json: () =>
+        Promise.resolve({
+          data: null,
+          error: { message: 'Failed to delete logo', code: 'DELETE_ERROR' },
+        }),
+    })
+
+    const { result } = renderHook(() => useDeleteLogo(), {
+      wrapper: createQueryWrapper(),
+    })
+
+    result.current.mutate('system-1')
+
+    await waitFor(() => {
+      expect(result.current.isError).toBe(true)
+    })
+
+    expect(result.current.error?.message).toBe('Failed to delete logo')
+  })
+
+  it('should invalidate queries on settled', async () => {
+    const queryClient = createTestQueryClient()
+    const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries')
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () =>
+        Promise.resolve({ data: createMockSystem({ logoUrl: null }), error: null }),
+    })
+
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    )
+
+    const { result } = renderHook(() => useDeleteLogo(), { wrapper })
+
+    result.current.mutate('f47ac10b-58cc-4372-a567-0e02b2c3d479')
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true)
+    })
+
+    await waitFor(() => {
+      expect(invalidateSpy).toHaveBeenCalledWith({
+        queryKey: ['admin', 'systems'],
+      })
+    })
+  })
+
+  describe('optimistic update & rollback', () => {
+    it('should optimistically clear logoUrl in cache', async () => {
+      const queryClient = createTestQueryClient()
+      const existingSystems = [
+        createMockSystem({
+          id: 'system-1',
+          logoUrl: 'https://abc.supabase.co/storage/v1/object/public/system-logos/system-1/old.png',
+        }),
+      ]
+
+      queryClient.setQueryData(['admin', 'systems'], existingSystems)
+
+      let optimisticUpdateApplied = false
+
+      mockFetch.mockImplementationOnce(async () => {
+        const cachedSystems = queryClient.getQueryData<System[]>(['admin', 'systems'])
+        const system = cachedSystems?.find((s) => s.id === 'system-1')
+        if (system?.logoUrl === null) {
+          optimisticUpdateApplied = true
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, 50))
+        return {
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              data: createMockSystem({ id: 'system-1', logoUrl: null }),
+              error: null,
+            }),
+        }
+      })
+
+      const wrapper = ({ children }: { children: React.ReactNode }) => (
+        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      )
+
+      const { result } = renderHook(() => useDeleteLogo(), { wrapper })
+
+      result.current.mutate('system-1')
+
+      await waitFor(() => {
+        expect(result.current.isSuccess).toBe(true)
+      })
+
+      expect(optimisticUpdateApplied).toBe(true)
+    })
+
+    it('should rollback cache on error (restore logoUrl)', async () => {
+      const queryClient = createTestQueryClient()
+      const existingSystems = [
+        createMockSystem({
+          id: 'system-1',
+          logoUrl: 'https://abc.supabase.co/storage/v1/object/public/system-logos/system-1/old.png',
+        }),
+      ]
+
+      queryClient.setQueryData(['admin', 'systems'], existingSystems)
+
+      const setQueryDataSpy = vi.spyOn(queryClient, 'setQueryData')
+
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        json: () =>
+          Promise.resolve({
+            data: null,
+            error: { message: 'Storage error', code: 'DELETE_ERROR' },
+          }),
+      })
+
+      const wrapper = ({ children }: { children: React.ReactNode }) => (
+        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      )
+
+      const { result } = renderHook(() => useDeleteLogo(), { wrapper })
+
+      result.current.mutate('system-1')
+
+      await waitFor(() => {
+        expect(result.current.isError).toBe(true)
+      })
+
+      // Verify rollback was called with original data (logoUrl restored)
+      expect(setQueryDataSpy).toHaveBeenCalledWith(
+        ['admin', 'systems'],
+        existingSystems,
+      )
+    })
+
+    it('should invalidate queries on error (onSettled still runs)', async () => {
+      const queryClient = createTestQueryClient()
+      const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries')
+
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        json: () =>
+          Promise.resolve({
+            data: null,
+            error: { message: 'Server error', code: 'DELETE_ERROR' },
+          }),
+      })
+
+      const wrapper = ({ children }: { children: React.ReactNode }) => (
+        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      )
+
+      const { result } = renderHook(() => useDeleteLogo(), { wrapper })
+
+      result.current.mutate('system-1')
+
+      await waitFor(() => {
+        expect(result.current.isError).toBe(true)
+      })
+
+      await waitFor(() => {
+        expect(invalidateSpy).toHaveBeenCalledWith({
+          queryKey: ['admin', 'systems'],
+        })
+      })
     })
   })
 })

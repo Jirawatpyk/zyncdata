@@ -67,7 +67,7 @@ development_status:
   3-4-delete-system-with-soft-delete: done
   3-5-reorder-systems-display: done
   3-6-toggle-system-visibility: done
-  3-7-system-logo-management: backlog
+  3-7-system-logo-management: done
   3-8-live-status-indicators-on-landing-page: backlog
   epic-3-retrospective: optional
 

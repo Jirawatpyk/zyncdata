@@ -84,9 +84,21 @@ export async function DELETE(
 
   try {
     const { id } = await params
+
+    // Validate UUID format
+    z.string().uuid('Invalid system ID').parse(id)
+
     const system = await deleteSystemLogo(id)
     return NextResponse.json({ data: system, error: null })
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      const message = error.issues?.[0]?.message ?? 'Validation failed'
+      return NextResponse.json(
+        { data: null, error: { message, code: 'VALIDATION_ERROR' } },
+        { status: 400 },
+      )
+    }
+
     if (error instanceof Error && error.message.includes('not found')) {
       return NextResponse.json(
         { data: null, error: { message: 'System not found', code: 'NOT_FOUND' } },
