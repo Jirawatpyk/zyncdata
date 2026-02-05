@@ -150,7 +150,7 @@ describe('MfaVerifyForm', () => {
       })
     })
 
-    it('should redirect to /dashboard on successful TOTP verification', async () => {
+    it('should redirect to /admin on successful TOTP verification', async () => {
       const user = userEvent.setup()
       render(<MfaVerifyForm />)
 
@@ -162,7 +162,7 @@ describe('MfaVerifyForm', () => {
       await user.click(screen.getByTestId('mfa-verify-submit'))
 
       await waitFor(() => {
-        expect(mockPush).toHaveBeenCalledWith('/dashboard')
+        expect(mockPush).toHaveBeenCalledWith('/admin')
       })
     })
 
@@ -272,7 +272,7 @@ describe('MfaVerifyForm', () => {
   })
 
   describe('backup code success', () => {
-    it('should redirect to /dashboard on successful backup code verification', async () => {
+    it('should redirect to /admin on successful backup code verification', async () => {
       const user = userEvent.setup()
       render(<MfaVerifyForm />)
 
@@ -286,7 +286,7 @@ describe('MfaVerifyForm', () => {
       // Click mock backup success
       await user.click(screen.getByTestId('mock-backup-success'))
 
-      expect(mockPush).toHaveBeenCalledWith('/dashboard')
+      expect(mockPush).toHaveBeenCalledWith('/admin')
     })
   })
 

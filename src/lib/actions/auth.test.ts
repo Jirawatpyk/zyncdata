@@ -142,7 +142,7 @@ describe('loginAction', () => {
       expect(mockRedirect).toHaveBeenCalledWith('/auth/mfa-verify')
     })
 
-    it('should redirect to dashboard when MFA fully verified', async () => {
+    it('should redirect to admin when MFA fully verified', async () => {
       mockSignInWithEmail.mockResolvedValue({
         user: { id: 'u1' },
         session: { access_token: 'tok' },
@@ -160,7 +160,7 @@ describe('loginAction', () => {
         loginAction(initialState, buildFormData('admin@dxt-ai.com', 'password123')),
       ).rejects.toThrow('NEXT_REDIRECT')
 
-      expect(mockRedirect).toHaveBeenCalledWith('/dashboard')
+      expect(mockRedirect).toHaveBeenCalledWith('/admin')
     })
   })
 

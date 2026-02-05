@@ -61,7 +61,7 @@ development_status:
 
   # Epic 3: System Portfolio Management (8 stories)
   epic-3: in-progress
-  3-1-cms-admin-panel-layout-navigation: backlog
+  3-1-cms-admin-panel-layout-navigation: done
   3-2-add-new-system: backlog
   3-3-edit-system-information: backlog
   3-4-delete-system-with-soft-delete: backlog

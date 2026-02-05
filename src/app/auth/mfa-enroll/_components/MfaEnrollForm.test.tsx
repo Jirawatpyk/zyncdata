@@ -364,7 +364,7 @@ describe('MfaEnrollForm', () => {
 
     // Should redirect to dashboard on backup code failure
     await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith('/dashboard')
+      expect(mockPush).toHaveBeenCalledWith('/admin')
     })
   })
 

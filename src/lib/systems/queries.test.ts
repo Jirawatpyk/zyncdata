@@ -5,7 +5,10 @@ vi.mock('@/lib/supabase/server', () => ({
 }))
 
 import { createClient } from '@/lib/supabase/server'
-import { getEnabledSystems, getSystemByName } from '@/lib/systems/queries'
+import { getEnabledSystems, getSystemByName, getSystems } from '@/lib/systems/queries'
+
+const EXPECTED_SELECT =
+  'id, name, url, logo_url, description, status, response_time, display_order, enabled, created_at, updated_at'
 
 describe('getEnabledSystems', () => {
   const mockSelect = vi.fn()
@@ -23,7 +26,11 @@ describe('getEnabledSystems', () => {
           logo_url: null,
           description: 'Task management',
           status: null,
+          response_time: 100,
           display_order: 1,
+          enabled: true,
+          created_at: '2026-01-01T00:00:00Z',
+          updated_at: '2026-01-01T00:00:00Z',
         },
         {
           id: 'a23bc45d-67ef-8901-b234-5c6d7e8f9012',
@@ -32,7 +39,11 @@ describe('getEnabledSystems', () => {
           logo_url: null,
           description: 'Analytics platform',
           status: 'coming_soon',
+          response_time: null,
           display_order: 2,
+          enabled: true,
+          created_at: '2026-01-02T00:00:00Z',
+          updated_at: '2026-01-02T00:00:00Z',
         },
       ],
       error: null,
@@ -48,9 +59,7 @@ describe('getEnabledSystems', () => {
   it('should query systems with correct filters', async () => {
     await getEnabledSystems()
 
-    expect(mockSelect).toHaveBeenCalledWith(
-      'id, name, url, logo_url, description, status, display_order',
-    )
+    expect(mockSelect).toHaveBeenCalledWith(EXPECTED_SELECT)
     expect(mockEq).toHaveBeenCalledWith('enabled', true)
     expect(mockOrder).toHaveBeenCalledWith('display_order', { ascending: true })
   })
@@ -66,7 +75,11 @@ describe('getEnabledSystems', () => {
       logoUrl: null,
       description: 'Task management',
       status: null,
+      responseTime: 100,
       displayOrder: 1,
+      enabled: true,
+      createdAt: '2026-01-01T00:00:00Z',
+      updatedAt: '2026-01-01T00:00:00Z',
     })
     expect(result[1].logoUrl).toBeNull()
     expect(result[1].status).toBe('coming_soon')
@@ -106,7 +119,11 @@ describe('getSystemByName', () => {
         logo_url: null,
         description: 'AI-powered vocabulary learning',
         status: 'coming_soon',
+        response_time: 150,
         display_order: 2,
+        enabled: true,
+        created_at: '2026-01-01T00:00:00Z',
+        updated_at: '2026-01-01T00:00:00Z',
       },
       error: null,
     })
@@ -122,9 +139,7 @@ describe('getSystemByName', () => {
   it('should query by name with correct filters', async () => {
     await getSystemByName('VOCA')
 
-    expect(mockSelect).toHaveBeenCalledWith(
-      'id, name, url, logo_url, description, status, display_order',
-    )
+    expect(mockSelect).toHaveBeenCalledWith(EXPECTED_SELECT)
     expect(mockEqName).toHaveBeenCalledWith('name', 'VOCA')
     expect(mockEqEnabled).toHaveBeenCalledWith('enabled', true)
   })
@@ -139,7 +154,11 @@ describe('getSystemByName', () => {
       logoUrl: null,
       description: 'AI-powered vocabulary learning',
       status: 'coming_soon',
+      responseTime: 150,
       displayOrder: 2,
+      enabled: true,
+      createdAt: '2026-01-01T00:00:00Z',
+      updatedAt: '2026-01-01T00:00:00Z',
     })
   })
 
@@ -157,5 +176,112 @@ describe('getSystemByName', () => {
     })
 
     await expect(getSystemByName('VOCA')).rejects.toThrow()
+  })
+})
+
+describe('getSystems', () => {
+  const mockSelect = vi.fn()
+  const mockOrder = vi.fn()
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockOrder.mockResolvedValue({
+      data: [
+        {
+          id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+          name: 'System 1',
+          url: 'https://sys1.com',
+          logo_url: null,
+          description: 'Desc 1',
+          status: 'operational',
+          response_time: 100,
+          display_order: 0,
+          enabled: true,
+          created_at: '2026-01-01T00:00:00Z',
+          updated_at: '2026-01-01T00:00:00Z',
+        },
+        {
+          id: 'a23bc45d-67ef-8901-b234-5c6d7e8f9012',
+          name: 'System 2',
+          url: 'https://sys2.com',
+          logo_url: 'https://logo.com/img.png',
+          description: null,
+          status: null,
+          response_time: null,
+          display_order: 1,
+          enabled: false,
+          created_at: '2026-01-02T00:00:00Z',
+          updated_at: '2026-01-02T00:00:00Z',
+        },
+      ],
+      error: null,
+    })
+    mockSelect.mockReturnValue({ order: mockOrder })
+    vi.mocked(createClient).mockResolvedValue({
+      from: vi.fn().mockReturnValue({ select: mockSelect }),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase client mock requires partial type
+    } as any)
+  })
+
+  it('should query all systems ordered by display_order', async () => {
+    await getSystems()
+
+    expect(mockSelect).toHaveBeenCalledWith(EXPECTED_SELECT)
+    expect(mockOrder).toHaveBeenCalledWith('display_order', { ascending: true })
+  })
+
+  it('should return all systems including disabled', async () => {
+    const result = await getSystems()
+
+    expect(result).toHaveLength(2)
+    expect(result[0].enabled).toBe(true)
+    expect(result[1].enabled).toBe(false)
+  })
+
+  it('should transform snake_case to camelCase', async () => {
+    const result = await getSystems()
+
+    expect(result[0]).toEqual({
+      id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+      name: 'System 1',
+      url: 'https://sys1.com',
+      logoUrl: null,
+      description: 'Desc 1',
+      status: 'operational',
+      responseTime: 100,
+      displayOrder: 0,
+      enabled: true,
+      createdAt: '2026-01-01T00:00:00Z',
+      updatedAt: '2026-01-01T00:00:00Z',
+    })
+    expect(result[1]).toEqual({
+      id: 'a23bc45d-67ef-8901-b234-5c6d7e8f9012',
+      name: 'System 2',
+      url: 'https://sys2.com',
+      logoUrl: 'https://logo.com/img.png',
+      description: null,
+      status: null,
+      responseTime: null,
+      displayOrder: 1,
+      enabled: false,
+      createdAt: '2026-01-02T00:00:00Z',
+      updatedAt: '2026-01-02T00:00:00Z',
+    })
+  })
+
+  it('should return empty array when no systems', async () => {
+    mockOrder.mockResolvedValue({ data: [], error: null })
+
+    const result = await getSystems()
+    expect(result).toEqual([])
+  })
+
+  it('should throw on Supabase error', async () => {
+    mockOrder.mockResolvedValue({
+      data: null,
+      error: { message: 'Connection failed' },
+    })
+
+    await expect(getSystems()).rejects.toThrow()
   })
 })

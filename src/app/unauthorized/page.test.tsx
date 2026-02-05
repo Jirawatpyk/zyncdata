@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, act } from '@testing-library/react'
 import { axe } from 'jest-axe'
 import UnauthorizedPage, { metadata } from './page'
 
@@ -45,7 +45,9 @@ describe('UnauthorizedPage', () => {
   it('should have no accessibility violations', async () => {
     const { container } = render(<UnauthorizedPage />)
 
-    const results = await axe(container)
-    expect(results).toHaveNoViolations()
+    await act(async () => {
+      const results = await axe(container)
+      expect(results).toHaveNoViolations()
+    })
   })
 })

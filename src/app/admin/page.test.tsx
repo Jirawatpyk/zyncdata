@@ -1,41 +1,23 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
-import { axe } from 'jest-axe'
-import AdminPage, { metadata } from './page'
+import { metadata } from './page'
 
-vi.mock('@/lib/actions/logout', () => ({
-  logoutAction: vi.fn(),
+const mockRedirect = vi.fn()
+vi.mock('next/navigation', () => ({
+  redirect: (path: string) => mockRedirect(path),
 }))
 
 describe('AdminPage', () => {
-  it('should render admin panel heading', () => {
-    render(<AdminPage />)
+  it('should redirect to /admin/systems', async () => {
+    const { default: AdminPage } = await import('./page')
 
-    expect(screen.getByRole('heading', { name: 'Admin Panel' })).toBeInTheDocument()
-  })
+    AdminPage()
 
-  it('should render LogoutButton', () => {
-    render(<AdminPage />)
-
-    expect(screen.getByTestId('logout-button')).toBeInTheDocument()
-  })
-
-  it('should render placeholder text', () => {
-    render(<AdminPage />)
-
-    expect(screen.getByText('Admin features coming in Epic 3+')).toBeInTheDocument()
+    expect(mockRedirect).toHaveBeenCalledWith('/admin/systems')
   })
 
   it('should export correct metadata', () => {
     expect(metadata).toEqual({
       title: 'Admin | zyncdata',
     })
-  })
-
-  it('should have no accessibility violations', async () => {
-    const { container } = render(<AdminPage />)
-
-    const results = await axe(container)
-    expect(results).toHaveNoViolations()
   })
 })

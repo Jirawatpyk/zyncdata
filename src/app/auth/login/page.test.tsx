@@ -26,11 +26,11 @@ beforeEach(() => {
 })
 
 describe('LoginPage', () => {
-  it('[P1] should redirect to /dashboard when user is authenticated', async () => {
+  it('[P1] should redirect to /admin when user is authenticated', async () => {
     mockGetCurrentUser.mockResolvedValue({ id: 'u1', email: 'admin@dxt-ai.com' })
 
     await expect(LoginPage()).rejects.toThrow('NEXT_REDIRECT')
-    expect(mockRedirect).toHaveBeenCalledWith('/dashboard')
+    expect(mockRedirect).toHaveBeenCalledWith('/admin')
   })
 
   it('[P1] should render LoginForm when user is not authenticated', async () => {

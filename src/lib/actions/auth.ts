@@ -42,7 +42,7 @@ export async function loginAction(
     } else if (needsMfaVerification) {
       redirect('/auth/mfa-verify')
     } else {
-      redirect('/dashboard')
+      redirect('/admin')
     }
   } catch (err) {
     // redirect() throws a NEXT_REDIRECT error — rethrow it
