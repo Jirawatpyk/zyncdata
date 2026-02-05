@@ -64,18 +64,14 @@ test.describe('/auth/register redirect', () => {
   })
 })
 
-test.describe('MFA stub pages', () => {
-  test('should render MFA enrollment stub', async ({ page }) => {
+test.describe('MFA pages redirect unauthenticated users', () => {
+  test('should redirect from MFA enrollment to login', async ({ page }) => {
     await page.goto('/auth/mfa-enroll')
-    await expect(page.getByRole('heading', { name: 'MFA Setup' })).toBeVisible()
-    await expect(page.getByText('MFA Setup coming in Story 2.2')).toBeVisible()
-    await expect(page.getByRole('link', { name: 'Back to Login' })).toBeVisible()
+    await expect(page).toHaveURL(/\/auth\/login/)
   })
 
-  test('should render MFA verification stub', async ({ page }) => {
+  test('should redirect from MFA verification to login', async ({ page }) => {
     await page.goto('/auth/mfa-verify')
-    await expect(page.getByRole('heading', { name: 'MFA Verification' })).toBeVisible()
-    await expect(page.getByText('MFA Verification coming in Story 2.4')).toBeVisible()
-    await expect(page.getByRole('link', { name: 'Back to Login' })).toBeVisible()
+    await expect(page).toHaveURL(/\/auth\/login/)
   })
 })

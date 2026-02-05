@@ -76,7 +76,7 @@ test.describe('RBAC Enforcement Guardrails', () => {
     await expect(page.getByTestId('unauthorized-page')).toBeVisible()
 
     // When the user clicks "Go to Dashboard"
-    await page.getByTestId('go-to-dashboard-link').click()
+    await page.getByTestId('go-to-admin-link').click()
 
     // Then unauthenticated user should be redirected to login
     // (since /dashboard requires authentication)

@@ -6,6 +6,7 @@ import LoadingSpinner from '@/components/patterns/LoadingSpinner'
 import SystemsEmptyState from './SystemsEmptyState'
 import AddSystemDialog from './AddSystemDialog'
 import EditSystemDialog from './EditSystemDialog'
+import DeleteSystemDialog from './DeleteSystemDialog'
 import { cn } from '@/lib/utils'
 
 export default function SystemsList() {
@@ -58,6 +59,10 @@ export default function SystemsList() {
             <div className="flex items-center gap-3">
               {/* Edit button */}
               <EditSystemDialog system={system} />
+              {/* Delete button — hidden for already-deleted systems */}
+              {system.deletedAt == null && (
+                <DeleteSystemDialog system={system} />
+              )}
               {system.status && (
                 <span
                   className={cn(
@@ -70,6 +75,15 @@ export default function SystemsList() {
                   )}
                 >
                   {system.status}
+                </span>
+              )}
+              {/* Deleted badge — shown when deletedAt is set */}
+              {system.deletedAt != null && (
+                <span
+                  className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700"
+                  data-testid={`deleted-badge-${system.id}`}
+                >
+                  Deleted
                 </span>
               )}
               <span

@@ -39,7 +39,10 @@ export async function updateSession(request: NextRequest) {
       request.nextUrl.pathname.startsWith(`${path}/`),
   )
 
-  if (!user && !isPublicPath) {
+  // API routes handle their own auth via requireApiAuth() — skip redirect
+  const isApiRoute = request.nextUrl.pathname.startsWith('/api/')
+
+  if (!user && !isPublicPath && !isApiRoute) {
     const url = request.nextUrl.clone()
     url.pathname = '/auth/login'
     return NextResponse.redirect(url)

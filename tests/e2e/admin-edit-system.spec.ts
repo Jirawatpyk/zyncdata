@@ -3,17 +3,20 @@ import { test } from '../support/fixtures/merged-fixtures'
 
 test.describe('Edit System Flow', () => {
   test.describe('Unauthenticated - API Protection', () => {
-    test('[P0] PATCH /api/systems/:id should return 401 without auth', async ({ playwright, baseURL }) => {
-      const unauthRequest = await playwright.request.newContext({ baseURL: baseURL! })
-      const response = await unauthRequest.patch('/api/systems/f47ac10b-58cc-4372-a567-0e02b2c3d479', {
-        data: {
+    test('[P0] PATCH /api/systems/:id should return 401 without auth', async () => {
+      // Use native fetch — guarantees zero cookies (Playwright contexts may leak state)
+      const baseUrl = process.env.BASE_URL || 'http://localhost:3000'
+      const response = await fetch(`${baseUrl}/api/systems/f47ac10b-58cc-4372-a567-0e02b2c3d479`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           name: 'Updated System',
           url: 'https://updated.example.com',
           enabled: true,
-        },
+        }),
       })
 
-      expect(response.status()).toBe(401)
+      expect(response.status).toBe(401)
       const body = await response.json()
       expect(body.error.code).toBe('UNAUTHORIZED')
     })
@@ -35,7 +38,9 @@ test.describe('Edit System Flow', () => {
       await adminPage.getByTestId('submit-button').click()
 
       await expect(adminPage.getByTestId('add-system-dialog')).not.toBeVisible({ timeout: 10000 })
-      await expect(adminPage.getByText(systemName)).toBeVisible()
+      await expect(
+        adminPage.getByTestId('systems-list').getByText(systemName, { exact: true })
+      ).toBeVisible()
 
       return { name: systemName, url: systemUrl }
     }
@@ -82,9 +87,13 @@ test.describe('Edit System Flow', () => {
       await expect(adminPage.getByTestId('edit-system-dialog')).not.toBeVisible({ timeout: 10000 })
 
       // Verify updated name appears in list
-      await expect(adminPage.getByText(updatedName)).toBeVisible()
+      await expect(
+        adminPage.getByTestId('systems-list').getByText(updatedName, { exact: true })
+      ).toBeVisible()
       // Original name should no longer be visible
-      await expect(adminPage.getByText(system.name)).not.toBeVisible()
+      await expect(
+        adminPage.getByTestId('systems-list').getByText(system.name, { exact: true })
+      ).not.toBeVisible()
     })
 
     test('[P1] should show success toast on update', async ({ adminPage }) => {

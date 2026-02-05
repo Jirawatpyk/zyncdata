@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { createSystemSchema, updateSystemSchema } from './system'
+import { createSystemSchema, updateSystemSchema, deleteSystemSchema } from './system'
 
 describe('createSystemSchema', () => {
   // AC #3, #4: Validate required fields and URL format
@@ -426,5 +426,45 @@ describe('updateSystemSchema', () => {
         expect('unknownField' in result.data).toBe(false)
       }
     })
+  })
+})
+
+describe('deleteSystemSchema', () => {
+  // Story 3.4 AC #3: Validate UUID for delete operation
+
+  it('should accept valid UUID', () => {
+    const result = deleteSystemSchema.safeParse({
+      id: '550e8400-e29b-41d4-a716-446655440000',
+    })
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.id).toBe('550e8400-e29b-41d4-a716-446655440000')
+    }
+  })
+
+  it('should reject invalid UUID', () => {
+    const result = deleteSystemSchema.safeParse({
+      id: 'not-a-uuid',
+    })
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(result.error.issues[0].message).toBe('Invalid system ID')
+    }
+  })
+
+  it('should reject missing id', () => {
+    const result = deleteSystemSchema.safeParse({})
+    expect(result.success).toBe(false)
+  })
+
+  it('should strip unknown fields', () => {
+    const result = deleteSystemSchema.safeParse({
+      id: '550e8400-e29b-41d4-a716-446655440000',
+      extraField: 'should be stripped',
+    })
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect('extraField' in result.data).toBe(false)
+    }
   })
 })

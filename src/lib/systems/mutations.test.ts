@@ -1,8 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { createSystem } from './mutations'
+import { createSystem, updateSystem, deleteSystem } from './mutations'
 
 const mockSingleForSelect = vi.fn()
 const mockSingleForInsert = vi.fn()
+const mockSingleForUpdate = vi.fn()
+
+const mockUpdate = vi.fn()
 
 const mockSupabase = {
   from: vi.fn(),
@@ -18,6 +21,21 @@ vi.mock('next/cache', () => ({
 
 // Valid UUID for testing
 const TEST_UUID = 'f47ac10b-58cc-4372-a567-0e02b2c3d479'
+
+const MOCK_SYSTEM_DB = {
+  id: TEST_UUID,
+  name: 'Test System',
+  url: 'https://example.com',
+  logo_url: null,
+  description: null,
+  status: null,
+  response_time: null,
+  display_order: 0,
+  enabled: true,
+  created_at: '2026-01-01T00:00:00Z',
+  updated_at: '2026-01-01T00:00:00Z',
+  deleted_at: null,
+}
 
 describe('createSystem', () => {
   beforeEach(() => {
@@ -61,17 +79,9 @@ describe('createSystem', () => {
     // Insert query
     mockSingleForInsert.mockResolvedValueOnce({
       data: {
-        id: TEST_UUID,
+        ...MOCK_SYSTEM_DB,
         name: 'New System',
-        url: 'https://example.com',
-        logo_url: null,
-        description: null,
-        status: null,
-        response_time: null,
         display_order: 6,
-        enabled: true,
-        created_at: '2026-01-01T00:00:00Z',
-        updated_at: '2026-01-01T00:00:00Z',
       },
       error: null,
     })
@@ -92,17 +102,9 @@ describe('createSystem', () => {
     // Insert query
     mockSingleForInsert.mockResolvedValueOnce({
       data: {
-        id: TEST_UUID,
+        ...MOCK_SYSTEM_DB,
         name: 'First System',
         url: 'https://first.com',
-        logo_url: null,
-        description: null,
-        status: null,
-        response_time: null,
-        display_order: 0,
-        enabled: true,
-        created_at: '2026-01-01T00:00:00Z',
-        updated_at: '2026-01-01T00:00:00Z',
       },
       error: null,
     })
@@ -123,17 +125,12 @@ describe('createSystem', () => {
     })
     mockSingleForInsert.mockResolvedValueOnce({
       data: {
-        id: TEST_UUID,
+        ...MOCK_SYSTEM_DB,
         name: 'Test',
         url: 'https://test.com',
-        logo_url: null,
         description: 'Test desc',
-        status: null,
-        response_time: null,
         display_order: 1,
         enabled: false,
-        created_at: '2026-01-01T00:00:00Z',
-        updated_at: '2026-01-01T00:00:00Z',
       },
       error: null,
     })
@@ -179,17 +176,8 @@ describe('createSystem', () => {
     })
     mockSingleForInsert.mockResolvedValueOnce({
       data: {
-        id: TEST_UUID,
-        name: 'New System',
-        url: 'https://example.com',
-        logo_url: null,
-        description: null,
-        status: null,
-        response_time: null,
+        ...MOCK_SYSTEM_DB,
         display_order: 1,
-        enabled: true,
-        created_at: '2026-01-01T00:00:00Z',
-        updated_at: '2026-01-01T00:00:00Z',
       },
       error: null,
     })
@@ -210,7 +198,7 @@ describe('createSystem', () => {
     })
     mockSingleForInsert.mockResolvedValueOnce({
       data: {
-        id: TEST_UUID,
+        ...MOCK_SYSTEM_DB,
         name: 'Camel System',
         url: 'https://camel.com',
         logo_url: 'https://logo.com/img.png',
@@ -218,8 +206,6 @@ describe('createSystem', () => {
         status: 'operational',
         response_time: 150,
         display_order: 3,
-        enabled: true,
-        created_at: '2026-01-01T00:00:00Z',
         updated_at: '2026-01-01T12:00:00Z',
       },
       error: null,
@@ -238,5 +224,168 @@ describe('createSystem', () => {
     expect(result.responseTime).toBe(150)
     expect(result.createdAt).toBe('2026-01-01T00:00:00Z')
     expect(result.updatedAt).toBe('2026-01-01T12:00:00Z')
+  })
+})
+
+describe('deleteSystem', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+
+    mockSupabase.from.mockReturnValue({
+      update: mockUpdate,
+    })
+
+    const mockEq = vi.fn().mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        single: mockSingleForUpdate,
+      }),
+    })
+    mockUpdate.mockReturnValue({ eq: mockEq })
+  })
+
+  it('should soft-delete system by setting enabled=false and deleted_at', async () => {
+    const deletedAt = '2026-02-05T12:00:00Z'
+    mockSingleForUpdate.mockResolvedValueOnce({
+      data: {
+        ...MOCK_SYSTEM_DB,
+        enabled: false,
+        deleted_at: deletedAt,
+      },
+      error: null,
+    })
+
+    const result = await deleteSystem(TEST_UUID)
+
+    expect(result.enabled).toBe(false)
+    expect(result.deletedAt).toBe(deletedAt)
+    expect(mockUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        enabled: false,
+        deleted_at: expect.any(String),
+      }),
+    )
+  })
+
+  it('should call revalidatePath after successful deletion', async () => {
+    const { revalidatePath } = await import('next/cache')
+
+    mockSingleForUpdate.mockResolvedValueOnce({
+      data: {
+        ...MOCK_SYSTEM_DB,
+        enabled: false,
+        deleted_at: '2026-02-05T12:00:00Z',
+      },
+      error: null,
+    })
+
+    await deleteSystem(TEST_UUID)
+
+    expect(revalidatePath).toHaveBeenCalledWith('/')
+  })
+
+  it('should throw "System not found" for PGRST116 error', async () => {
+    mockSingleForUpdate.mockResolvedValueOnce({
+      data: null,
+      error: { message: 'Not found', code: 'PGRST116' },
+    })
+
+    await expect(deleteSystem(TEST_UUID)).rejects.toThrow('System not found')
+  })
+
+  it('should throw generic error for other failures', async () => {
+    mockSingleForUpdate.mockResolvedValueOnce({
+      data: null,
+      error: { message: 'Connection failed', code: 'SOME_ERROR' },
+    })
+
+    await expect(deleteSystem(TEST_UUID)).rejects.toEqual({
+      message: 'Connection failed',
+      code: 'SOME_ERROR',
+    })
+  })
+
+  it('should return parsed System with camelCase fields', async () => {
+    mockSingleForUpdate.mockResolvedValueOnce({
+      data: {
+        ...MOCK_SYSTEM_DB,
+        enabled: false,
+        deleted_at: '2026-02-05T12:00:00Z',
+        updated_at: '2026-02-05T12:00:00Z',
+      },
+      error: null,
+    })
+
+    const result = await deleteSystem(TEST_UUID)
+
+    expect(result.id).toBe(TEST_UUID)
+    expect(result.deletedAt).toBe('2026-02-05T12:00:00Z')
+    expect(result.updatedAt).toBe('2026-02-05T12:00:00Z')
+  })
+})
+
+describe('updateSystem — recovery path', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+
+    mockSupabase.from.mockReturnValue({
+      update: mockUpdate,
+    })
+
+    const mockEq = vi.fn().mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        single: mockSingleForUpdate,
+      }),
+    })
+    mockUpdate.mockReturnValue({ eq: mockEq })
+  })
+
+  it('should clear deleted_at when enabled is set to true (recovery)', async () => {
+    mockSingleForUpdate.mockResolvedValueOnce({
+      data: {
+        ...MOCK_SYSTEM_DB,
+        enabled: true,
+        deleted_at: null,
+      },
+      error: null,
+    })
+
+    await updateSystem({
+      id: TEST_UUID,
+      name: 'Test System',
+      url: 'https://example.com',
+      enabled: true,
+    })
+
+    // The update payload should include deleted_at: null
+    expect(mockUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        deleted_at: null,
+      }),
+    )
+  })
+
+  it('should NOT clear deleted_at when enabled is false', async () => {
+    mockSingleForUpdate.mockResolvedValueOnce({
+      data: {
+        ...MOCK_SYSTEM_DB,
+        enabled: false,
+        deleted_at: '2026-02-05T12:00:00Z',
+      },
+      error: null,
+    })
+
+    await updateSystem({
+      id: TEST_UUID,
+      name: 'Test System',
+      url: 'https://example.com',
+      enabled: false,
+    })
+
+    // deleted_at should NOT be explicitly set to null
+    expect(mockUpdate).toHaveBeenCalledWith(
+      expect.not.objectContaining({
+        deleted_at: null,
+      }),
+    )
   })
 })

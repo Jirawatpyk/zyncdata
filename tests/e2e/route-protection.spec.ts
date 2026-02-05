@@ -35,7 +35,7 @@ test.describe('Route Protection', () => {
 
     await expect(page.getByTestId('unauthorized-page')).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Access Denied' })).toBeVisible()
-    await expect(page.getByTestId('go-to-dashboard-link')).toBeVisible()
+    await expect(page.getByTestId('go-to-admin-link')).toBeVisible()
     await expect(page.getByTestId('go-to-login-link')).toBeVisible()
   })
 

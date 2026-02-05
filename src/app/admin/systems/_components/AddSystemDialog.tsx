@@ -42,6 +42,7 @@ export default function AddSystemDialog({
   onSuccess,
 }: AddSystemDialogProps) {
   const [open, setOpen] = useState(false)
+  const [serverError, setServerError] = useState<string | null>(null)
   const createSystem = useCreateSystem()
 
   const form = useForm<FormValues>({
@@ -57,6 +58,7 @@ export default function AddSystemDialog({
   })
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
+    setServerError(null)
     try {
       await createSystem.mutateAsync(data)
       toast.success('System added', {
@@ -68,14 +70,20 @@ export default function AddSystemDialog({
     } catch (error) {
       const message =
         error instanceof Error ? error.message : 'Failed to add system'
-      toast.error('Unable to add system', { description: message })
+
+      // Show duplicate name as inline error (survives query-triggered re-renders)
+      if (message.includes('already exists')) {
+        setServerError(message)
+      } else {
+        toast.error('Unable to add system', { description: message })
+      }
     }
   }
 
   function handleOpenChange(isOpen: boolean) {
     setOpen(isOpen)
     if (!isOpen) {
-      // Reset form when dialog closes
+      setServerError(null)
       form.reset()
     }
   }
@@ -107,6 +115,13 @@ export default function AddSystemDialog({
             className="space-y-4"
             data-testid="add-system-form"
           >
+            {/* Server error (e.g. duplicate name) */}
+            {serverError && (
+              <p className="text-[0.8rem] font-medium text-destructive" role="alert">
+                {serverError}
+              </p>
+            )}
+
             {/* Name field */}
             <FormField
               control={form.control}
@@ -189,7 +204,7 @@ export default function AddSystemDialog({
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setOpen(false)}
+                onClick={() => handleOpenChange(false)}
                 data-testid="cancel-button"
               >
                 Cancel

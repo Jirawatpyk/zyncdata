@@ -44,6 +44,7 @@ export default function EditSystemDialog({
   onSuccess,
 }: EditSystemDialogProps) {
   const [open, setOpen] = useState(false)
+  const [serverError, setServerError] = useState<string | null>(null)
   const updateSystem = useUpdateSystem()
 
   const form = useForm<FormValues>({
@@ -72,6 +73,7 @@ export default function EditSystemDialog({
   }, [open, system, form])
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
+    setServerError(null)
     try {
       await updateSystem.mutateAsync(data)
       toast.success('System updated', {
@@ -82,13 +84,20 @@ export default function EditSystemDialog({
     } catch (error) {
       const message =
         error instanceof Error ? error.message : 'Failed to update system'
-      toast.error('Unable to update system', { description: message })
+
+      // Show duplicate name as inline error (survives form resets from useEffect)
+      if (message.includes('already exists')) {
+        setServerError(message)
+      } else {
+        toast.error('Unable to update system', { description: message })
+      }
     }
   }
 
   function handleOpenChange(isOpen: boolean) {
     setOpen(isOpen)
     if (!isOpen) {
+      setServerError(null)
       // Reset form to original system values when dialog closes (AC #5)
       form.reset({
         id: system.id,
@@ -131,6 +140,13 @@ export default function EditSystemDialog({
             className="space-y-4"
             data-testid="edit-system-form"
           >
+            {/* Server error (e.g. duplicate name) */}
+            {serverError && (
+              <p className="text-[0.8rem] font-medium text-destructive" role="alert">
+                {serverError}
+              </p>
+            )}
+
             {/* Name field */}
             <FormField
               control={form.control}
@@ -213,7 +229,7 @@ export default function EditSystemDialog({
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setOpen(false)}
+                onClick={() => handleOpenChange(false)}
                 data-testid="cancel-button"
               >
                 Cancel

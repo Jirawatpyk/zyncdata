@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import type { System, CreateSystemInput, UpdateSystemInput } from '@/lib/validations/system'
+import type { System, CreateSystemInput, UpdateSystemInput, DeleteSystemInput } from '@/lib/validations/system'
 import { unwrapResponse } from '@/lib/admin/queries/api-adapter'
 
 interface CreateMutationContext {
@@ -8,6 +8,10 @@ interface CreateMutationContext {
 }
 
 interface UpdateMutationContext {
+  previous: System[] | undefined
+}
+
+interface DeleteMutationContext {
   previous: System[] | undefined
 }
 
@@ -44,6 +48,7 @@ export function useCreateSystem() {
         enabled: newSystem.enabled ?? true,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
+        deletedAt: null,
       }
 
       queryClient.setQueryData<System[]>(['admin', 'systems'], (old) => [
@@ -120,6 +125,57 @@ export function useUpdateSystem() {
       // Replace optimistic update with real server response
       queryClient.setQueryData<System[]>(['admin', 'systems'], (old) =>
         old?.map((s) => (s.id === updated.id ? updated : s)) ?? [],
+      )
+    },
+
+    onError: (_error, _variables, context) => {
+      // Rollback to snapshot
+      if (context?.previous) {
+        queryClient.setQueryData(['admin', 'systems'], context.previous)
+      }
+    },
+
+    onSettled: () => {
+      // Always refetch to ensure consistency
+      queryClient.invalidateQueries({ queryKey: ['admin', 'systems'] })
+    },
+  })
+}
+
+export function useDeleteSystem() {
+  const queryClient = useQueryClient()
+
+  return useMutation<System, Error, DeleteSystemInput, DeleteMutationContext>({
+    mutationFn: async ({ id }: DeleteSystemInput) => {
+      const res = await fetch(`/api/systems/${id}`, {
+        method: 'DELETE',
+      })
+      return unwrapResponse<System>(res)
+    },
+
+    onMutate: async ({ id }) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['admin', 'systems'] })
+
+      // Snapshot current data
+      const previous = queryClient.getQueryData<System[]>(['admin', 'systems'])
+
+      // Optimistic update — mark as deleted (NOT remove from list)
+      queryClient.setQueryData<System[]>(['admin', 'systems'], (old) =>
+        old?.map((s) =>
+          s.id === id
+            ? { ...s, enabled: false, deletedAt: new Date().toISOString() }
+            : s,
+        ) ?? [],
+      )
+
+      return { previous }
+    },
+
+    onSuccess: (serverData) => {
+      // Replace optimistic entry with real server response
+      queryClient.setQueryData<System[]>(['admin', 'systems'], (old) =>
+        old?.map((s) => (s.id === serverData.id ? serverData : s)) ?? [],
       )
     },
 

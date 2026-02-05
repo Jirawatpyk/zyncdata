@@ -8,11 +8,12 @@ import { createClient } from '@/lib/supabase/server'
 import { getEnabledSystems, getSystemByName, getSystems } from '@/lib/systems/queries'
 
 const EXPECTED_SELECT =
-  'id, name, url, logo_url, description, status, response_time, display_order, enabled, created_at, updated_at'
+  'id, name, url, logo_url, description, status, response_time, display_order, enabled, created_at, updated_at, deleted_at'
 
 describe('getEnabledSystems', () => {
   const mockSelect = vi.fn()
   const mockEq = vi.fn()
+  const mockIs = vi.fn()
   const mockOrder = vi.fn()
 
   beforeEach(() => {
@@ -31,6 +32,7 @@ describe('getEnabledSystems', () => {
           enabled: true,
           created_at: '2026-01-01T00:00:00Z',
           updated_at: '2026-01-01T00:00:00Z',
+          deleted_at: null,
         },
         {
           id: 'a23bc45d-67ef-8901-b234-5c6d7e8f9012',
@@ -44,11 +46,13 @@ describe('getEnabledSystems', () => {
           enabled: true,
           created_at: '2026-01-02T00:00:00Z',
           updated_at: '2026-01-02T00:00:00Z',
+          deleted_at: null,
         },
       ],
       error: null,
     })
-    mockEq.mockReturnValue({ order: mockOrder })
+    mockIs.mockReturnValue({ order: mockOrder })
+    mockEq.mockReturnValue({ is: mockIs })
     mockSelect.mockReturnValue({ eq: mockEq })
     vi.mocked(createClient).mockResolvedValue({
       from: vi.fn().mockReturnValue({ select: mockSelect }),
@@ -61,6 +65,7 @@ describe('getEnabledSystems', () => {
 
     expect(mockSelect).toHaveBeenCalledWith(EXPECTED_SELECT)
     expect(mockEq).toHaveBeenCalledWith('enabled', true)
+    expect(mockIs).toHaveBeenCalledWith('deleted_at', null)
     expect(mockOrder).toHaveBeenCalledWith('display_order', { ascending: true })
   })
 
@@ -80,6 +85,7 @@ describe('getEnabledSystems', () => {
       enabled: true,
       createdAt: '2026-01-01T00:00:00Z',
       updatedAt: '2026-01-01T00:00:00Z',
+      deletedAt: null,
     })
     expect(result[1].logoUrl).toBeNull()
     expect(result[1].status).toBe('coming_soon')
@@ -107,6 +113,7 @@ describe('getSystemByName', () => {
   const mockSelect = vi.fn()
   const mockEqName = vi.fn()
   const mockEqEnabled = vi.fn()
+  const mockIs = vi.fn()
   const mockMaybeSingle = vi.fn()
 
   beforeEach(() => {
@@ -124,10 +131,12 @@ describe('getSystemByName', () => {
         enabled: true,
         created_at: '2026-01-01T00:00:00Z',
         updated_at: '2026-01-01T00:00:00Z',
+        deleted_at: null,
       },
       error: null,
     })
-    mockEqEnabled.mockReturnValue({ maybeSingle: mockMaybeSingle })
+    mockIs.mockReturnValue({ maybeSingle: mockMaybeSingle })
+    mockEqEnabled.mockReturnValue({ is: mockIs })
     mockEqName.mockReturnValue({ eq: mockEqEnabled })
     mockSelect.mockReturnValue({ eq: mockEqName })
     vi.mocked(createClient).mockResolvedValue({
@@ -142,6 +151,7 @@ describe('getSystemByName', () => {
     expect(mockSelect).toHaveBeenCalledWith(EXPECTED_SELECT)
     expect(mockEqName).toHaveBeenCalledWith('name', 'VOCA')
     expect(mockEqEnabled).toHaveBeenCalledWith('enabled', true)
+    expect(mockIs).toHaveBeenCalledWith('deleted_at', null)
   })
 
   it('should return system in camelCase when found', async () => {
@@ -159,6 +169,7 @@ describe('getSystemByName', () => {
       enabled: true,
       createdAt: '2026-01-01T00:00:00Z',
       updatedAt: '2026-01-01T00:00:00Z',
+      deletedAt: null,
     })
   })
 
@@ -199,6 +210,7 @@ describe('getSystems', () => {
           enabled: true,
           created_at: '2026-01-01T00:00:00Z',
           updated_at: '2026-01-01T00:00:00Z',
+          deleted_at: null,
         },
         {
           id: 'a23bc45d-67ef-8901-b234-5c6d7e8f9012',
@@ -212,6 +224,7 @@ describe('getSystems', () => {
           enabled: false,
           created_at: '2026-01-02T00:00:00Z',
           updated_at: '2026-01-02T00:00:00Z',
+          deleted_at: null,
         },
       ],
       error: null,
@@ -253,6 +266,7 @@ describe('getSystems', () => {
       enabled: true,
       createdAt: '2026-01-01T00:00:00Z',
       updatedAt: '2026-01-01T00:00:00Z',
+      deletedAt: null,
     })
     expect(result[1]).toEqual({
       id: 'a23bc45d-67ef-8901-b234-5c6d7e8f9012',
@@ -266,6 +280,7 @@ describe('getSystems', () => {
       enabled: false,
       createdAt: '2026-01-02T00:00:00Z',
       updatedAt: '2026-01-02T00:00:00Z',
+      deletedAt: null,
     })
   })
 

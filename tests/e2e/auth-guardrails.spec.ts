@@ -1,26 +1,27 @@
-import { test, expect } from '@playwright/test'
+import { expect } from '@playwright/test'
+import { test } from '../support/fixtures/merged-fixtures'
 import AxeBuilder from '@axe-core/playwright'
 
 // Story 2.1 guardrail tests — fills E2E coverage gaps not addressed by login.spec.ts
 
 test.describe('Dashboard Stub Page', () => {
-  test('[P2] should render dashboard heading and placeholder text', async ({ page }) => {
-    await page.goto('/dashboard')
+  test('[P2] should render dashboard heading and placeholder text', async ({ adminPage }) => {
+    await adminPage.goto('/dashboard')
 
-    await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible()
-    await expect(page.getByText('Dashboard coming in Epic 3+')).toBeVisible()
+    await expect(adminPage.getByRole('heading', { name: 'Dashboard' })).toBeVisible()
+    await expect(adminPage.getByText('Dashboard coming in Epic 3+')).toBeVisible()
   })
 
-  test('[P2] should have correct page title', async ({ page }) => {
-    await page.goto('/dashboard')
+  test('[P2] should have correct page title', async ({ adminPage }) => {
+    await adminPage.goto('/dashboard')
 
-    await expect(page).toHaveTitle(/Dashboard.*zyncdata/)
+    await expect(adminPage).toHaveTitle(/Dashboard.*zyncdata/)
   })
 
-  test('[P2] should have no accessibility violations', async ({ page }) => {
-    await page.goto('/dashboard')
+  test('[P2] should have no accessibility violations', async ({ adminPage }) => {
+    await adminPage.goto('/dashboard')
 
-    const results = await new AxeBuilder({ page }).analyze()
+    const results = await new AxeBuilder({ page: adminPage }).analyze()
     expect(results.violations).toEqual([])
   })
 })
@@ -33,24 +34,16 @@ test.describe('Auth Callback Error Handling', () => {
   })
 })
 
-test.describe('MFA Stub Back-to-Login Navigation', () => {
-  test('[P2] should navigate from MFA enrollment stub to login page', async ({ page }) => {
+test.describe('MFA Pages Redirect Unauthenticated Users', () => {
+  test('[P2] should redirect from MFA enrollment to login page', async ({ page }) => {
     await page.goto('/auth/mfa-enroll')
-
-    const backLink = page.getByRole('link', { name: 'Back to Login' })
-    await expect(backLink).toBeVisible()
-    await backLink.click()
 
     await expect(page).toHaveURL(/\/auth\/login/)
     await expect(page.getByRole('heading', { name: 'Sign in' })).toBeVisible()
   })
 
-  test('[P2] should navigate from MFA verification stub to login page', async ({ page }) => {
+  test('[P2] should redirect from MFA verification to login page', async ({ page }) => {
     await page.goto('/auth/mfa-verify')
-
-    const backLink = page.getByRole('link', { name: 'Back to Login' })
-    await expect(backLink).toBeVisible()
-    await backLink.click()
 
     await expect(page).toHaveURL(/\/auth\/login/)
     await expect(page.getByRole('heading', { name: 'Sign in' })).toBeVisible()

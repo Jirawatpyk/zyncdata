@@ -39,9 +39,7 @@ test.describe('MFA Verify Page', () => {
     await expect(page.getByRole('heading', { name: 'Sign in' })).toBeVisible()
 
     // Verify login form is functional
-    const emailInput = page.getByLabel(/email/i)
-    const passwordInput = page.getByLabel(/password/i)
-    await expect(emailInput).toBeVisible()
-    await expect(passwordInput).toBeVisible()
+    await expect(page.getByTestId('login-email')).toBeVisible()
+    await expect(page.getByTestId('login-password')).toBeVisible()
   })
 })

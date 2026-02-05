@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { NextResponse } from 'next/server'
-import { PATCH } from './route'
+import { PATCH, DELETE } from './route'
 import type { AuthResult } from '@/lib/auth/guard'
 import type { User } from '@supabase/supabase-js'
 import type { System } from '@/lib/validations/system'
@@ -8,6 +8,7 @@ import type { System } from '@/lib/validations/system'
 const mockRequireApiAuth = vi.fn()
 const mockIsAuthError = vi.fn()
 const mockUpdateSystem = vi.fn()
+const mockDeleteSystem = vi.fn()
 
 vi.mock('@/lib/auth/guard', () => ({
   requireApiAuth: () => mockRequireApiAuth(),
@@ -16,6 +17,7 @@ vi.mock('@/lib/auth/guard', () => ({
 
 vi.mock('@/lib/systems/mutations', () => ({
   updateSystem: (input: unknown) => mockUpdateSystem(input),
+  deleteSystem: (id: string) => mockDeleteSystem(id),
 }))
 
 function createMockAuth(): AuthResult {
@@ -38,6 +40,7 @@ function createMockSystem(overrides?: Partial<System>): System {
     enabled: true,
     createdAt: '2026-01-01T00:00:00Z',
     updatedAt: '2026-01-01T00:00:00Z',
+    deletedAt: null,
     ...overrides,
   }
 }
@@ -446,6 +449,109 @@ describe('PATCH /api/systems/[id]', () => {
       name: 'Updated',
       url: 'https://example.com',
       enabled: true,
+    })
+  })
+})
+
+describe('DELETE /api/systems/[id]', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  function createDeleteRequest(): Request {
+    return new Request('http://localhost/api/systems/f47ac10b-58cc-4372-a567-0e02b2c3d479', {
+      method: 'DELETE',
+    })
+  }
+
+  it('should return 401 when not authenticated', async () => {
+    const authErrorResponse = NextResponse.json(
+      { data: null, error: { message: 'Unauthorized', code: 'UNAUTHORIZED' } },
+      { status: 401 },
+    )
+    mockRequireApiAuth.mockResolvedValue(authErrorResponse)
+    mockIsAuthError.mockReturnValue(true)
+
+    const response = await DELETE(createDeleteRequest(), createParams())
+
+    expect(response).toBe(authErrorResponse)
+    expect(mockDeleteSystem).not.toHaveBeenCalled()
+  })
+
+  it('should return 403 for non-admin roles', async () => {
+    const forbiddenResponse = NextResponse.json(
+      { data: null, error: { message: 'Forbidden', code: 'FORBIDDEN' } },
+      { status: 403 },
+    )
+    mockRequireApiAuth.mockResolvedValue(forbiddenResponse)
+    mockIsAuthError.mockReturnValue(true)
+
+    const response = await DELETE(createDeleteRequest(), createParams())
+
+    expect(response).toBe(forbiddenResponse)
+    expect(mockDeleteSystem).not.toHaveBeenCalled()
+  })
+
+  it('should soft-delete system and return 200 on success', async () => {
+    const deletedSystem = createMockSystem({
+      enabled: false,
+      deletedAt: '2026-02-05T12:00:00Z',
+    })
+
+    mockRequireApiAuth.mockResolvedValue(createMockAuth())
+    mockIsAuthError.mockReturnValue(false)
+    mockDeleteSystem.mockResolvedValue(deletedSystem)
+
+    const response = await DELETE(createDeleteRequest(), createParams())
+    const body = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(body).toEqual({ data: deletedSystem, error: null })
+    expect(mockDeleteSystem).toHaveBeenCalledWith('f47ac10b-58cc-4372-a567-0e02b2c3d479')
+  })
+
+  it('should return 400 for invalid UUID in params', async () => {
+    mockRequireApiAuth.mockResolvedValue(createMockAuth())
+    mockIsAuthError.mockReturnValue(false)
+
+    const response = await DELETE(createDeleteRequest(), createParams('invalid-uuid'))
+    const body = await response.json()
+
+    expect(response.status).toBe(400)
+    expect(body).toEqual({
+      data: null,
+      error: { message: 'Invalid system ID', code: 'VALIDATION_ERROR' },
+    })
+    expect(mockDeleteSystem).not.toHaveBeenCalled()
+  })
+
+  it('should return 404 when system not found', async () => {
+    mockRequireApiAuth.mockResolvedValue(createMockAuth())
+    mockIsAuthError.mockReturnValue(false)
+    mockDeleteSystem.mockRejectedValue(new Error('System not found'))
+
+    const response = await DELETE(createDeleteRequest(), createParams())
+    const body = await response.json()
+
+    expect(response.status).toBe(404)
+    expect(body).toEqual({
+      data: null,
+      error: { message: 'System not found', code: 'NOT_FOUND' },
+    })
+  })
+
+  it('should return 500 for generic errors', async () => {
+    mockRequireApiAuth.mockResolvedValue(createMockAuth())
+    mockIsAuthError.mockReturnValue(false)
+    mockDeleteSystem.mockRejectedValue(new Error('Database connection failed'))
+
+    const response = await DELETE(createDeleteRequest(), createParams())
+    const body = await response.json()
+
+    expect(response.status).toBe(500)
+    expect(body).toEqual({
+      data: null,
+      error: { message: 'Failed to delete system', code: 'DELETE_ERROR' },
     })
   })
 })

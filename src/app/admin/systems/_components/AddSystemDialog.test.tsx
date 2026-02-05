@@ -30,6 +30,7 @@ function createMockSystem(overrides?: Partial<System>): System {
     enabled: true,
     createdAt: '2026-01-01T00:00:00Z',
     updatedAt: '2026-01-01T00:00:00Z',
+    deletedAt: null,
     ...overrides,
   }
 }
@@ -436,9 +437,8 @@ describe('AddSystemDialog', () => {
   // ===============================================
 
   describe('duplicate name error (409) handling', () => {
-    it('should show duplicate name error in toast', async () => {
+    it('should show duplicate name as inline form error', async () => {
       const user = userEvent.setup()
-      const { toast } = await import('sonner')
 
       mockFetch.mockResolvedValueOnce({
         ok: false,
@@ -465,10 +465,9 @@ describe('AddSystemDialog', () => {
       )
       await user.click(screen.getByTestId('submit-button'))
 
+      // Duplicate name error shown inline via serverError state
       await waitFor(() => {
-        expect(toast.error).toHaveBeenCalledWith('Unable to add system', {
-          description: 'A system with this name already exists',
-        })
+        expect(screen.getByText('A system with this name already exists')).toBeInTheDocument()
       })
 
       // Dialog should stay open so user can change name

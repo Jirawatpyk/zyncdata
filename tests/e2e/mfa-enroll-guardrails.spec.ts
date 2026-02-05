@@ -44,35 +44,19 @@ test.describe('CSP and Security Headers', () => {
   })
 })
 
-test.describe('MFA Verify Stub Page', () => {
-  test('[P2] should render verification heading and placeholder text', async ({ page }) => {
+test.describe('MFA Verify Redirect', () => {
+  test('[P2] unauthenticated user should be redirected to login from mfa-verify', async ({ page }) => {
     await page.goto('/auth/mfa-verify')
 
-    await expect(page.getByRole('heading', { name: 'MFA Verification' })).toBeVisible()
-    await expect(page.getByText('MFA Verification coming in Story 2.4')).toBeVisible()
+    await expect(page).toHaveURL(/\/auth\/login/)
+    await expect(page.getByRole('heading', { name: 'Sign in' })).toBeVisible()
   })
 
-  test('[P2] should have correct page title', async ({ page }) => {
+  test('[P2] login page after redirect should have no accessibility violations', async ({ page }) => {
     await page.goto('/auth/mfa-verify')
-
-    await expect(page).toHaveTitle(/MFA Verification.*zyncdata/)
-  })
-
-  test('[P2] should have no accessibility violations', async ({ page }) => {
-    await page.goto('/auth/mfa-verify')
+    await expect(page).toHaveURL(/\/auth\/login/)
 
     const results = await new AxeBuilder({ page }).analyze()
     expect(results.violations).toEqual([])
-  })
-
-  test('[P2] back-to-login link should have visible focus indicator', async ({ page }) => {
-    await page.goto('/auth/mfa-verify')
-
-    const backLink = page.getByRole('link', { name: 'Back to Login' })
-    await expect(backLink).toBeVisible()
-
-    // Tab to the link and verify focus-visible styling is applied
-    await backLink.focus()
-    await expect(backLink).toBeFocused()
   })
 })

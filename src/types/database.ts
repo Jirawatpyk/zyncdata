@@ -91,6 +91,7 @@ export type Database = {
       systems: {
         Row: {
           created_at: string
+          deleted_at: string | null
           description: string | null
           display_order: number
           enabled: boolean
@@ -104,6 +105,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          deleted_at?: string | null
           description?: string | null
           display_order?: number
           enabled?: boolean
@@ -117,6 +119,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          deleted_at?: string | null
           description?: string | null
           display_order?: number
           enabled?: boolean

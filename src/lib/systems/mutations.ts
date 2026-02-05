@@ -9,7 +9,7 @@ import { toCamelCase, toSnakeCase } from '@/lib/utils/transform'
 import { revalidatePath } from 'next/cache'
 
 const SYSTEM_SELECT_COLUMNS =
-  'id, name, url, logo_url, description, status, response_time, display_order, enabled, created_at, updated_at'
+  'id, name, url, logo_url, description, status, response_time, display_order, enabled, created_at, updated_at, deleted_at'
 
 /**
  * Create a new system in the database.
@@ -58,9 +58,14 @@ export async function updateSystem(input: UpdateSystemInput): Promise<System> {
   const supabase = await createClient()
   const { id, ...updateData } = input
 
+  const snakeData = toSnakeCase(updateData as unknown as Record<string, unknown>)
+  if (updateData.enabled === true) {
+    snakeData.deleted_at = null // Clear soft-delete on recovery
+  }
+
   const { data, error } = await supabase
     .from('systems')
-    .update(toSnakeCase(updateData as unknown as Record<string, unknown>))
+    .update(snakeData)
     .eq('id', id)
     .select(SYSTEM_SELECT_COLUMNS)
     .single()
@@ -73,6 +78,34 @@ export async function updateSystem(input: UpdateSystemInput): Promise<System> {
   }
 
   // Bust ISR cache for landing page (AC #4)
+  revalidatePath('/')
+
+  return systemSchema.parse(toCamelCase<System>(data))
+}
+
+/**
+ * Soft-delete a system by setting enabled=false and recording deleted_at timestamp.
+ * System remains in admin list for recovery within 30 days.
+ * Revalidates ISR cache for landing page.
+ */
+export async function deleteSystem(id: string): Promise<System> {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .from('systems')
+    .update({ enabled: false, deleted_at: new Date().toISOString() })
+    .eq('id', id)
+    .select(SYSTEM_SELECT_COLUMNS)
+    .single()
+
+  if (error) {
+    if (error.code === 'PGRST116') {
+      throw new Error('System not found')
+    }
+    throw error
+  }
+
+  // Bust ISR cache for landing page
   revalidatePath('/')
 
   return systemSchema.parse(toCamelCase<System>(data))

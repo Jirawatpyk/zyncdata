@@ -21,6 +21,7 @@ function createMockSystem(overrides?: Partial<System>): System {
     enabled: true,
     createdAt: '2026-01-01T00:00:00Z',
     updatedAt: '2026-01-01T00:00:00Z',
+    deletedAt: null,
     ...overrides,
   }
 }
@@ -280,5 +281,93 @@ describe('SystemsList', () => {
     expect(row).toContainElement(screen.getByTestId('edit-system-test-id'))
     expect(row).toContainElement(screen.getByText('operational'))
     expect(row).toContainElement(screen.getByText('Enabled'))
+  })
+
+  it('should render delete button for non-deleted systems (Story 3.4)', async () => {
+    vi.useRealTimers()
+    const systems = [
+      createMockSystem({ id: 'active-id', name: 'Active System', deletedAt: null }),
+    ]
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ data: systems, error: null }),
+    })
+
+    render(<SystemsList />, { wrapper: createQueryWrapper() })
+
+    await waitFor(() => {
+      expect(screen.getByTestId('delete-system-active-id')).toBeInTheDocument()
+    })
+  })
+
+  it('should NOT render delete button for already-deleted systems (Story 3.4)', async () => {
+    vi.useRealTimers()
+    const systems = [
+      createMockSystem({
+        id: 'deleted-id',
+        name: 'Deleted System',
+        enabled: false,
+        deletedAt: '2026-02-05T12:00:00Z',
+      }),
+    ]
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ data: systems, error: null }),
+    })
+
+    render(<SystemsList />, { wrapper: createQueryWrapper() })
+
+    await waitFor(() => {
+      expect(screen.getByTestId('system-row-deleted-id')).toBeInTheDocument()
+    })
+
+    expect(screen.queryByTestId('delete-system-deleted-id')).not.toBeInTheDocument()
+  })
+
+  it('should show "Deleted" badge for soft-deleted systems (Story 3.4)', async () => {
+    vi.useRealTimers()
+    const systems = [
+      createMockSystem({
+        id: 'deleted-id',
+        name: 'Deleted System',
+        enabled: false,
+        deletedAt: '2026-02-05T12:00:00Z',
+      }),
+    ]
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ data: systems, error: null }),
+    })
+
+    render(<SystemsList />, { wrapper: createQueryWrapper() })
+
+    await waitFor(() => {
+      expect(screen.getByTestId('deleted-badge-deleted-id')).toBeInTheDocument()
+    })
+
+    expect(screen.getByTestId('deleted-badge-deleted-id')).toHaveTextContent('Deleted')
+  })
+
+  it('should NOT show "Deleted" badge for non-deleted systems', async () => {
+    vi.useRealTimers()
+    const systems = [
+      createMockSystem({ id: 'active-id', name: 'Active System', deletedAt: null }),
+    ]
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ data: systems, error: null }),
+    })
+
+    render(<SystemsList />, { wrapper: createQueryWrapper() })
+
+    await waitFor(() => {
+      expect(screen.getByTestId('system-row-active-id')).toBeInTheDocument()
+    })
+
+    expect(screen.queryByTestId('deleted-badge-active-id')).not.toBeInTheDocument()
   })
 })

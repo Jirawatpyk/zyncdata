@@ -45,7 +45,12 @@ export async function POST(request: Request) {
     }
 
     // Handle unique constraint violation (duplicate name)
-    if (error instanceof Error && error.message.includes('duplicate key')) {
+    // Check both Error.message and PostgrestError.code for robustness
+    const isDuplicate =
+      (error instanceof Error && error.message.includes('duplicate key')) ||
+      (error != null && typeof error === 'object' && 'code' in error && (error as { code: string }).code === '23505')
+
+    if (isDuplicate) {
       return NextResponse.json(
         {
           data: null,

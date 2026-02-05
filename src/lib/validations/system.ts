@@ -31,6 +31,7 @@ export const systemSchema = z.object({
   // Supabase returns timestamps with/without timezone offset - use string() with permissive validation
   createdAt: z.string(),
   updatedAt: z.string(),
+  deletedAt: z.string().nullable(),
 })
 
 export type System = z.infer<typeof systemSchema>
@@ -49,3 +50,10 @@ export const updateSystemSchema = z.object({
 })
 
 export type UpdateSystemInput = z.infer<typeof updateSystemSchema>
+
+// Input schema for deleting a system (Story 3.4, AC: #3)
+export const deleteSystemSchema = z.object({
+  id: z.string().uuid('Invalid system ID'),
+})
+
+export type DeleteSystemInput = z.infer<typeof deleteSystemSchema>

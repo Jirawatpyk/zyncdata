@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook, waitFor } from '@testing-library/react'
-import { useCreateSystem, useUpdateSystem } from './systems'
+import { useCreateSystem, useUpdateSystem, useDeleteSystem } from './systems'
 import { createQueryWrapper, createTestQueryClient } from '@/lib/test-utils'
 import { QueryClientProvider } from '@tanstack/react-query'
 import type { System } from '@/lib/validations/system'
@@ -21,6 +21,7 @@ function createMockSystem(overrides?: Partial<System>): System {
     enabled: true,
     createdAt: '2026-01-01T00:00:00Z',
     updatedAt: '2026-01-01T00:00:00Z',
+    deletedAt: null,
     ...overrides,
   }
 }
@@ -843,6 +844,178 @@ describe('useUpdateSystem', () => {
       })
 
       expect(result.current.error?.message).toBe('System not found')
+    })
+  })
+})
+
+describe('useDeleteSystem', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('should delete system and return server data on success', async () => {
+    const deletedSystem = createMockSystem({
+      id: 'system-to-delete',
+      enabled: false,
+      deletedAt: '2026-02-05T12:00:00Z',
+    })
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ data: deletedSystem, error: null }),
+    })
+
+    const { result } = renderHook(() => useDeleteSystem(), {
+      wrapper: createQueryWrapper(),
+    })
+
+    result.current.mutate({ id: 'system-to-delete' })
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true)
+    })
+
+    expect(result.current.data).toEqual(deletedSystem)
+    expect(mockFetch).toHaveBeenCalledWith('/api/systems/system-to-delete', {
+      method: 'DELETE',
+    })
+  })
+
+  it('should handle error response', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      json: () =>
+        Promise.resolve({
+          data: null,
+          error: { message: 'System not found', code: 'NOT_FOUND' },
+        }),
+    })
+
+    const { result } = renderHook(() => useDeleteSystem(), {
+      wrapper: createQueryWrapper(),
+    })
+
+    result.current.mutate({ id: 'non-existent-uuid' })
+
+    await waitFor(() => {
+      expect(result.current.isError).toBe(true)
+    })
+
+    expect(result.current.error?.message).toBe('System not found')
+  })
+
+  it('should invalidate queries on settled', async () => {
+    const queryClient = createTestQueryClient()
+    const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries')
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () =>
+        Promise.resolve({
+          data: createMockSystem({ enabled: false, deletedAt: '2026-02-05T12:00:00Z' }),
+          error: null,
+        }),
+    })
+
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    )
+
+    const { result } = renderHook(() => useDeleteSystem(), { wrapper })
+
+    result.current.mutate({ id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479' })
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true)
+    })
+
+    await waitFor(() => {
+      expect(invalidateSpy).toHaveBeenCalledWith({
+        queryKey: ['admin', 'systems'],
+      })
+    })
+  })
+
+  describe('optimistic update & rollback', () => {
+    it('should optimistically mark system as deleted in cache', async () => {
+      const queryClient = createTestQueryClient()
+      const existingSystems = [
+        createMockSystem({ id: 'system-1', name: 'Active System', enabled: true, deletedAt: null }),
+      ]
+
+      queryClient.setQueryData(['admin', 'systems'], existingSystems)
+
+      let optimisticUpdateApplied = false
+
+      mockFetch.mockImplementationOnce(async () => {
+        const cachedSystems = queryClient.getQueryData<System[]>(['admin', 'systems'])
+        const system = cachedSystems?.find((s) => s.id === 'system-1')
+        if (system?.enabled === false && system?.deletedAt != null) {
+          optimisticUpdateApplied = true
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, 50))
+        return {
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              data: createMockSystem({ id: 'system-1', enabled: false, deletedAt: '2026-02-05T12:00:00Z' }),
+              error: null,
+            }),
+        }
+      })
+
+      const wrapper = ({ children }: { children: React.ReactNode }) => (
+        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      )
+
+      const { result } = renderHook(() => useDeleteSystem(), { wrapper })
+
+      result.current.mutate({ id: 'system-1' })
+
+      await waitFor(() => {
+        expect(result.current.isSuccess).toBe(true)
+      })
+
+      expect(optimisticUpdateApplied).toBe(true)
+    })
+
+    it('should rollback cache on error', async () => {
+      const queryClient = createTestQueryClient()
+      const existingSystems = [
+        createMockSystem({ id: 'system-1', name: 'Active System', enabled: true, deletedAt: null }),
+      ]
+
+      queryClient.setQueryData(['admin', 'systems'], existingSystems)
+
+      const setQueryDataSpy = vi.spyOn(queryClient, 'setQueryData')
+
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        json: () =>
+          Promise.resolve({
+            data: null,
+            error: { message: 'Failed to delete', code: 'DELETE_ERROR' },
+          }),
+      })
+
+      const wrapper = ({ children }: { children: React.ReactNode }) => (
+        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      )
+
+      const { result } = renderHook(() => useDeleteSystem(), { wrapper })
+
+      result.current.mutate({ id: 'system-1' })
+
+      await waitFor(() => {
+        expect(result.current.isError).toBe(true)
+      })
+
+      // Verify rollback was called with original data
+      expect(setQueryDataSpy).toHaveBeenCalledWith(
+        ['admin', 'systems'],
+        existingSystems,
+      )
     })
   })
 })

@@ -3,17 +3,20 @@ import { test } from '../support/fixtures/merged-fixtures'
 
 test.describe('Add System Flow', () => {
   test.describe('Unauthenticated - API Protection', () => {
-    test('[P0] POST /api/systems should return 401 without auth', async ({ playwright, baseURL }) => {
-      const unauthRequest = await playwright.request.newContext({ baseURL: baseURL! })
-      const response = await unauthRequest.post('/api/systems', {
-        data: {
+    test('[P0] POST /api/systems should return 401 without auth', async () => {
+      // Use native fetch — guarantees zero cookies (Playwright contexts may leak state)
+      const baseUrl = process.env.BASE_URL || 'http://localhost:3000'
+      const response = await fetch(`${baseUrl}/api/systems`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           name: 'Test System',
           url: 'https://test.example.com',
           enabled: true,
-        },
+        }),
       })
 
-      expect(response.status()).toBe(401)
+      expect(response.status).toBe(401)
       const body = await response.json()
       expect(body.error.code).toBe('UNAUTHORIZED')
     })
@@ -71,8 +74,10 @@ test.describe('Add System Flow', () => {
       // Wait for dialog to close (indicates success)
       await expect(adminPage.getByTestId('add-system-dialog')).not.toBeVisible({ timeout: 10000 })
 
-      // Verify new system appears in the list
-      await expect(adminPage.getByText(systemName)).toBeVisible()
+      // Verify new system appears in the list (exact match avoids sr-only "Edit {name}" text)
+      await expect(
+        adminPage.getByTestId('systems-list').getByText(systemName, { exact: true })
+      ).toBeVisible()
     })
 
     test('[P2] should show success toast with system name', async ({ adminPage }) => {

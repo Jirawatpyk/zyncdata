@@ -1,34 +1,26 @@
-import { test, expect } from '../support/fixtures/merged-fixtures'
+import { expect } from '@playwright/test'
+import { test } from '../support/fixtures/merged-fixtures'
 import { buildSystem } from '../factories/system-factory'
 
 test.describe('Dashboard', () => {
-  test('should display the login page for unauthenticated users', async ({ page }) => {
-    // Given: an unauthenticated user
-    // When: they navigate to the dashboard
+  test('should redirect unauthenticated user to login', async ({ page }) => {
     await page.goto('/dashboard')
 
-    // Then: they are redirected to login
-    await expect(page).toHaveURL(/\/login/)
+    await expect(page).toHaveURL(/\/auth\/login/)
   })
 
-  test('should show system status after login', async ({ authenticatedPage }) => {
-    // Given: an authenticated user on the dashboard
-    const page = authenticatedPage
+  test('should show dashboard content for authenticated user', async ({ adminPage }) => {
+    await adminPage.goto('/dashboard')
 
-    // When: the dashboard loads
-    await page.waitForSelector('[data-testid="dashboard-content"]')
-
-    // Then: the page title is visible
-    await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+    await expect(adminPage.getByRole('heading', { name: 'Dashboard' })).toBeVisible()
+    await expect(adminPage.getByText('Dashboard coming in Epic 3+')).toBeVisible()
   })
 })
 
 test.describe('Factory Usage Example', () => {
   test('buildSystem creates valid test data', async () => {
-    // Given: a system factory with overrides
     const system = buildSystem({ name: 'Production API', status: 'healthy' })
 
-    // Then: factory produces complete, typed data
     expect(system.id).toBeTruthy()
     expect(system.name).toBe('Production API')
     expect(system.status).toBe('healthy')
