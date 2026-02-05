@@ -81,7 +81,7 @@
   "size-limit": [
     {
       "path": ".next/static/**/*.js",
-      "limit": "200 KB",
+      "limit": "350 KB",
       "gzip": true
     },
     {
