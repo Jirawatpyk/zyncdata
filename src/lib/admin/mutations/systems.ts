@@ -142,6 +142,57 @@ export function useUpdateSystem() {
   })
 }
 
+interface ReorderMutationContext {
+  previous: System[] | undefined
+}
+
+export function useReorderSystems() {
+  const queryClient = useQueryClient()
+
+  return useMutation<System[], Error, Array<{ id: string; displayOrder: number }>, ReorderMutationContext>({
+    mutationFn: async (systems) => {
+      const res = await fetch('/api/systems/reorder', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ systems }),
+      })
+      return unwrapResponse<System[]>(res)
+    },
+
+    onMutate: async (updates) => {
+      await queryClient.cancelQueries({ queryKey: ['admin', 'systems'] })
+      const previous = queryClient.getQueryData<System[]>(['admin', 'systems'])
+
+      // Optimistic swap
+      queryClient.setQueryData<System[]>(['admin', 'systems'], (old) => {
+        if (!old) return []
+        const next = [...old]
+        for (const u of updates) {
+          const idx = next.findIndex((s) => s.id === u.id)
+          if (idx !== -1) next[idx] = { ...next[idx], displayOrder: u.displayOrder }
+        }
+        return next.sort((a, b) => a.displayOrder - b.displayOrder)
+      })
+
+      return { previous }
+    },
+
+    onSuccess: (serverData) => {
+      queryClient.setQueryData<System[]>(['admin', 'systems'], serverData)
+    },
+
+    onError: (_error, _variables, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(['admin', 'systems'], context.previous)
+      }
+    },
+
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'systems'] })
+    },
+  })
+}
+
 export function useDeleteSystem() {
   const queryClient = useQueryClient()
 

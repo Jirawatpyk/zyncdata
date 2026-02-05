@@ -2,15 +2,38 @@
 
 import { useQuery } from '@tanstack/react-query'
 import { systemsQueryOptions } from '@/lib/admin/queries/systems'
+import { useReorderSystems } from '@/lib/admin/mutations/systems'
 import LoadingSpinner from '@/components/patterns/LoadingSpinner'
 import SystemsEmptyState from './SystemsEmptyState'
 import AddSystemDialog from './AddSystemDialog'
 import EditSystemDialog from './EditSystemDialog'
 import DeleteSystemDialog from './DeleteSystemDialog'
+import { Button } from '@/components/ui/button'
+import { ChevronUp, ChevronDown } from 'lucide-react'
+import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
 export default function SystemsList() {
   const { data: systems, isPending, isError } = useQuery(systemsQueryOptions)
+  const reorder = useReorderSystems()
+
+  const handleMove = (index: number, direction: 'up' | 'down') => {
+    if (!systems) return
+    const targetIndex = direction === 'up' ? index - 1 : index + 1
+    const current = systems[index]
+    const target = systems[targetIndex]
+
+    reorder.mutate(
+      [
+        { id: current.id, displayOrder: target.displayOrder },
+        { id: target.id, displayOrder: current.displayOrder },
+      ],
+      {
+        onSuccess: () => toast.success('Order updated'),
+        onError: () => toast.error('Failed to reorder systems'),
+      },
+    )
+  }
 
   if (isPending) {
     return <LoadingSpinner />
@@ -44,7 +67,7 @@ export default function SystemsList() {
 
       {/* Systems list */}
       <div className="divide-y divide-border" data-testid="systems-list">
-        {systems.map((system) => (
+        {systems.map((system, index) => (
           <div
             key={system.id}
             className="flex items-center justify-between px-4 py-3"
@@ -57,6 +80,29 @@ export default function SystemsList() {
               </span>
             </div>
             <div className="flex items-center gap-3">
+              {/* Move up/down buttons (Story 3.5, AC #1, #4) */}
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  disabled={index === 0 || system.deletedAt != null || reorder.isPending}
+                  onClick={() => handleMove(index, 'up')}
+                  aria-label={`Move ${system.name} up`}
+                  data-testid={`move-up-${system.id}`}
+                >
+                  <ChevronUp className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  disabled={index === systems.length - 1 || system.deletedAt != null || reorder.isPending}
+                  onClick={() => handleMove(index, 'down')}
+                  aria-label={`Move ${system.name} down`}
+                  data-testid={`move-down-${system.id}`}
+                >
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </div>
               {/* Edit button */}
               <EditSystemDialog system={system} />
               {/* Delete button — hidden for already-deleted systems */}

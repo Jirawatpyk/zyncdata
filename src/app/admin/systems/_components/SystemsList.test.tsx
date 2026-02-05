@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, waitFor, act } from '@testing-library/react'
+import { render, screen, waitFor, act, fireEvent } from '@testing-library/react'
 import { axe } from 'jest-axe'
 import SystemsList from './SystemsList'
 import { createQueryWrapper } from '@/lib/test-utils'
@@ -369,5 +369,161 @@ describe('SystemsList', () => {
     })
 
     expect(screen.queryByTestId('deleted-badge-active-id')).not.toBeInTheDocument()
+  })
+
+  // =======================
+  // Reorder buttons (Story 3.5, AC #1, #4)
+  // =======================
+
+  it('should render move up/down buttons for each system (AC #1)', async () => {
+    vi.useRealTimers()
+    const systems = [
+      createMockSystem({ id: 'id-1', name: 'System 1', displayOrder: 0 }),
+      createMockSystem({ id: 'id-2', name: 'System 2', displayOrder: 1 }),
+    ]
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ data: systems, error: null }),
+    })
+
+    render(<SystemsList />, { wrapper: createQueryWrapper() })
+
+    await waitFor(() => {
+      expect(screen.getByTestId('move-up-id-1')).toBeInTheDocument()
+    })
+
+    expect(screen.getByTestId('move-down-id-1')).toBeInTheDocument()
+    expect(screen.getByTestId('move-up-id-2')).toBeInTheDocument()
+    expect(screen.getByTestId('move-down-id-2')).toBeInTheDocument()
+  })
+
+  it('should disable move-up button for first system (AC #4)', async () => {
+    vi.useRealTimers()
+    const systems = [
+      createMockSystem({ id: 'id-1', name: 'System 1', displayOrder: 0 }),
+      createMockSystem({ id: 'id-2', name: 'System 2', displayOrder: 1 }),
+    ]
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ data: systems, error: null }),
+    })
+
+    render(<SystemsList />, { wrapper: createQueryWrapper() })
+
+    await waitFor(() => {
+      expect(screen.getByTestId('move-up-id-1')).toBeInTheDocument()
+    })
+
+    expect(screen.getByTestId('move-up-id-1')).toBeDisabled()
+    expect(screen.getByTestId('move-down-id-1')).not.toBeDisabled()
+  })
+
+  it('should disable move-down button for last system (AC #4)', async () => {
+    vi.useRealTimers()
+    const systems = [
+      createMockSystem({ id: 'id-1', name: 'System 1', displayOrder: 0 }),
+      createMockSystem({ id: 'id-2', name: 'System 2', displayOrder: 1 }),
+    ]
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ data: systems, error: null }),
+    })
+
+    render(<SystemsList />, { wrapper: createQueryWrapper() })
+
+    await waitFor(() => {
+      expect(screen.getByTestId('move-down-id-2')).toBeInTheDocument()
+    })
+
+    expect(screen.getByTestId('move-down-id-2')).toBeDisabled()
+    expect(screen.getByTestId('move-up-id-2')).not.toBeDisabled()
+  })
+
+  it('should disable both move buttons for deleted systems', async () => {
+    vi.useRealTimers()
+    const systems = [
+      createMockSystem({ id: 'id-1', name: 'System 1', displayOrder: 0, deletedAt: null }),
+      createMockSystem({
+        id: 'deleted-id',
+        name: 'Deleted System',
+        displayOrder: 1,
+        enabled: false,
+        deletedAt: '2026-02-05T12:00:00Z',
+      }),
+      createMockSystem({ id: 'id-3', name: 'System 3', displayOrder: 2, deletedAt: null }),
+    ]
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ data: systems, error: null }),
+    })
+
+    render(<SystemsList />, { wrapper: createQueryWrapper() })
+
+    await waitFor(() => {
+      expect(screen.getByTestId('move-up-deleted-id')).toBeInTheDocument()
+    })
+
+    expect(screen.getByTestId('move-up-deleted-id')).toBeDisabled()
+    expect(screen.getByTestId('move-down-deleted-id')).toBeDisabled()
+  })
+
+  it('should call reorder mutation when move-down is clicked (AC #1)', async () => {
+    vi.useRealTimers()
+    const systems = [
+      createMockSystem({ id: 'id-1', name: 'System 1', displayOrder: 0 }),
+      createMockSystem({ id: 'id-2', name: 'System 2', displayOrder: 1 }),
+    ]
+
+    // First fetch: load systems
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ data: systems, error: null }),
+    })
+
+    render(<SystemsList />, { wrapper: createQueryWrapper() })
+
+    await waitFor(() => {
+      expect(screen.getByTestId('move-down-id-1')).toBeInTheDocument()
+    })
+
+    // Second fetch: reorder mutation
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () =>
+        Promise.resolve({
+          data: [
+            createMockSystem({ id: 'id-2', name: 'System 2', displayOrder: 0 }),
+            createMockSystem({ id: 'id-1', name: 'System 1', displayOrder: 1 }),
+          ],
+          error: null,
+        }),
+    })
+
+    fireEvent.click(screen.getByTestId('move-down-id-1'))
+
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalledWith('/api/systems/reorder', expect.objectContaining({
+        method: 'PATCH',
+      }))
+    })
+  })
+
+  it('should have accessible labels on move buttons', async () => {
+    vi.useRealTimers()
+    const systems = [
+      createMockSystem({ id: 'id-1', name: 'ENEOS', displayOrder: 0 }),
+    ]
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ data: systems, error: null }),
+    })
+
+    render(<SystemsList />, { wrapper: createQueryWrapper() })
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Move ENEOS up')).toBeInTheDocument()
+    })
+
+    expect(screen.getByLabelText('Move ENEOS down')).toBeInTheDocument()
   })
 })

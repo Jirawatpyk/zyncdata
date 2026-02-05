@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { createSystemSchema, updateSystemSchema, deleteSystemSchema } from './system'
+import { createSystemSchema, updateSystemSchema, deleteSystemSchema, reorderSystemsSchema } from './system'
 
 describe('createSystemSchema', () => {
   // AC #3, #4: Validate required fields and URL format
@@ -466,5 +466,180 @@ describe('deleteSystemSchema', () => {
     if (result.success) {
       expect('extraField' in result.data).toBe(false)
     }
+  })
+})
+
+describe('reorderSystemsSchema', () => {
+  // Story 3.5 AC #1: Validate reorder payload
+
+  const validInput = {
+    systems: [
+      { id: '550e8400-e29b-41d4-a716-446655440000', displayOrder: 0 },
+      { id: '550e8400-e29b-41d4-a716-446655440001', displayOrder: 1 },
+    ],
+  }
+
+  describe('systems array', () => {
+    it('should accept valid 2-system swap', () => {
+      const result = reorderSystemsSchema.safeParse(validInput)
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data.systems).toHaveLength(2)
+        expect(result.data.systems[0].id).toBe('550e8400-e29b-41d4-a716-446655440000')
+        expect(result.data.systems[0].displayOrder).toBe(0)
+      }
+    })
+
+    it('should reject empty systems array', () => {
+      const result = reorderSystemsSchema.safeParse({ systems: [] })
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error.issues[0].message).toBe('At least 2 systems required for reorder')
+      }
+    })
+
+    it('should reject single system (min 2)', () => {
+      const result = reorderSystemsSchema.safeParse({
+        systems: [{ id: '550e8400-e29b-41d4-a716-446655440000', displayOrder: 0 }],
+      })
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error.issues[0].message).toBe('At least 2 systems required for reorder')
+      }
+    })
+
+    it('should reject over 100 systems', () => {
+      const systems = Array.from({ length: 101 }, (_, i) => ({
+        id: `550e8400-e29b-41d4-a716-${String(i).padStart(12, '0')}`,
+        displayOrder: i,
+      }))
+      const result = reorderSystemsSchema.safeParse({ systems })
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error.issues[0].message).toBe('Too many systems in single reorder')
+      }
+    })
+
+    it('should accept exactly 100 systems', () => {
+      const systems = Array.from({ length: 100 }, (_, i) => ({
+        id: `550e8400-e29b-41d4-a716-${String(i).padStart(12, '0')}`,
+        displayOrder: i,
+      }))
+      const result = reorderSystemsSchema.safeParse({ systems })
+      expect(result.success).toBe(true)
+    })
+
+    it('should reject missing systems field', () => {
+      const result = reorderSystemsSchema.safeParse({})
+      expect(result.success).toBe(false)
+    })
+  })
+
+  describe('system id field', () => {
+    it('should reject invalid UUID', () => {
+      const result = reorderSystemsSchema.safeParse({
+        systems: [
+          { id: 'not-a-uuid', displayOrder: 0 },
+          { id: '550e8400-e29b-41d4-a716-446655440001', displayOrder: 1 },
+        ],
+      })
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error.issues[0].message).toBe('Invalid system ID')
+      }
+    })
+
+    it('should reject missing id', () => {
+      const result = reorderSystemsSchema.safeParse({
+        systems: [
+          { displayOrder: 0 },
+          { id: '550e8400-e29b-41d4-a716-446655440001', displayOrder: 1 },
+        ],
+      })
+      expect(result.success).toBe(false)
+    })
+  })
+
+  describe('displayOrder field', () => {
+    it('should accept zero', () => {
+      const result = reorderSystemsSchema.safeParse(validInput)
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data.systems[0].displayOrder).toBe(0)
+      }
+    })
+
+    it('should reject negative displayOrder', () => {
+      const result = reorderSystemsSchema.safeParse({
+        systems: [
+          { id: '550e8400-e29b-41d4-a716-446655440000', displayOrder: -1 },
+          { id: '550e8400-e29b-41d4-a716-446655440001', displayOrder: 0 },
+        ],
+      })
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error.issues[0].message).toBe('Display order must be non-negative')
+      }
+    })
+
+    it('should reject float displayOrder', () => {
+      const result = reorderSystemsSchema.safeParse({
+        systems: [
+          { id: '550e8400-e29b-41d4-a716-446655440000', displayOrder: 1.5 },
+          { id: '550e8400-e29b-41d4-a716-446655440001', displayOrder: 0 },
+        ],
+      })
+      expect(result.success).toBe(false)
+    })
+
+    it('should reject missing displayOrder', () => {
+      const result = reorderSystemsSchema.safeParse({
+        systems: [
+          { id: '550e8400-e29b-41d4-a716-446655440000' },
+          { id: '550e8400-e29b-41d4-a716-446655440001', displayOrder: 1 },
+        ],
+      })
+      expect(result.success).toBe(false)
+    })
+  })
+
+  describe('duplicate ID validation', () => {
+    it('should reject duplicate system IDs', () => {
+      const result = reorderSystemsSchema.safeParse({
+        systems: [
+          { id: '550e8400-e29b-41d4-a716-446655440000', displayOrder: 0 },
+          { id: '550e8400-e29b-41d4-a716-446655440000', displayOrder: 1 },
+        ],
+      })
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error.issues[0].message).toBe('Duplicate system IDs are not allowed')
+      }
+    })
+
+    it('should accept unique system IDs', () => {
+      const result = reorderSystemsSchema.safeParse({
+        systems: [
+          { id: '550e8400-e29b-41d4-a716-446655440000', displayOrder: 0 },
+          { id: '550e8400-e29b-41d4-a716-446655440001', displayOrder: 1 },
+        ],
+      })
+      expect(result.success).toBe(true)
+    })
+  })
+
+  describe('strip unknown fields', () => {
+    it('should strip unknown fields from systems items', () => {
+      const result = reorderSystemsSchema.safeParse({
+        systems: [
+          { id: '550e8400-e29b-41d4-a716-446655440000', displayOrder: 0, extra: 'stripped' },
+          { id: '550e8400-e29b-41d4-a716-446655440001', displayOrder: 1 },
+        ],
+      })
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect('extra' in result.data.systems[0]).toBe(false)
+      }
+    })
   })
 })

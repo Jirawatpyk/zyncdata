@@ -3,7 +3,7 @@ import { systemSchema, type System } from '@/lib/validations/system'
 import { toCamelCase } from '@/lib/utils/transform'
 import { z } from 'zod'
 
-const SYSTEM_SELECT_COLUMNS =
+export const SYSTEM_SELECT_COLUMNS =
   'id, name, url, logo_url, description, status, response_time, display_order, enabled, created_at, updated_at, deleted_at'
 
 export async function getSystemByName(name: string): Promise<System | null> {

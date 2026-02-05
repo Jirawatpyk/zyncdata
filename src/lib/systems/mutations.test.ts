@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { createSystem, updateSystem, deleteSystem } from './mutations'
+import { createSystem, updateSystem, deleteSystem, reorderSystems } from './mutations'
 
 const mockSingleForSelect = vi.fn()
 const mockSingleForInsert = vi.fn()
@@ -18,6 +18,15 @@ vi.mock('@/lib/supabase/server', () => ({
 vi.mock('next/cache', () => ({
   revalidatePath: vi.fn(),
 }))
+
+const mockGetSystems = vi.fn()
+vi.mock('@/lib/systems/queries', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/systems/queries')>()
+  return {
+    ...actual,
+    getSystems: (...args: unknown[]) => mockGetSystems(...args),
+  }
+})
 
 // Valid UUID for testing
 const TEST_UUID = 'f47ac10b-58cc-4372-a567-0e02b2c3d479'
@@ -387,5 +396,117 @@ describe('updateSystem — recovery path', () => {
         deleted_at: null,
       }),
     )
+  })
+})
+
+describe('reorderSystems', () => {
+  const TEST_UUID_2 = 'a47ac10b-58cc-4372-a567-0e02b2c3d480'
+
+  const MOCK_REORDERED_LIST = [
+    {
+      id: TEST_UUID_2,
+      name: 'System B',
+      url: 'https://b.com',
+      logoUrl: null,
+      description: null,
+      status: null,
+      responseTime: null,
+      displayOrder: 0,
+      enabled: true,
+      createdAt: '2026-01-01T00:00:00Z',
+      updatedAt: '2026-01-01T00:00:00Z',
+      deletedAt: null,
+    },
+    {
+      id: TEST_UUID,
+      name: 'System A',
+      url: 'https://a.com',
+      logoUrl: null,
+      description: null,
+      status: null,
+      responseTime: null,
+      displayOrder: 1,
+      enabled: true,
+      createdAt: '2026-01-01T00:00:00Z',
+      updatedAt: '2026-01-01T00:00:00Z',
+      deletedAt: null,
+    },
+  ]
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+
+    // Mock the supabase update chain: .from().update().eq()
+    const mockEq = vi.fn().mockResolvedValue({ error: null })
+    mockUpdate.mockReturnValue({ eq: mockEq })
+    mockSupabase.from.mockReturnValue({
+      update: mockUpdate,
+    })
+
+    mockGetSystems.mockResolvedValue(MOCK_REORDERED_LIST)
+  })
+
+  it('should update display_order for each system in the swap', async () => {
+    const result = await reorderSystems([
+      { id: TEST_UUID, displayOrder: 1 },
+      { id: TEST_UUID_2, displayOrder: 0 },
+    ])
+
+    // Should call update twice (once per system)
+    expect(mockUpdate).toHaveBeenCalledTimes(2)
+    expect(mockUpdate).toHaveBeenCalledWith({ display_order: 1 })
+    expect(mockUpdate).toHaveBeenCalledWith({ display_order: 0 })
+    expect(result).toEqual(MOCK_REORDERED_LIST)
+  })
+
+  it('should call revalidatePath after successful reorder', async () => {
+    const { revalidatePath } = await import('next/cache')
+
+    await reorderSystems([
+      { id: TEST_UUID, displayOrder: 1 },
+      { id: TEST_UUID_2, displayOrder: 0 },
+    ])
+
+    expect(revalidatePath).toHaveBeenCalledWith('/')
+  })
+
+  it('should return fresh system list from getSystems()', async () => {
+    const result = await reorderSystems([
+      { id: TEST_UUID, displayOrder: 1 },
+      { id: TEST_UUID_2, displayOrder: 0 },
+    ])
+
+    expect(mockGetSystems).toHaveBeenCalledTimes(1)
+    expect(result).toEqual(MOCK_REORDERED_LIST)
+  })
+
+  it('should throw when Supabase update fails', async () => {
+    const dbError = { message: 'Database error', code: 'DB_ERROR' }
+    const mockEq = vi.fn().mockResolvedValue({ error: dbError })
+    mockUpdate.mockReturnValue({ eq: mockEq })
+
+    await expect(
+      reorderSystems([
+        { id: TEST_UUID, displayOrder: 1 },
+        { id: TEST_UUID_2, displayOrder: 0 },
+      ]),
+    ).rejects.toEqual(dbError)
+  })
+
+  it('should not call revalidatePath or getSystems when update fails', async () => {
+    const { revalidatePath } = await import('next/cache')
+    const dbError = { message: 'Database error', code: 'DB_ERROR' }
+    const mockEq = vi.fn().mockResolvedValue({ error: dbError })
+    mockUpdate.mockReturnValue({ eq: mockEq })
+
+    await expect(
+      reorderSystems([
+        { id: TEST_UUID, displayOrder: 1 },
+        { id: TEST_UUID_2, displayOrder: 0 },
+      ]),
+    ).rejects.toEqual(dbError)
+
+    expect(revalidatePath).not.toHaveBeenCalled()
+    expect(mockGetSystems).not.toHaveBeenCalled()
   })
 })

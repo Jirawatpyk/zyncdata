@@ -57,3 +57,22 @@ export const deleteSystemSchema = z.object({
 })
 
 export type DeleteSystemInput = z.infer<typeof deleteSystemSchema>
+
+// Input schema for reordering systems (Story 3.5, AC: #1)
+export const reorderSystemsSchema = z.object({
+  systems: z
+    .array(
+      z.object({
+        id: z.string().uuid('Invalid system ID'),
+        displayOrder: z.number().int().min(0, 'Display order must be non-negative'),
+      }),
+    )
+    .min(2, 'At least 2 systems required for reorder')
+    .max(100, 'Too many systems in single reorder')
+    .refine(
+      (systems) => new Set(systems.map((s) => s.id)).size === systems.length,
+      { message: 'Duplicate system IDs are not allowed' },
+    ),
+})
+
+export type ReorderSystemsInput = z.infer<typeof reorderSystemsSchema>

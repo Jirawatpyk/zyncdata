@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook, waitFor } from '@testing-library/react'
-import { useCreateSystem, useUpdateSystem, useDeleteSystem } from './systems'
+import { useCreateSystem, useUpdateSystem, useDeleteSystem, useReorderSystems } from './systems'
 import { createQueryWrapper, createTestQueryClient } from '@/lib/test-utils'
 import { QueryClientProvider } from '@tanstack/react-query'
 import type { System } from '@/lib/validations/system'
@@ -844,6 +844,281 @@ describe('useUpdateSystem', () => {
       })
 
       expect(result.current.error?.message).toBe('System not found')
+    })
+  })
+})
+
+// =========================================
+// useReorderSystems Tests (Story 3.5, AC #3, #5)
+// =========================================
+
+describe('useReorderSystems', () => {
+  const UUID_1 = 'f47ac10b-58cc-4372-a567-0e02b2c3d479'
+  const UUID_2 = 'a47ac10b-58cc-4372-a567-0e02b2c3d480'
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('should call PATCH /api/systems/reorder on mutate', async () => {
+    const reorderedSystems = [
+      createMockSystem({ id: UUID_2, name: 'System B', displayOrder: 0 }),
+      createMockSystem({ id: UUID_1, name: 'System A', displayOrder: 1 }),
+    ]
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ data: reorderedSystems, error: null }),
+    })
+
+    const { result } = renderHook(() => useReorderSystems(), {
+      wrapper: createQueryWrapper(),
+    })
+
+    result.current.mutate([
+      { id: UUID_1, displayOrder: 1 },
+      { id: UUID_2, displayOrder: 0 },
+    ])
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true)
+    })
+
+    expect(mockFetch).toHaveBeenCalledWith('/api/systems/reorder', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        systems: [
+          { id: UUID_1, displayOrder: 1 },
+          { id: UUID_2, displayOrder: 0 },
+        ],
+      }),
+    })
+  })
+
+  it('should return reordered system list on success', async () => {
+    const reorderedSystems = [
+      createMockSystem({ id: UUID_2, name: 'System B', displayOrder: 0 }),
+      createMockSystem({ id: UUID_1, name: 'System A', displayOrder: 1 }),
+    ]
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ data: reorderedSystems, error: null }),
+    })
+
+    const { result } = renderHook(() => useReorderSystems(), {
+      wrapper: createQueryWrapper(),
+    })
+
+    const mutationResult = await result.current.mutateAsync([
+      { id: UUID_1, displayOrder: 1 },
+      { id: UUID_2, displayOrder: 0 },
+    ])
+
+    expect(mutationResult).toEqual(reorderedSystems)
+  })
+
+  it('should set error state on failure', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 500,
+      json: () =>
+        Promise.resolve({
+          data: null,
+          error: { message: 'Failed to reorder systems', code: 'UPDATE_ERROR' },
+        }),
+    })
+
+    const { result } = renderHook(() => useReorderSystems(), {
+      wrapper: createQueryWrapper(),
+    })
+
+    result.current.mutate([
+      { id: UUID_1, displayOrder: 1 },
+      { id: UUID_2, displayOrder: 0 },
+    ])
+
+    await waitFor(() => {
+      expect(result.current.isError).toBe(true)
+    })
+
+    expect(result.current.error?.message).toBe('Failed to reorder systems')
+  })
+
+  it('should invalidate queries on settled', async () => {
+    const queryClient = createTestQueryClient()
+    const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries')
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () =>
+        Promise.resolve({
+          data: [createMockSystem(), createMockSystem({ id: 'second' })],
+          error: null,
+        }),
+    })
+
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    )
+
+    const { result } = renderHook(() => useReorderSystems(), { wrapper })
+
+    result.current.mutate([
+      { id: UUID_1, displayOrder: 1 },
+      { id: UUID_2, displayOrder: 0 },
+    ])
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true)
+    })
+
+    await waitFor(() => {
+      expect(invalidateSpy).toHaveBeenCalledWith({
+        queryKey: ['admin', 'systems'],
+      })
+    })
+  })
+
+  describe('optimistic swap & rollback (AC #3, #5)', () => {
+    it('should optimistically swap displayOrder in cache', async () => {
+      const queryClient = createTestQueryClient()
+      const existingSystems = [
+        createMockSystem({ id: UUID_1, name: 'System A', displayOrder: 0 }),
+        createMockSystem({ id: UUID_2, name: 'System B', displayOrder: 1 }),
+      ]
+
+      queryClient.setQueryData(['admin', 'systems'], existingSystems)
+
+      let optimisticOrderCorrect = false
+
+      mockFetch.mockImplementationOnce(async () => {
+        // Check optimistic state during fetch
+        const cachedSystems = queryClient.getQueryData<System[]>(['admin', 'systems'])
+        if (
+          cachedSystems?.[0]?.id === UUID_2 &&
+          cachedSystems?.[0]?.displayOrder === 0 &&
+          cachedSystems?.[1]?.id === UUID_1 &&
+          cachedSystems?.[1]?.displayOrder === 1
+        ) {
+          optimisticOrderCorrect = true
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, 50))
+        return {
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              data: [
+                createMockSystem({ id: UUID_2, name: 'System B', displayOrder: 0 }),
+                createMockSystem({ id: UUID_1, name: 'System A', displayOrder: 1 }),
+              ],
+              error: null,
+            }),
+        }
+      })
+
+      const wrapper = ({ children }: { children: React.ReactNode }) => (
+        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      )
+
+      const { result } = renderHook(() => useReorderSystems(), { wrapper })
+
+      result.current.mutate([
+        { id: UUID_1, displayOrder: 1 },
+        { id: UUID_2, displayOrder: 0 },
+      ])
+
+      await waitFor(() => {
+        expect(result.current.isSuccess).toBe(true)
+      })
+
+      expect(optimisticOrderCorrect).toBe(true)
+    })
+
+    it('should rollback cache on error (AC #5)', async () => {
+      const queryClient = createTestQueryClient()
+      const existingSystems = [
+        createMockSystem({ id: UUID_1, name: 'System A', displayOrder: 0 }),
+        createMockSystem({ id: UUID_2, name: 'System B', displayOrder: 1 }),
+      ]
+
+      queryClient.setQueryData(['admin', 'systems'], existingSystems)
+
+      const setQueryDataSpy = vi.spyOn(queryClient, 'setQueryData')
+
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        json: () =>
+          Promise.resolve({
+            data: null,
+            error: { message: 'Failed to reorder', code: 'UPDATE_ERROR' },
+          }),
+      })
+
+      const wrapper = ({ children }: { children: React.ReactNode }) => (
+        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      )
+
+      const { result } = renderHook(() => useReorderSystems(), { wrapper })
+
+      result.current.mutate([
+        { id: UUID_1, displayOrder: 1 },
+        { id: UUID_2, displayOrder: 0 },
+      ])
+
+      await waitFor(() => {
+        expect(result.current.isError).toBe(true)
+      })
+
+      // Verify rollback was called with original data (via setQueryData spy)
+      const rollbackCall = setQueryDataSpy.mock.calls.find(
+        (call) =>
+          JSON.stringify(call[0]) === JSON.stringify(['admin', 'systems']) &&
+          Array.isArray(call[1]) &&
+          call[1].length === 2 &&
+          (call[1] as System[])[0]?.displayOrder === 0 &&
+          (call[1] as System[])[0]?.id === UUID_1,
+      )
+      expect(rollbackCall).toBeDefined()
+    })
+
+    it('should invalidate queries on error (onSettled still runs)', async () => {
+      const queryClient = createTestQueryClient()
+      const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries')
+
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        json: () =>
+          Promise.resolve({
+            data: null,
+            error: { message: 'Server error', code: 'UPDATE_ERROR' },
+          }),
+      })
+
+      const wrapper = ({ children }: { children: React.ReactNode }) => (
+        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      )
+
+      const { result } = renderHook(() => useReorderSystems(), { wrapper })
+
+      result.current.mutate([
+        { id: UUID_1, displayOrder: 1 },
+        { id: UUID_2, displayOrder: 0 },
+      ])
+
+      await waitFor(() => {
+        expect(result.current.isError).toBe(true)
+      })
+
+      await waitFor(() => {
+        expect(invalidateSpy).toHaveBeenCalledWith({
+          queryKey: ['admin', 'systems'],
+        })
+      })
     })
   })
 })

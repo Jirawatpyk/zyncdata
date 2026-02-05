@@ -5,11 +5,9 @@ import {
   type CreateSystemInput,
   type UpdateSystemInput,
 } from '@/lib/validations/system'
+import { getSystems, SYSTEM_SELECT_COLUMNS } from '@/lib/systems/queries'
 import { toCamelCase, toSnakeCase } from '@/lib/utils/transform'
 import { revalidatePath } from 'next/cache'
-
-const SYSTEM_SELECT_COLUMNS =
-  'id, name, url, logo_url, description, status, response_time, display_order, enabled, created_at, updated_at, deleted_at'
 
 /**
  * Create a new system in the database.
@@ -109,4 +107,36 @@ export async function deleteSystem(id: string): Promise<System> {
   revalidatePath('/')
 
   return systemSchema.parse(toCamelCase<System>(data))
+}
+
+/**
+ * Reorder systems by updating display_order for the given systems.
+ * Typically used for a 2-system swap, but supports bulk updates.
+ * Revalidates ISR cache for landing page.
+ *
+ * WARNING: Updates are NOT atomic — each system is updated individually.
+ * If the second update fails, the first is already committed, which can leave
+ * display_order in an inconsistent state. For a 2-item swap the risk is minimal.
+ * TODO: Migrate to a Supabase RPC function for atomic bulk reorder if this
+ * grows beyond simple swaps.
+ */
+export async function reorderSystems(
+  systems: Array<{ id: string; displayOrder: number }>,
+): Promise<System[]> {
+  const supabase = await createClient()
+
+  for (const { id, displayOrder } of systems) {
+    const { error } = await supabase
+      .from('systems')
+      .update({ display_order: displayOrder })
+      .eq('id', id)
+
+    if (error) throw error
+  }
+
+  // Bust ISR cache for landing page
+  revalidatePath('/')
+
+  // Return fresh sorted list
+  return getSystems()
 }
