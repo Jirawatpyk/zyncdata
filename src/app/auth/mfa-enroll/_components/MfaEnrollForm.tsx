@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils'
 import { enrollMfaFactor, verifyMfaEnrollment } from '@/lib/auth/mutations'
 import { verifyMfaEnrollmentAction } from '@/lib/actions/mfa'
 import { generateBackupCodesAction } from '@/lib/actions/backup-codes'
+import { logoutAction } from '@/lib/actions/logout'
 import type { MfaEnrollState } from '@/lib/actions/mfa'
 import BackupCodesDisplay from './BackupCodesDisplay'
 
@@ -255,6 +256,22 @@ export default function MfaEnrollForm() {
             <SubmitButton disabled={verifying || !factorId} />
           </form>
         )}
+
+        {/* Sign out link */}
+        <div className="text-center">
+          <form action={logoutAction}>
+            <button
+              type="submit"
+              data-testid="mfa-enroll-sign-out"
+              className={cn(
+                'text-sm text-muted-foreground hover:text-foreground hover:underline',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+              )}
+            >
+              Sign out
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   )
