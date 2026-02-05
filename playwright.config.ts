@@ -12,6 +12,8 @@ export default defineConfig({
 
   // Global setup for admin authentication
   globalSetup: require.resolve('./tests/support/auth/global-setup.ts'),
+  // Global teardown to clean up E2E test data
+  globalTeardown: require.resolve('./tests/support/auth/global-teardown.ts'),
 
   use: {
     baseURL: process.env.BASE_URL || 'http://localhost:3000',
