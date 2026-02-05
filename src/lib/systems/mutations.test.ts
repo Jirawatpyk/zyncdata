@@ -1,5 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { createSystem, updateSystem, deleteSystem, reorderSystems, toggleSystem } from './mutations'
+import {
+  createSystem,
+  updateSystem,
+  deleteSystem,
+  reorderSystems,
+  toggleSystem,
+  uploadSystemLogo,
+  deleteSystemLogo,
+  isSupabaseStorageUrl,
+  extractStoragePath,
+} from './mutations'
 
 const mockSingleForSelect = vi.fn()
 const mockSingleForInsert = vi.fn()
@@ -615,5 +625,342 @@ describe('toggleSystem', () => {
     expect(result.id).toBe(TEST_UUID)
     expect(result.updatedAt).toBe('2026-02-06T12:00:00Z')
     expect(result.enabled).toBe(false)
+  })
+})
+
+describe('isSupabaseStorageUrl', () => {
+  it('should return true for cloud Supabase Storage URL', () => {
+    expect(
+      isSupabaseStorageUrl(
+        'https://abc.supabase.co/storage/v1/object/public/system-logos/id/logo.png',
+      ),
+    ).toBe(true)
+  })
+
+  it('should return true for local 127.0.0.1 storage URL', () => {
+    expect(
+      isSupabaseStorageUrl(
+        'http://127.0.0.1:54321/storage/v1/object/public/system-logos/id/logo.png',
+      ),
+    ).toBe(true)
+  })
+
+  it('should return true for local localhost storage URL', () => {
+    expect(
+      isSupabaseStorageUrl(
+        'http://localhost:54321/storage/v1/object/public/system-logos/id/logo.png',
+      ),
+    ).toBe(true)
+  })
+
+  it('should return false for static logo path', () => {
+    expect(isSupabaseStorageUrl('/logos/tinedy.svg')).toBe(false)
+  })
+
+  it('should return false for arbitrary URL', () => {
+    expect(isSupabaseStorageUrl('https://example.com/logo.png')).toBe(false)
+  })
+})
+
+describe('extractStoragePath', () => {
+  it('should extract path from cloud Supabase URL', () => {
+    expect(
+      extractStoragePath(
+        'https://abc.supabase.co/storage/v1/object/public/system-logos/id123/1706000000.png',
+      ),
+    ).toBe('id123/1706000000.png')
+  })
+
+  it('should extract path from local Supabase URL', () => {
+    expect(
+      extractStoragePath(
+        'http://127.0.0.1:54321/storage/v1/object/public/system-logos/id123/logo.webp',
+      ),
+    ).toBe('id123/logo.webp')
+  })
+
+  it('should return null for non-matching URL', () => {
+    expect(extractStoragePath('/logos/tinedy.svg')).toBeNull()
+  })
+
+  it('should return null for URL without system-logos bucket', () => {
+    expect(
+      extractStoragePath(
+        'https://abc.supabase.co/storage/v1/object/public/other-bucket/file.png',
+      ),
+    ).toBeNull()
+  })
+})
+
+describe('uploadSystemLogo', () => {
+  const mockStorageRemove = vi.fn()
+  const mockStorageUpload = vi.fn()
+  const mockStorageGetPublicUrl = vi.fn()
+  const mockSelectSingle = vi.fn()
+  const mockUpdateSingle = vi.fn()
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+
+    let fromCallCount = 0
+    mockSupabase.from.mockImplementation(() => {
+      fromCallCount++
+      if (fromCallCount === 1) {
+        // First call: SELECT logo_url
+        return {
+          select: () => ({
+            eq: () => ({
+              single: mockSelectSingle,
+            }),
+          }),
+        }
+      } else {
+        // Second call: UPDATE logo_url
+        return {
+          update: () => ({
+            eq: () => ({
+              select: () => ({
+                single: mockUpdateSingle,
+              }),
+            }),
+          }),
+        }
+      }
+    })
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ;(mockSupabase as any).storage = {
+      from: () => ({
+        remove: mockStorageRemove,
+        upload: mockStorageUpload,
+        getPublicUrl: mockStorageGetPublicUrl,
+      }),
+    }
+  })
+
+  it('should upload new logo for system without existing logo', async () => {
+    mockSelectSingle.mockResolvedValueOnce({
+      data: { logo_url: null },
+      error: null,
+    })
+    mockStorageUpload.mockResolvedValueOnce({ error: null })
+    mockStorageGetPublicUrl.mockReturnValueOnce({
+      data: { publicUrl: 'https://abc.supabase.co/storage/v1/object/public/system-logos/id/123.png' },
+    })
+    mockUpdateSingle.mockResolvedValueOnce({
+      data: {
+        ...MOCK_SYSTEM_DB,
+        logo_url: 'https://abc.supabase.co/storage/v1/object/public/system-logos/id/123.png',
+      },
+      error: null,
+    })
+
+    const result = await uploadSystemLogo(TEST_UUID, Buffer.from('test'), 'logo.png', 'image/png')
+
+    expect(result.logoUrl).toBe(
+      'https://abc.supabase.co/storage/v1/object/public/system-logos/id/123.png',
+    )
+    expect(mockStorageRemove).not.toHaveBeenCalled()
+    expect(mockStorageUpload).toHaveBeenCalledTimes(1)
+  })
+
+  it('should delete old Supabase logo before uploading new one', async () => {
+    const oldUrl =
+      'https://abc.supabase.co/storage/v1/object/public/system-logos/id/old.png'
+    mockSelectSingle.mockResolvedValueOnce({
+      data: { logo_url: oldUrl },
+      error: null,
+    })
+    mockStorageRemove.mockResolvedValueOnce({ error: null })
+    mockStorageUpload.mockResolvedValueOnce({ error: null })
+    mockStorageGetPublicUrl.mockReturnValueOnce({
+      data: { publicUrl: 'https://abc.supabase.co/storage/v1/object/public/system-logos/id/new.png' },
+    })
+    mockUpdateSingle.mockResolvedValueOnce({
+      data: {
+        ...MOCK_SYSTEM_DB,
+        logo_url: 'https://abc.supabase.co/storage/v1/object/public/system-logos/id/new.png',
+      },
+      error: null,
+    })
+
+    await uploadSystemLogo(TEST_UUID, Buffer.from('test'), 'new.png', 'image/png')
+
+    expect(mockStorageRemove).toHaveBeenCalledWith(['id/old.png'])
+  })
+
+  it('should NOT delete static logo from storage when replacing', async () => {
+    mockSelectSingle.mockResolvedValueOnce({
+      data: { logo_url: '/logos/tinedy.svg' },
+      error: null,
+    })
+    mockStorageUpload.mockResolvedValueOnce({ error: null })
+    mockStorageGetPublicUrl.mockReturnValueOnce({
+      data: { publicUrl: 'https://abc.supabase.co/storage/v1/object/public/system-logos/id/123.png' },
+    })
+    mockUpdateSingle.mockResolvedValueOnce({
+      data: {
+        ...MOCK_SYSTEM_DB,
+        logo_url: 'https://abc.supabase.co/storage/v1/object/public/system-logos/id/123.png',
+      },
+      error: null,
+    })
+
+    await uploadSystemLogo(TEST_UUID, Buffer.from('test'), 'logo.png', 'image/png')
+
+    expect(mockStorageRemove).not.toHaveBeenCalled()
+  })
+
+  it('should throw "System not found" for PGRST116 error', async () => {
+    mockSelectSingle.mockResolvedValueOnce({
+      data: null,
+      error: { message: 'Not found', code: 'PGRST116' },
+    })
+
+    await expect(
+      uploadSystemLogo(TEST_UUID, Buffer.from('test'), 'logo.png', 'image/png'),
+    ).rejects.toThrow('System not found')
+  })
+
+  it('should throw when storage upload fails', async () => {
+    mockSelectSingle.mockResolvedValueOnce({
+      data: { logo_url: null },
+      error: null,
+    })
+    mockStorageUpload.mockResolvedValueOnce({
+      error: { message: 'Storage full' },
+    })
+
+    await expect(
+      uploadSystemLogo(TEST_UUID, Buffer.from('test'), 'logo.png', 'image/png'),
+    ).rejects.toThrow('Failed to upload logo: Storage full')
+  })
+
+  it('should call revalidatePath after successful upload', async () => {
+    const { revalidatePath } = await import('next/cache')
+
+    mockSelectSingle.mockResolvedValueOnce({
+      data: { logo_url: null },
+      error: null,
+    })
+    mockStorageUpload.mockResolvedValueOnce({ error: null })
+    mockStorageGetPublicUrl.mockReturnValueOnce({
+      data: { publicUrl: 'https://abc.supabase.co/storage/v1/object/public/system-logos/id/123.png' },
+    })
+    mockUpdateSingle.mockResolvedValueOnce({
+      data: {
+        ...MOCK_SYSTEM_DB,
+        logo_url: 'https://abc.supabase.co/storage/v1/object/public/system-logos/id/123.png',
+      },
+      error: null,
+    })
+
+    await uploadSystemLogo(TEST_UUID, Buffer.from('test'), 'logo.png', 'image/png')
+
+    expect(revalidatePath).toHaveBeenCalledWith('/')
+  })
+})
+
+describe('deleteSystemLogo', () => {
+  const mockStorageRemove = vi.fn()
+  const mockSelectSingle = vi.fn()
+  const mockUpdateSingle = vi.fn()
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+
+    let fromCallCount = 0
+    mockSupabase.from.mockImplementation(() => {
+      fromCallCount++
+      if (fromCallCount === 1) {
+        // First call: SELECT logo_url
+        return {
+          select: () => ({
+            eq: () => ({
+              single: mockSelectSingle,
+            }),
+          }),
+        }
+      } else {
+        // Second call: UPDATE logo_url = null
+        return {
+          update: () => ({
+            eq: () => ({
+              select: () => ({
+                single: mockUpdateSingle,
+              }),
+            }),
+          }),
+        }
+      }
+    })
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ;(mockSupabase as any).storage = {
+      from: () => ({
+        remove: mockStorageRemove,
+      }),
+    }
+  })
+
+  it('should delete Supabase Storage logo and clear DB field', async () => {
+    const storageUrl =
+      'https://abc.supabase.co/storage/v1/object/public/system-logos/id/old.png'
+    mockSelectSingle.mockResolvedValueOnce({
+      data: { logo_url: storageUrl },
+      error: null,
+    })
+    mockStorageRemove.mockResolvedValueOnce({ error: null })
+    mockUpdateSingle.mockResolvedValueOnce({
+      data: { ...MOCK_SYSTEM_DB, logo_url: null },
+      error: null,
+    })
+
+    const result = await deleteSystemLogo(TEST_UUID)
+
+    expect(result.logoUrl).toBeNull()
+    expect(mockStorageRemove).toHaveBeenCalledWith(['id/old.png'])
+  })
+
+  it('should just clear DB field for static logo (not delete from storage)', async () => {
+    mockSelectSingle.mockResolvedValueOnce({
+      data: { logo_url: '/logos/tinedy.svg' },
+      error: null,
+    })
+    mockUpdateSingle.mockResolvedValueOnce({
+      data: { ...MOCK_SYSTEM_DB, logo_url: null },
+      error: null,
+    })
+
+    const result = await deleteSystemLogo(TEST_UUID)
+
+    expect(result.logoUrl).toBeNull()
+    expect(mockStorageRemove).not.toHaveBeenCalled()
+  })
+
+  it('should throw "System not found" for PGRST116 error', async () => {
+    mockSelectSingle.mockResolvedValueOnce({
+      data: null,
+      error: { message: 'Not found', code: 'PGRST116' },
+    })
+
+    await expect(deleteSystemLogo(TEST_UUID)).rejects.toThrow('System not found')
+  })
+
+  it('should call revalidatePath after successful deletion', async () => {
+    const { revalidatePath } = await import('next/cache')
+
+    mockSelectSingle.mockResolvedValueOnce({
+      data: { logo_url: null },
+      error: null,
+    })
+    mockUpdateSingle.mockResolvedValueOnce({
+      data: { ...MOCK_SYSTEM_DB, logo_url: null },
+      error: null,
+    })
+
+    await deleteSystemLogo(TEST_UUID)
+
+    expect(revalidatePath).toHaveBeenCalledWith('/')
   })
 })

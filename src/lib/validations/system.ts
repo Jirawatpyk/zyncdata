@@ -84,3 +84,29 @@ export const toggleSystemSchema = z.object({
 })
 
 export type ToggleSystemInput = z.infer<typeof toggleSystemSchema>
+
+// Max file size: 512KB (architecture target is 10KB, but allow larger originals)
+export const MAX_LOGO_SIZE = 512 * 1024 // 512KB
+
+export const ALLOWED_LOGO_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/svg+xml',
+  'image/webp',
+] as const
+
+// Server-side validation for the upload API (validates parsed FormData fields)
+export const uploadLogoSchema = z.object({
+  systemId: z.string().uuid('Invalid system ID'),
+  fileName: z.string().min(1, 'File name required'),
+  fileSize: z.number().max(MAX_LOGO_SIZE, 'File must be less than 512KB'),
+  fileType: z
+    .string()
+    .refine(
+      (val): val is (typeof ALLOWED_LOGO_TYPES)[number] =>
+        (ALLOWED_LOGO_TYPES as readonly string[]).includes(val),
+      { message: 'File must be JPEG, PNG, SVG, or WebP' },
+    ),
+})
+
+export type UploadLogoInput = z.infer<typeof uploadLogoSchema>

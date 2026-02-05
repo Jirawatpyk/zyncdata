@@ -9,6 +9,21 @@ import { getSystems, SYSTEM_SELECT_COLUMNS } from '@/lib/systems/queries'
 import { toCamelCase, toSnakeCase } from '@/lib/utils/transform'
 import { revalidatePath } from 'next/cache'
 
+/** Check if a logo URL points to Supabase Storage (vs static /logos/ path) */
+export function isSupabaseStorageUrl(url: string): boolean {
+  return (
+    url.includes('supabase.co/storage/') ||
+    url.includes('127.0.0.1:54321/storage/') ||
+    url.includes('localhost:54321/storage/')
+  )
+}
+
+/** Extract storage path from a Supabase Storage public URL */
+export function extractStoragePath(url: string): string | null {
+  const match = url.match(/\/object\/public\/system-logos\/(.+)$/)
+  return match?.[1] ?? null
+}
+
 /**
  * Create a new system in the database.
  * Auto-calculates display_order as MAX(display_order) + 1.
@@ -165,6 +180,115 @@ export async function toggleSystem(id: string, enabled: boolean): Promise<System
   }
 
   // Bust ISR cache for landing page
+  revalidatePath('/')
+
+  return systemSchema.parse(toCamelCase<System>(data))
+}
+
+/**
+ * Upload a logo for a system.
+ * If the system already has a Supabase Storage logo, deletes the old one first.
+ * Stores file in system-logos/{systemId}/{timestamp}.{ext}
+ * Revalidates ISR cache for landing page.
+ */
+export async function uploadSystemLogo(
+  systemId: string,
+  file: Buffer | Uint8Array,
+  fileName: string,
+  contentType: string,
+): Promise<System> {
+  const supabase = await createClient()
+
+  // 1. Get current system to check for existing logo
+  const { data: current, error: fetchError } = await supabase
+    .from('systems')
+    .select('logo_url')
+    .eq('id', systemId)
+    .single()
+
+  if (fetchError) {
+    if (fetchError.code === 'PGRST116') throw new Error('System not found')
+    throw fetchError
+  }
+
+  // 2. Delete old logo from storage if it's a Supabase URL
+  if (current.logo_url && isSupabaseStorageUrl(current.logo_url)) {
+    const oldPath = extractStoragePath(current.logo_url)
+    if (oldPath) {
+      await supabase.storage.from('system-logos').remove([oldPath])
+    }
+  }
+
+  // 3. Upload new file
+  const ext = fileName.split('.').pop() ?? 'png'
+  const storagePath = `${systemId}/${Date.now()}.${ext}`
+
+  const { error: uploadError } = await supabase.storage
+    .from('system-logos')
+    .upload(storagePath, file, {
+      contentType,
+      upsert: false,
+    })
+
+  if (uploadError) throw new Error(`Failed to upload logo: ${uploadError.message}`)
+
+  // 4. Get public URL
+  const { data: urlData } = supabase.storage.from('system-logos').getPublicUrl(storagePath)
+
+  // 5. Update system record with new logo URL
+  const { data, error } = await supabase
+    .from('systems')
+    .update({ logo_url: urlData.publicUrl })
+    .eq('id', systemId)
+    .select(SYSTEM_SELECT_COLUMNS)
+    .single()
+
+  if (error) throw error
+
+  revalidatePath('/')
+
+  return systemSchema.parse(toCamelCase<System>(data))
+}
+
+/**
+ * Delete a system's logo.
+ * Removes file from Supabase Storage (if it's a storage URL) and clears logo_url.
+ * Static logos (e.g., /logos/tinedy.svg) just get their DB field cleared.
+ * Revalidates ISR cache for landing page.
+ */
+export async function deleteSystemLogo(systemId: string): Promise<System> {
+  const supabase = await createClient()
+
+  // 1. Get current logo URL
+  const { data: current, error: fetchError } = await supabase
+    .from('systems')
+    .select('logo_url')
+    .eq('id', systemId)
+    .single()
+
+  if (fetchError) {
+    if (fetchError.code === 'PGRST116') throw new Error('System not found')
+    throw fetchError
+  }
+
+  // 2. Delete from storage if Supabase URL
+  if (current.logo_url && isSupabaseStorageUrl(current.logo_url)) {
+    const path = extractStoragePath(current.logo_url)
+    if (path) {
+      await supabase.storage.from('system-logos').remove([path])
+    }
+  }
+
+  // 3. Clear logo_url on system record
+  const { data, error } = await supabase
+    .from('systems')
+    .update({ logo_url: null })
+    .eq('id', systemId)
+    .select(SYSTEM_SELECT_COLUMNS)
+    .single()
+
+  if (error) throw error
+
   revalidatePath('/')
 
   return systemSchema.parse(toCamelCase<System>(data))

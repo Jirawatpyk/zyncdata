@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { createSystemSchema, updateSystemSchema, deleteSystemSchema, reorderSystemsSchema, toggleSystemSchema } from './system'
+import { createSystemSchema, updateSystemSchema, deleteSystemSchema, reorderSystemsSchema, toggleSystemSchema, uploadLogoSchema, MAX_LOGO_SIZE } from './system'
 
 describe('createSystemSchema', () => {
   // AC #3, #4: Validate required fields and URL format
@@ -698,5 +698,131 @@ describe('toggleSystemSchema', () => {
     if (result.success) {
       expect('extraField' in result.data).toBe(false)
     }
+  })
+})
+
+describe('uploadLogoSchema', () => {
+  // Story 3.7 AC #1, #4: Validate logo upload metadata
+
+  const validInput = {
+    systemId: '550e8400-e29b-41d4-a716-446655440000',
+    fileName: 'logo.png',
+    fileSize: 10240,
+    fileType: 'image/png' as const,
+  }
+
+  describe('valid file types', () => {
+    it('should accept JPEG upload', () => {
+      const result = uploadLogoSchema.safeParse({ ...validInput, fileType: 'image/jpeg' })
+      expect(result.success).toBe(true)
+    })
+
+    it('should accept PNG upload', () => {
+      const result = uploadLogoSchema.safeParse(validInput)
+      expect(result.success).toBe(true)
+    })
+
+    it('should accept SVG upload', () => {
+      const result = uploadLogoSchema.safeParse({ ...validInput, fileType: 'image/svg+xml' })
+      expect(result.success).toBe(true)
+    })
+
+    it('should accept WebP upload', () => {
+      const result = uploadLogoSchema.safeParse({ ...validInput, fileType: 'image/webp' })
+      expect(result.success).toBe(true)
+    })
+  })
+
+  describe('file size validation', () => {
+    it('should reject file larger than 512KB (AC #4)', () => {
+      const result = uploadLogoSchema.safeParse({
+        ...validInput,
+        fileSize: MAX_LOGO_SIZE + 1,
+      })
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error.issues[0].message).toBe('File must be less than 512KB')
+      }
+    })
+
+    it('should accept file at exactly 512KB', () => {
+      const result = uploadLogoSchema.safeParse({
+        ...validInput,
+        fileSize: MAX_LOGO_SIZE,
+      })
+      expect(result.success).toBe(true)
+    })
+
+    it('should accept small file', () => {
+      const result = uploadLogoSchema.safeParse({
+        ...validInput,
+        fileSize: 1024,
+      })
+      expect(result.success).toBe(true)
+    })
+  })
+
+  describe('invalid file types', () => {
+    it('should reject PDF (AC #4)', () => {
+      const result = uploadLogoSchema.safeParse({
+        ...validInput,
+        fileType: 'application/pdf',
+      })
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error.issues[0].message).toBe('File must be JPEG, PNG, SVG, or WebP')
+      }
+    })
+
+    it('should reject GIF (AC #4)', () => {
+      const result = uploadLogoSchema.safeParse({
+        ...validInput,
+        fileType: 'image/gif',
+      })
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error.issues[0].message).toBe('File must be JPEG, PNG, SVG, or WebP')
+      }
+    })
+  })
+
+  describe('systemId validation', () => {
+    it('should reject missing systemId', () => {
+      const { systemId: _, ...withoutId } = validInput
+      void _
+      const result = uploadLogoSchema.safeParse(withoutId)
+      expect(result.success).toBe(false)
+    })
+
+    it('should reject invalid UUID', () => {
+      const result = uploadLogoSchema.safeParse({
+        ...validInput,
+        systemId: 'not-a-uuid',
+      })
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error.issues[0].message).toBe('Invalid system ID')
+      }
+    })
+  })
+
+  describe('fileName validation', () => {
+    it('should reject missing fileName', () => {
+      const { fileName: _, ...withoutName } = validInput
+      void _
+      const result = uploadLogoSchema.safeParse(withoutName)
+      expect(result.success).toBe(false)
+    })
+
+    it('should reject empty fileName', () => {
+      const result = uploadLogoSchema.safeParse({
+        ...validInput,
+        fileName: '',
+      })
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        expect(result.error.issues[0].message).toBe('File name required')
+      }
+    })
   })
 })
