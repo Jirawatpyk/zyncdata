@@ -45,6 +45,9 @@ test-results/
 # Sentry
 .sentryclirc
 
+# Claude Code
+.claude/settings.local.json
+
 # vercel
 .vercel
 

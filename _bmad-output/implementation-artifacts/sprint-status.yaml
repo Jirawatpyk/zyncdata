@@ -50,13 +50,13 @@ development_status:
   epic-1-retrospective: done
 
   # Epic 2: Authentication & Access Control (6 stories)
-  epic-2: in-progress
+  epic-2: done
   2-1-initial-super-admin-account-login: done
   2-2-totp-mfa-setup: done
   2-3-backup-codes-generation-usage: done
   2-4-mfa-login-verification: done
   2-5-secure-logout: done
-  2-6-route-protection-rbac-enforcement: backlog
+  2-6-route-protection-rbac-enforcement: done
   epic-2-retrospective: optional
 
   # Epic 3: System Portfolio Management (8 stories)

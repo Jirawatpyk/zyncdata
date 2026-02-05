@@ -1,8 +1,8 @@
-import { NextResponse } from 'next/server'
+import { updateSession } from '@/lib/supabase/proxy'
+import type { NextRequest } from 'next/server'
 
-export async function proxy() {
-  // TODO: Story 2.6 will add auth + RBAC enforcement
-  return NextResponse.next()
+export async function proxy(request: NextRequest) {
+  return await updateSession(request)
 }
 
 export const config = {
@@ -11,9 +11,9 @@ export const config = {
      * Match all request paths except:
      * - _next/static (static files)
      * - _next/image (image optimization)
-     * - favicon.ico (favicon file)
-     * - public folder assets
+     * - favicon.ico, sitemap.xml, robots.txt
+     * - Static assets (.svg, .png, .jpg, .jpeg, .gif, .webp)
      */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }
