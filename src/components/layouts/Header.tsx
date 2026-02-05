@@ -4,7 +4,7 @@ import AuthButton from './AuthButton'
 export default function Header() {
   return (
     <header className="sticky top-0 z-50 border-b border-gray-200/50 bg-white/80 backdrop-blur-xl">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 md:px-8">
+      <div className="mx-auto flex h-[76px] max-w-7xl items-center justify-between px-4 md:px-8">
         <Link
           href="/"
           className="flex items-center gap-2 rounded-sm font-bold text-gray-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-dxt-primary"

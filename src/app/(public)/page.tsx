@@ -2,7 +2,6 @@ import { Suspense } from 'react'
 import type { Metadata } from 'next'
 import { getEnabledSystems } from '@/lib/systems/queries'
 import { getLandingPageContent } from '@/lib/content/queries'
-import Header from '@/components/layouts/Header'
 import Footer from '@/components/layouts/Footer'
 import Hero from '@/app/_components/Hero'
 import IntroSection from '@/app/_components/IntroSection'
@@ -57,13 +56,6 @@ export default async function Home() {
 
   return (
     <>
-      <a
-        href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:bg-white focus:p-4 focus:text-dxt-primary"
-      >
-        Skip to content
-      </a>
-      <Header />
       <main id="main-content">
         <Hero
           title={content.hero.title}
