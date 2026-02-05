@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 
 const buttonClasses = cn(
-  'min-h-11 rounded-lg bg-gradient-to-r from-dxt-primary to-dxt-secondary px-4 py-2 text-sm font-medium text-white',
+  'inline-flex h-11 w-28 items-center justify-center rounded-lg bg-gradient-to-r from-dxt-primary to-dxt-secondary text-sm font-medium text-white',
   'shadow-sm shadow-dxt-primary/25 hover:shadow-md hover:shadow-dxt-primary/30',
   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-dxt-primary focus-visible:ring-offset-2',
   'motion-safe:transition-all motion-safe:duration-150',
@@ -31,7 +31,7 @@ export default function AuthButton() {
   if (isLoggedIn === null) {
     return (
       <span
-        className="inline-block h-11 w-24 animate-pulse rounded-lg bg-gray-200"
+        className="inline-block h-11 w-28 animate-pulse rounded-lg bg-gray-200"
         data-testid="auth-button-skeleton"
       />
     )
