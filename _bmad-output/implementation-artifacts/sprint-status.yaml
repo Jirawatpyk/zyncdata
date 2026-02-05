@@ -55,7 +55,7 @@ development_status:
   2-2-totp-mfa-setup: done
   2-3-backup-codes-generation-usage: done
   2-4-mfa-login-verification: done
-  2-5-secure-logout: backlog
+  2-5-secure-logout: done
   2-6-route-protection-rbac-enforcement: backlog
   epic-2-retrospective: optional
 
