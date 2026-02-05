@@ -170,9 +170,9 @@ export default function AddSystemDialog({
               name="enabled"
               render={({ field }) => (
                 <FormItem className="flex items-center justify-between rounded-lg border p-3">
-                  <div className="space-y-0.5">
-                    <FormLabel>Visible on landing page</FormLabel>
-                  </div>
+                  <FormLabel className="mb-0 cursor-pointer">
+                    Visible on landing page
+                  </FormLabel>
                   <FormControl>
                     <Switch
                       checked={field.value}
