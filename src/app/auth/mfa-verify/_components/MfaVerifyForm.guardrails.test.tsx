@@ -115,7 +115,7 @@ describe('MfaVerifyForm — guardrail edge cases', () => {
       resolveVerify!({ user: { id: 'u1' }, session: {} })
 
       await waitFor(() => {
-        expect(mockPush).toHaveBeenCalledWith('/dashboard')
+        expect(mockPush).toHaveBeenCalledWith('/admin')
       })
 
       // Then verifyMfaEnrollment should only have been called once
@@ -392,7 +392,7 @@ describe('MfaVerifyForm — guardrail edge cases', () => {
 
       // Then the previous client error should be cleared
       await waitFor(() => {
-        expect(mockPush).toHaveBeenCalledWith('/dashboard')
+        expect(mockPush).toHaveBeenCalledWith('/admin')
       })
 
       // And the error message should no longer be displayed

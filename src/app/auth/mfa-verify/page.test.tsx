@@ -46,7 +46,7 @@ describe('MfaVerifyPage', () => {
     expect(mockRedirect).toHaveBeenCalledWith('/auth/mfa-enroll')
   })
 
-  it('should redirect to /dashboard if already aal2', async () => {
+  it('should redirect to /admin if already aal2', async () => {
     mockGetCurrentUser.mockResolvedValue({ id: 'user-1' })
     mockGetMfaStatus.mockResolvedValue({
       hasNoFactors: false,
@@ -54,7 +54,7 @@ describe('MfaVerifyPage', () => {
     })
 
     await expect(MfaVerifyPage()).rejects.toThrow('NEXT_REDIRECT')
-    expect(mockRedirect).toHaveBeenCalledWith('/dashboard')
+    expect(mockRedirect).toHaveBeenCalledWith('/admin')
   })
 
   it('should render MfaVerifyForm when MFA verification needed', async () => {

@@ -53,7 +53,7 @@ describe('MfaEnrollPage', () => {
     })
 
     await expect(MfaEnrollPage()).rejects.toThrow('NEXT_REDIRECT')
-    expect(mockRedirect).toHaveBeenCalledWith('/dashboard')
+    expect(mockRedirect).toHaveBeenCalledWith('/admin')
   })
 
   it('should render MfaEnrollForm when user is authenticated with no factors', async () => {

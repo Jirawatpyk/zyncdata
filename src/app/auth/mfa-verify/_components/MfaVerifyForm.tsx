@@ -78,7 +78,7 @@ export default function MfaVerifyForm() {
         await verifyMfaEnrollment(factorId, formData.get('code') as string)
         verifyInProgress.current = false
         setVerifying(false)
-        router.push('/dashboard')
+        router.push('/admin')
         return result
       } catch {
         verifyInProgress.current = false
@@ -132,7 +132,7 @@ export default function MfaVerifyForm() {
   }, [loadFactors])
 
   const handleBackupCodeSuccess = useCallback(() => {
-    router.push('/dashboard')
+    router.push('/admin')
   }, [router])
 
   const handleRetryFactors = useCallback(() => {

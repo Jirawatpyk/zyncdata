@@ -18,13 +18,13 @@ describe('UnauthorizedPage', () => {
     ).toBeInTheDocument()
   })
 
-  it('should render link to dashboard', () => {
+  it('should render link to admin', () => {
     render(<UnauthorizedPage />)
 
-    const dashboardLink = screen.getByTestId('go-to-dashboard-link')
-    expect(dashboardLink).toBeInTheDocument()
-    expect(dashboardLink).toHaveAttribute('href', '/dashboard')
-    expect(dashboardLink).toHaveTextContent('Go to Dashboard')
+    const adminLink = screen.getByTestId('go-to-admin-link')
+    expect(adminLink).toBeInTheDocument()
+    expect(adminLink).toHaveAttribute('href', '/admin')
+    expect(adminLink).toHaveTextContent('Go to Admin')
   })
 
   it('should render link to login page', () => {

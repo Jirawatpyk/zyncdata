@@ -26,14 +26,14 @@ function buildRequest(url: string): Request {
 
 describe('Auth Callback Route - GET', () => {
   describe('successful code exchange', () => {
-    it('[P0] should redirect to /dashboard on successful exchange with no next param', async () => {
+    it('[P0] should redirect to /admin on successful exchange with no next param', async () => {
       mockExchangeCodeForSession.mockResolvedValue({ error: null })
 
       const request = buildRequest('https://example.com/auth/callback?code=valid-code')
       const response = await GET(request)
 
       expect(mockExchangeCodeForSession).toHaveBeenCalledWith('valid-code')
-      expect(redirectSpy).toHaveBeenCalledWith('https://example.com/dashboard')
+      expect(redirectSpy).toHaveBeenCalledWith('https://example.com/admin')
       expect(response.status).toBe(307)
     })
 
@@ -51,7 +51,7 @@ describe('Auth Callback Route - GET', () => {
   })
 
   describe('open redirect prevention (P0)', () => {
-    it('[P0] should reject //evil.com paths and fall back to /dashboard', async () => {
+    it('[P0] should reject //evil.com paths and fall back to /admin', async () => {
       mockExchangeCodeForSession.mockResolvedValue({ error: null })
 
       const request = buildRequest(
@@ -59,10 +59,10 @@ describe('Auth Callback Route - GET', () => {
       )
       await GET(request)
 
-      expect(redirectSpy).toHaveBeenCalledWith('https://example.com/dashboard')
+      expect(redirectSpy).toHaveBeenCalledWith('https://example.com/admin')
     })
 
-    it('[P0] should reject absolute URLs and fall back to /dashboard', async () => {
+    it('[P0] should reject absolute URLs and fall back to /admin', async () => {
       mockExchangeCodeForSession.mockResolvedValue({ error: null })
 
       const request = buildRequest(
@@ -70,7 +70,7 @@ describe('Auth Callback Route - GET', () => {
       )
       await GET(request)
 
-      expect(redirectSpy).toHaveBeenCalledWith('https://example.com/dashboard')
+      expect(redirectSpy).toHaveBeenCalledWith('https://example.com/admin')
     })
 
     it('[P0] should reject protocol-relative URLs like //evil.com/path', async () => {
@@ -81,7 +81,7 @@ describe('Auth Callback Route - GET', () => {
       )
       await GET(request)
 
-      expect(redirectSpy).toHaveBeenCalledWith('https://example.com/dashboard')
+      expect(redirectSpy).toHaveBeenCalledWith('https://example.com/admin')
     })
   })
 
@@ -122,7 +122,7 @@ describe('Auth Callback Route - GET', () => {
       expect(redirectSpy).toHaveBeenCalledWith('https://example.com/admin/users')
     })
 
-    it('[P2] should reject empty-string next param and use /dashboard', async () => {
+    it('[P2] should reject empty-string next param and use /admin', async () => {
       mockExchangeCodeForSession.mockResolvedValue({ error: null })
 
       const request = buildRequest(
@@ -130,7 +130,7 @@ describe('Auth Callback Route - GET', () => {
       )
       await GET(request)
 
-      expect(redirectSpy).toHaveBeenCalledWith('https://example.com/dashboard')
+      expect(redirectSpy).toHaveBeenCalledWith('https://example.com/admin')
     })
   })
 })

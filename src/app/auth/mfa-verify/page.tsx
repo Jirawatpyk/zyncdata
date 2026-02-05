@@ -21,7 +21,7 @@ export default async function MfaVerifyPage() {
 
   // If already aal2, go to dashboard
   if (!needsMfaVerification) {
-    redirect('/dashboard')
+    redirect('/admin')
   }
 
   return (

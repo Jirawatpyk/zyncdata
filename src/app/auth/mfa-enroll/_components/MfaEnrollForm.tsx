@@ -81,7 +81,7 @@ export default function MfaEnrollForm() {
           setShowBackupCodes(true)
         } else {
           // Backup code generation failed — still allow dashboard access
-          router.push('/dashboard')
+          router.push('/admin')
         }
         setVerifying(false)
         return result
@@ -138,7 +138,7 @@ export default function MfaEnrollForm() {
     return (
       <BackupCodesDisplay
         codes={backupCodes}
-        onContinue={() => router.push('/dashboard')}
+        onContinue={() => router.push('/admin')}
       />
     )
   }

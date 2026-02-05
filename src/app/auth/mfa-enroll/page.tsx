@@ -13,7 +13,7 @@ export default async function MfaEnrollPage() {
 
   const { hasNoFactors, needsMfaVerification } = await getMfaStatus()
   if (!hasNoFactors && needsMfaVerification) redirect('/auth/mfa-verify')
-  if (!hasNoFactors && !needsMfaVerification) redirect('/dashboard')
+  if (!hasNoFactors && !needsMfaVerification) redirect('/admin')
 
   return (
     <main className="flex min-h-screen items-center justify-center">

@@ -26,17 +26,17 @@ export default function UnauthorizedPage() {
         </p>
         <div className="flex flex-col gap-3">
           <Link
-            href="/dashboard"
+            href="/admin"
             className={cn(
               'inline-flex min-h-11 items-center justify-center rounded-md bg-primary px-4 py-2',
               'text-sm font-medium text-primary-foreground shadow-sm',
               'hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2',
               'focus-visible:ring-ring focus-visible:ring-offset-2',
             )}
-            aria-label="Go to Dashboard"
-            data-testid="go-to-dashboard-link"
+            aria-label="Go to Admin"
+            data-testid="go-to-admin-link"
           >
-            Go to Dashboard
+            Go to Admin
           </Link>
           <Link
             href="/auth/login"

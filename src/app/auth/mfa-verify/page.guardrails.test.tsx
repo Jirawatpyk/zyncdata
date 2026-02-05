@@ -60,6 +60,6 @@ describe('MfaVerifyPage — guardrail edge cases', () => {
     })
 
     await expect(MfaVerifyPage()).rejects.toThrow('NEXT_REDIRECT')
-    expect(mockRedirect).toHaveBeenCalledWith('/dashboard')
+    expect(mockRedirect).toHaveBeenCalledWith('/admin')
   })
 })
