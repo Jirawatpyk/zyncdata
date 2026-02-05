@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import AuthButton from './AuthButton'
 
 export default function Header() {
   return (
@@ -14,13 +15,8 @@ export default function Header() {
           </span>
           <span className="text-lg">DxT AI Platform</span>
         </Link>
-        <nav>
-          <Link
-            href="/auth/login"
-            className="rounded-lg bg-gradient-to-r from-dxt-primary to-dxt-secondary px-4 py-2 text-sm font-medium text-white shadow-sm shadow-dxt-primary/25 hover:shadow-md hover:shadow-dxt-primary/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-dxt-primary focus-visible:ring-offset-2 motion-safe:transition-all motion-safe:duration-150"
-          >
-            Login
-          </Link>
+        <nav aria-label="Main">
+          <AuthButton />
         </nav>
       </div>
     </header>

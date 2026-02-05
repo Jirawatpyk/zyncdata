@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import type { JSX } from 'react'
 import Header from '@/components/layouts/Header'
+import AuthButton from '@/components/layouts/AuthButton'
 
 function extractText(node: unknown): string {
   if (typeof node === 'string') return node
@@ -14,6 +15,20 @@ function extractText(node: unknown): string {
   return ''
 }
 
+function findByType(node: unknown, type: string | ((...args: unknown[]) => unknown)): JSX.Element | null {
+  if (!node || typeof node !== 'object' || !('type' in (node as object))) return null
+  const el = node as JSX.Element
+  if (el.type === type) return el
+  const children = el.props?.children
+  if (Array.isArray(children)) {
+    for (const child of children) {
+      const found = findByType(child, type)
+      if (found) return found
+    }
+  }
+  return findByType(children, type)
+}
+
 describe('Header', () => {
   it('should render branding text', () => {
     const jsx = (Header as (props: Record<string, never>) => JSX.Element)({})
@@ -22,11 +37,13 @@ describe('Header', () => {
     expect(text).toContain('DxT AI Platform')
   })
 
-  it('should render login link', () => {
+  it('should render AuthButton in nav', () => {
     const jsx = (Header as (props: Record<string, never>) => JSX.Element)({})
-    const text = extractText(jsx)
 
-    expect(text).toContain('Login')
+    const navElement = findByType(jsx, 'nav')
+    expect(navElement).not.toBeNull()
+    expect(navElement!.props.children.type).toBe(AuthButton)
+    expect(navElement!.props['aria-label']).toBe('Main')
   })
 
   it('should render as header element', () => {
@@ -50,7 +67,7 @@ describe('Header', () => {
     expect(jsx.props.className).toContain('bg-white/')
   })
 
-  it('should have focus-visible styles on interactive elements', () => {
+  it('should have focus-visible styles on home link', () => {
     const jsx = (Header as (props: Record<string, never>) => JSX.Element)({})
     const seen = new WeakSet()
     const rendered = JSON.stringify(jsx, (_key, value) => {

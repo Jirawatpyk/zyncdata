@@ -47,6 +47,9 @@ test.describe('Landing Page', () => {
   })
 
   test('should support keyboard navigation through cards', async ({ page }) => {
+    // Wait for AuthButton to resolve from skeleton to a real link
+    await page.waitForSelector('[data-testid="header-login-link"], [data-testid="header-dashboard-link"]')
+
     // Tab to first interactive element
     await page.keyboard.press('Tab')
 
@@ -57,7 +60,7 @@ test.describe('Landing Page', () => {
     // Continue tabbing to reach cards
     // Tab through header links first
     await page.keyboard.press('Tab') // DxT AI Platform link
-    await page.keyboard.press('Tab') // Login link
+    await page.keyboard.press('Tab') // Login or Dashboard link
 
     // Tab to first system card
     await page.keyboard.press('Tab')
