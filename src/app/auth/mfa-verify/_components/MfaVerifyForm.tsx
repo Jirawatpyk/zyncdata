@@ -10,6 +10,7 @@ import { Loader2, ShieldCheck, KeyRound } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { verifyMfaEnrollmentAction } from '@/lib/actions/mfa'
+import { logoutAction } from '@/lib/actions/logout'
 import { verifyMfaEnrollment } from '@/lib/auth/mutations'
 import type { MfaEnrollState } from '@/lib/actions/mfa'
 import BackupCodeVerifyForm from './BackupCodeVerifyForm'
@@ -258,7 +259,7 @@ export default function MfaVerifyForm() {
           <SubmitButton disabled={verifying || !factorId} />
         </form>
 
-        <div className="text-center">
+        <div className="flex flex-col items-center gap-2">
           <button
             type="button"
             onClick={() => setMode('backup')}
@@ -271,6 +272,18 @@ export default function MfaVerifyForm() {
             <KeyRound size={14} aria-hidden="true" />
             Use backup code
           </button>
+          <form action={logoutAction}>
+            <button
+              type="submit"
+              data-testid="mfa-verify-sign-out"
+              className={cn(
+                'text-sm text-muted-foreground hover:text-foreground hover:underline',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+              )}
+            >
+              Sign out
+            </button>
+          </form>
         </div>
       </div>
     </div>
