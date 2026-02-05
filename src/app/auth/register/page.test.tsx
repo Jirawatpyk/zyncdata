@@ -1,16 +1,20 @@
 import { describe, it, expect, vi } from 'vitest'
+import { isRedirectError } from 'next/dist/client/components/redirect-error'
 
-const mockRedirect = vi.fn()
-
-vi.mock('next/navigation', () => ({
-  redirect: (...args: unknown[]) => mockRedirect(...args),
-}))
+vi.mock('next/navigation', async (importActual) => {
+  const actual = await importActual<typeof import('next/navigation')>()
+  return { ...actual }
+})
 
 describe('RegisterPage', () => {
   it('[P2] should redirect to /auth/login (invitation-only model)', async () => {
     const { default: RegisterPage } = await import('./page')
-    RegisterPage()
 
-    expect(mockRedirect).toHaveBeenCalledWith('/auth/login')
+    try {
+      RegisterPage()
+      expect.unreachable('Should have thrown a redirect error')
+    } catch (err) {
+      expect(isRedirectError(err)).toBe(true)
+    }
   })
 })
