@@ -66,10 +66,14 @@ test.describe('Reorder Systems Flow', () => {
       // Wait for success toast (AC #3)
       await expect(adminPage.getByText('Order updated')).toBeVisible({ timeout: 5000 })
 
-      // Verify order changed: systems[1] should now be first in the list
-      const rows = adminPage.locator('[data-testid^="system-row-"]')
-      await expect(rows.first()).toContainText(systems[1].name)
-      await expect(rows.nth(1)).toContainText(systems[0].name)
+      // Verify order changed: systems[1] should now appear before systems[0]
+      const row0 = adminPage.locator('[data-testid^="system-row-"]', { hasText: systems[0].name })
+      const row1 = adminPage.locator('[data-testid^="system-row-"]', { hasText: systems[1].name })
+      const box0 = await row0.boundingBox()
+      const box1 = await row1.boundingBox()
+      expect(box0).not.toBeNull()
+      expect(box1).not.toBeNull()
+      expect(box1!.y).toBeLessThan(box0!.y)
     })
 
     test('[P0] should disable move-up on first system (AC #4)', async ({ adminPage }) => {
@@ -148,11 +152,16 @@ test.describe('Reorder Systems Flow', () => {
       await expect(secondSystem).toBeVisible()
 
       // Verify order: systems[1] should appear before systems[0] in the DOM
-      const firstBox = await secondSystem.boundingBox()
-      const secondBox = await firstSystem.boundingBox()
-      if (firstBox && secondBox) {
-        expect(firstBox.y).toBeLessThan(secondBox.y)
-      }
+      // Use DOM order instead of boundingBox — grid layout can place cards side-by-side
+      const allCardLabels = await adminPage
+        .locator('[aria-label^="Visit "]')
+        .evaluateAll((els) => els.map((el) => el.getAttribute('aria-label')))
+
+      const idx0 = allCardLabels.findIndex((label) => label?.includes(systems[0].name))
+      const idx1 = allCardLabels.findIndex((label) => label?.includes(systems[1].name))
+      expect(idx1).toBeGreaterThanOrEqual(0)
+      expect(idx0).toBeGreaterThanOrEqual(0)
+      expect(idx1).toBeLessThan(idx0)
     })
   })
 })

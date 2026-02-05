@@ -145,7 +145,7 @@ test.describe('Toggle System Visibility Flow', () => {
       await deleteButton.click()
 
       // Confirm deletion in dialog
-      const confirmButton = adminPage.getByTestId('confirm-delete-button')
+      const confirmButton = adminPage.getByTestId('delete-confirm-button')
       await confirmButton.click()
 
       // Wait for the system to be soft-deleted

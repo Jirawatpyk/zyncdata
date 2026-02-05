@@ -58,9 +58,10 @@ test.describe('Landing Page', () => {
     await expect(skipLink).toBeFocused()
 
     // Continue tabbing to reach cards
-    // Tab through header links first
+    // Tab through: Home link → Auth button → "Get Started" hero CTA
     await page.keyboard.press('Tab') // DxT AI Platform link
     await page.keyboard.press('Tab') // Login or Dashboard link
+    await page.keyboard.press('Tab') // "Get Started" CTA in hero
 
     // Tab to first system card
     await page.keyboard.press('Tab')
@@ -69,7 +70,19 @@ test.describe('Landing Page', () => {
   })
 
   test('should have no accessibility violations', async ({ page }) => {
+    // Wait for dynamic content to fully render (AuthButton, system cards)
+    await page.waitForSelector('[data-testid="header-login-link"], [data-testid="header-dashboard-link"]')
+    await page.waitForSelector('[aria-label^="Visit "]', { timeout: 10000 })
+
     const results = await new AxeBuilder({ page }).analyze()
+
+    // Log violations for CI debugging
+    if (results.violations.length > 0) {
+      const summary = results.violations.map(
+        (v) => `  [${v.impact}] ${v.id}: ${v.description} (${v.nodes.length} element(s))`,
+      )
+      console.log(`Accessibility violations (${results.violations.length} rules):\n${summary.join('\n')}`)
+    }
 
     expect(results.violations).toEqual([])
   })

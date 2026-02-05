@@ -255,7 +255,7 @@ test.describe('Delete System Flow', () => {
         hasText: system.name,
       })
       await expect(recoveredRow.getByText('Deleted')).not.toBeVisible()
-      await expect(recoveredRow.getByText('Enabled')).toBeVisible()
+      await expect(recoveredRow.getByText('Visible')).toBeVisible()
 
       // Step 5: Verify system reappears on public landing page
       await adminPage.goto('/')
