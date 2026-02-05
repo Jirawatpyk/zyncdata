@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { createSystemSchema, updateSystemSchema, deleteSystemSchema, reorderSystemsSchema } from './system'
+import { createSystemSchema, updateSystemSchema, deleteSystemSchema, reorderSystemsSchema, toggleSystemSchema } from './system'
 
 describe('createSystemSchema', () => {
   // AC #3, #4: Validate required fields and URL format
@@ -641,5 +641,62 @@ describe('reorderSystemsSchema', () => {
         expect('extra' in result.data.systems[0]).toBe(false)
       }
     })
+  })
+})
+
+describe('toggleSystemSchema', () => {
+  // Story 3.6 AC #1: Validate toggle input
+
+  const validInput = {
+    id: '550e8400-e29b-41d4-a716-446655440000',
+    enabled: true,
+  }
+
+  it('should accept valid input with enabled true', () => {
+    const result = toggleSystemSchema.safeParse(validInput)
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.id).toBe('550e8400-e29b-41d4-a716-446655440000')
+      expect(result.data.enabled).toBe(true)
+    }
+  })
+
+  it('should accept valid input with enabled false', () => {
+    const result = toggleSystemSchema.safeParse({ ...validInput, enabled: false })
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.enabled).toBe(false)
+    }
+  })
+
+  it('should reject invalid UUID', () => {
+    const result = toggleSystemSchema.safeParse({ id: 'not-a-uuid', enabled: true })
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(result.error.issues[0].message).toBe('Invalid system ID')
+    }
+  })
+
+  it('should reject missing enabled field', () => {
+    const result = toggleSystemSchema.safeParse({ id: '550e8400-e29b-41d4-a716-446655440000' })
+    expect(result.success).toBe(false)
+  })
+
+  it('should reject non-boolean enabled', () => {
+    const result = toggleSystemSchema.safeParse({ ...validInput, enabled: 'true' })
+    expect(result.success).toBe(false)
+  })
+
+  it('should reject missing id', () => {
+    const result = toggleSystemSchema.safeParse({ enabled: true })
+    expect(result.success).toBe(false)
+  })
+
+  it('should strip unknown fields', () => {
+    const result = toggleSystemSchema.safeParse({ ...validInput, extraField: 'stripped' })
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect('extraField' in result.data).toBe(false)
+    }
   })
 })

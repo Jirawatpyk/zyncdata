@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { createSystem, updateSystem, deleteSystem, reorderSystems } from './mutations'
+import { createSystem, updateSystem, deleteSystem, reorderSystems, toggleSystem } from './mutations'
 
 const mockSingleForSelect = vi.fn()
 const mockSingleForInsert = vi.fn()
@@ -508,5 +508,112 @@ describe('reorderSystems', () => {
 
     expect(revalidatePath).not.toHaveBeenCalled()
     expect(mockGetSystems).not.toHaveBeenCalled()
+  })
+})
+
+describe('toggleSystem', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+
+    mockSupabase.from.mockReturnValue({
+      update: mockUpdate,
+    })
+
+    const mockEq = vi.fn().mockReturnValue({
+      select: vi.fn().mockReturnValue({
+        single: mockSingleForUpdate,
+      }),
+    })
+    mockUpdate.mockReturnValue({ eq: mockEq })
+  })
+
+  it('should toggle system to enabled', async () => {
+    mockSingleForUpdate.mockResolvedValueOnce({
+      data: { ...MOCK_SYSTEM_DB, enabled: true },
+      error: null,
+    })
+
+    const result = await toggleSystem(TEST_UUID, true)
+
+    expect(result.enabled).toBe(true)
+    expect(mockUpdate).toHaveBeenCalledWith({ enabled: true })
+  })
+
+  it('should toggle system to disabled', async () => {
+    mockSingleForUpdate.mockResolvedValueOnce({
+      data: { ...MOCK_SYSTEM_DB, enabled: false },
+      error: null,
+    })
+
+    const result = await toggleSystem(TEST_UUID, false)
+
+    expect(result.enabled).toBe(false)
+    expect(mockUpdate).toHaveBeenCalledWith({ enabled: false })
+  })
+
+  it('should NOT include deleted_at in the update payload', async () => {
+    mockSingleForUpdate.mockResolvedValueOnce({
+      data: { ...MOCK_SYSTEM_DB, enabled: true },
+      error: null,
+    })
+
+    await toggleSystem(TEST_UUID, true)
+
+    // Verify only { enabled } was passed — no deleted_at
+    expect(mockUpdate).toHaveBeenCalledWith({ enabled: true })
+    expect(mockUpdate).not.toHaveBeenCalledWith(
+      expect.objectContaining({ deleted_at: expect.anything() }),
+    )
+  })
+
+  it('should call revalidatePath after successful toggle', async () => {
+    const { revalidatePath } = await import('next/cache')
+
+    mockSingleForUpdate.mockResolvedValueOnce({
+      data: { ...MOCK_SYSTEM_DB, enabled: false },
+      error: null,
+    })
+
+    await toggleSystem(TEST_UUID, false)
+
+    expect(revalidatePath).toHaveBeenCalledWith('/')
+  })
+
+  it('should throw "System not found" for PGRST116 error', async () => {
+    mockSingleForUpdate.mockResolvedValueOnce({
+      data: null,
+      error: { message: 'Not found', code: 'PGRST116' },
+    })
+
+    await expect(toggleSystem(TEST_UUID, true)).rejects.toThrow('System not found')
+  })
+
+  it('should throw generic error for other failures', async () => {
+    mockSingleForUpdate.mockResolvedValueOnce({
+      data: null,
+      error: { message: 'Connection failed', code: 'SOME_ERROR' },
+    })
+
+    await expect(toggleSystem(TEST_UUID, false)).rejects.toEqual({
+      message: 'Connection failed',
+      code: 'SOME_ERROR',
+    })
+  })
+
+  it('should return parsed System with camelCase fields', async () => {
+    mockSingleForUpdate.mockResolvedValueOnce({
+      data: {
+        ...MOCK_SYSTEM_DB,
+        enabled: false,
+        updated_at: '2026-02-06T12:00:00Z',
+      },
+      error: null,
+    })
+
+    const result = await toggleSystem(TEST_UUID, false)
+
+    expect(result.id).toBe(TEST_UUID)
+    expect(result.updatedAt).toBe('2026-02-06T12:00:00Z')
+    expect(result.enabled).toBe(false)
   })
 })

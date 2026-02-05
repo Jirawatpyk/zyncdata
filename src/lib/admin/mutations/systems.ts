@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import type { System, CreateSystemInput, UpdateSystemInput, DeleteSystemInput } from '@/lib/validations/system'
+import type { System, CreateSystemInput, UpdateSystemInput, DeleteSystemInput, ToggleSystemInput } from '@/lib/validations/system'
 import { unwrapResponse } from '@/lib/admin/queries/api-adapter'
 
 interface CreateMutationContext {
@@ -179,6 +179,53 @@ export function useReorderSystems() {
 
     onSuccess: (serverData) => {
       queryClient.setQueryData<System[]>(['admin', 'systems'], serverData)
+    },
+
+    onError: (_error, _variables, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(['admin', 'systems'], context.previous)
+      }
+    },
+
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'systems'] })
+    },
+  })
+}
+
+interface ToggleMutationContext {
+  previous: System[] | undefined
+}
+
+export function useToggleSystem() {
+  const queryClient = useQueryClient()
+
+  return useMutation<System, Error, ToggleSystemInput, ToggleMutationContext>({
+    mutationFn: async ({ id, enabled }) => {
+      const res = await fetch(`/api/systems/${id}/toggle`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled }),
+      })
+      return unwrapResponse<System>(res)
+    },
+
+    onMutate: async ({ id, enabled }) => {
+      await queryClient.cancelQueries({ queryKey: ['admin', 'systems'] })
+      const previous = queryClient.getQueryData<System[]>(['admin', 'systems'])
+
+      // Optimistic toggle
+      queryClient.setQueryData<System[]>(['admin', 'systems'], (old) =>
+        old?.map((s) => (s.id === id ? { ...s, enabled } : s)) ?? [],
+      )
+
+      return { previous }
+    },
+
+    onSuccess: (serverData) => {
+      queryClient.setQueryData<System[]>(['admin', 'systems'], (old) =>
+        old?.map((s) => (s.id === serverData.id ? serverData : s)) ?? [],
+      )
     },
 
     onError: (_error, _variables, context) => {

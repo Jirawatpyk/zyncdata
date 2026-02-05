@@ -76,3 +76,11 @@ export const reorderSystemsSchema = z.object({
 })
 
 export type ReorderSystemsInput = z.infer<typeof reorderSystemsSchema>
+
+// Input schema for toggling system visibility (Story 3.6, AC: #1)
+export const toggleSystemSchema = z.object({
+  id: z.string().uuid('Invalid system ID'),
+  enabled: z.boolean(),
+})
+
+export type ToggleSystemInput = z.infer<typeof toggleSystemSchema>

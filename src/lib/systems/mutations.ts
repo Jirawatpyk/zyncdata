@@ -140,3 +140,32 @@ export async function reorderSystems(
   // Return fresh sorted list
   return getSystems()
 }
+
+/**
+ * Toggle system visibility (enabled/disabled).
+ * ONLY updates `enabled` — does NOT touch `deleted_at`.
+ * Use this for simple visibility toggle, NOT for soft-delete recovery.
+ * Revalidates ISR cache for landing page.
+ */
+export async function toggleSystem(id: string, enabled: boolean): Promise<System> {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .from('systems')
+    .update({ enabled })
+    .eq('id', id)
+    .select(SYSTEM_SELECT_COLUMNS)
+    .single()
+
+  if (error) {
+    if (error.code === 'PGRST116') {
+      throw new Error('System not found')
+    }
+    throw error
+  }
+
+  // Bust ISR cache for landing page
+  revalidatePath('/')
+
+  return systemSchema.parse(toCamelCase<System>(data))
+}

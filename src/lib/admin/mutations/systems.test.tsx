@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook, waitFor } from '@testing-library/react'
-import { useCreateSystem, useUpdateSystem, useDeleteSystem, useReorderSystems } from './systems'
+import { useCreateSystem, useUpdateSystem, useDeleteSystem, useReorderSystems, useToggleSystem } from './systems'
 import { createQueryWrapper, createTestQueryClient } from '@/lib/test-utils'
 import { QueryClientProvider } from '@tanstack/react-query'
 import type { System } from '@/lib/validations/system'
@@ -1109,6 +1109,272 @@ describe('useReorderSystems', () => {
         { id: UUID_1, displayOrder: 1 },
         { id: UUID_2, displayOrder: 0 },
       ])
+
+      await waitFor(() => {
+        expect(result.current.isError).toBe(true)
+      })
+
+      await waitFor(() => {
+        expect(invalidateSpy).toHaveBeenCalledWith({
+          queryKey: ['admin', 'systems'],
+        })
+      })
+    })
+  })
+})
+
+// =========================================
+// useToggleSystem Tests (Story 3.6, AC #1, #5)
+// =========================================
+
+describe('useToggleSystem', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('should call PATCH /api/systems/:id/toggle on mutate', async () => {
+    const toggledSystem = createMockSystem({ id: 'system-1', enabled: false })
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ data: toggledSystem, error: null }),
+    })
+
+    const { result } = renderHook(() => useToggleSystem(), {
+      wrapper: createQueryWrapper(),
+    })
+
+    result.current.mutate({ id: 'system-1', enabled: false })
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true)
+    })
+
+    expect(mockFetch).toHaveBeenCalledWith('/api/systems/system-1/toggle', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ enabled: false }),
+    })
+  })
+
+  it('should return toggled system data on success', async () => {
+    const toggledSystem = createMockSystem({ id: 'system-1', enabled: true })
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ data: toggledSystem, error: null }),
+    })
+
+    const { result } = renderHook(() => useToggleSystem(), {
+      wrapper: createQueryWrapper(),
+    })
+
+    const mutationResult = await result.current.mutateAsync({ id: 'system-1', enabled: true })
+
+    expect(mutationResult).toEqual(toggledSystem)
+  })
+
+  it('should set error state on failure', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 500,
+      json: () =>
+        Promise.resolve({
+          data: null,
+          error: { message: 'Failed to toggle system visibility', code: 'UPDATE_ERROR' },
+        }),
+    })
+
+    const { result } = renderHook(() => useToggleSystem(), {
+      wrapper: createQueryWrapper(),
+    })
+
+    result.current.mutate({ id: 'system-1', enabled: false })
+
+    await waitFor(() => {
+      expect(result.current.isError).toBe(true)
+    })
+
+    expect(result.current.error?.message).toBe('Failed to toggle system visibility')
+  })
+
+  it('should invalidate queries on settled', async () => {
+    const queryClient = createTestQueryClient()
+    const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries')
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () =>
+        Promise.resolve({ data: createMockSystem({ enabled: false }), error: null }),
+    })
+
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    )
+
+    const { result } = renderHook(() => useToggleSystem(), { wrapper })
+
+    result.current.mutate({ id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', enabled: false })
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true)
+    })
+
+    await waitFor(() => {
+      expect(invalidateSpy).toHaveBeenCalledWith({
+        queryKey: ['admin', 'systems'],
+      })
+    })
+  })
+
+  describe('optimistic toggle & rollback (AC #5)', () => {
+    it('should optimistically toggle enabled in cache', async () => {
+      const queryClient = createTestQueryClient()
+      const existingSystems = [
+        createMockSystem({ id: 'system-1', name: 'System A', enabled: true }),
+      ]
+
+      queryClient.setQueryData(['admin', 'systems'], existingSystems)
+
+      let optimisticUpdateApplied = false
+
+      mockFetch.mockImplementationOnce(async () => {
+        const cachedSystems = queryClient.getQueryData<System[]>(['admin', 'systems'])
+        const system = cachedSystems?.find((s) => s.id === 'system-1')
+        if (system?.enabled === false) {
+          optimisticUpdateApplied = true
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, 50))
+        return {
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              data: createMockSystem({ id: 'system-1', enabled: false }),
+              error: null,
+            }),
+        }
+      })
+
+      const wrapper = ({ children }: { children: React.ReactNode }) => (
+        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      )
+
+      const { result } = renderHook(() => useToggleSystem(), { wrapper })
+
+      result.current.mutate({ id: 'system-1', enabled: false })
+
+      await waitFor(() => {
+        expect(result.current.isSuccess).toBe(true)
+      })
+
+      expect(optimisticUpdateApplied).toBe(true)
+    })
+
+    it('should rollback cache on error (AC #5)', async () => {
+      const queryClient = createTestQueryClient()
+      const existingSystems = [
+        createMockSystem({ id: 'system-1', name: 'System A', enabled: true }),
+      ]
+
+      queryClient.setQueryData(['admin', 'systems'], existingSystems)
+
+      const setQueryDataSpy = vi.spyOn(queryClient, 'setQueryData')
+
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        json: () =>
+          Promise.resolve({
+            data: null,
+            error: { message: 'Server error', code: 'UPDATE_ERROR' },
+          }),
+      })
+
+      const wrapper = ({ children }: { children: React.ReactNode }) => (
+        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      )
+
+      const { result } = renderHook(() => useToggleSystem(), { wrapper })
+
+      result.current.mutate({ id: 'system-1', enabled: false })
+
+      await waitFor(() => {
+        expect(result.current.isError).toBe(true)
+      })
+
+      // Verify rollback was called with original data
+      const rollbackCall = setQueryDataSpy.mock.calls.find(
+        (call) =>
+          JSON.stringify(call[0]) === JSON.stringify(['admin', 'systems']) &&
+          Array.isArray(call[1]) &&
+          call[1].length === 1 &&
+          (call[1] as System[])[0]?.enabled === true,
+      )
+      expect(rollbackCall).toBeDefined()
+    })
+
+    it('should replace with server data on success', async () => {
+      const queryClient = createTestQueryClient()
+      const existingSystems = [
+        createMockSystem({ id: 'system-1', enabled: true, updatedAt: '2026-01-01T00:00:00Z' }),
+      ]
+
+      queryClient.setQueryData(['admin', 'systems'], existingSystems)
+
+      const serverSystem = createMockSystem({
+        id: 'system-1',
+        enabled: false,
+        updatedAt: '2026-02-06T12:00:00Z',
+      })
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ data: serverSystem, error: null }),
+      })
+
+      const wrapper = ({ children }: { children: React.ReactNode }) => (
+        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      )
+
+      const { result } = renderHook(() => useToggleSystem(), { wrapper })
+
+      result.current.mutate({ id: 'system-1', enabled: false })
+
+      await waitFor(() => {
+        expect(result.current.isSuccess).toBe(true)
+      })
+
+      // After onSuccess, the server data should be in cache
+      await waitFor(() => {
+        const cachedSystems = queryClient.getQueryData<System[]>(['admin', 'systems'])
+        const system = cachedSystems?.find((s) => s.id === 'system-1')
+        // Either the server data is present, or cache was invalidated
+        expect(system === undefined || system?.updatedAt === '2026-02-06T12:00:00Z').toBe(true)
+      })
+    })
+
+    it('should invalidate queries on error (onSettled still runs)', async () => {
+      const queryClient = createTestQueryClient()
+      const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries')
+
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        json: () =>
+          Promise.resolve({
+            data: null,
+            error: { message: 'Server error', code: 'UPDATE_ERROR' },
+          }),
+      })
+
+      const wrapper = ({ children }: { children: React.ReactNode }) => (
+        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      )
+
+      const { result } = renderHook(() => useToggleSystem(), { wrapper })
+
+      result.current.mutate({ id: 'system-1', enabled: false })
 
       await waitFor(() => {
         expect(result.current.isError).toBe(true)

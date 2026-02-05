@@ -124,7 +124,7 @@ describe('SystemsList', () => {
     })
   })
 
-  it('should display enabled badge when enabled', async () => {
+  it('should display Visible label and checked Switch when enabled', async () => {
     vi.useRealTimers()
     const systems = [createMockSystem({ enabled: true })]
     mockFetch.mockResolvedValueOnce({
@@ -135,11 +135,15 @@ describe('SystemsList', () => {
     render(<SystemsList />, { wrapper: createQueryWrapper() })
 
     await waitFor(() => {
-      expect(screen.getByText('Enabled')).toBeInTheDocument()
+      expect(screen.getByText('Visible')).toBeInTheDocument()
     })
+
+    const toggle = screen.getByTestId('toggle-system-f47ac10b-58cc-4372-a567-0e02b2c3d479')
+    expect(toggle).toBeInTheDocument()
+    expect(toggle).toHaveAttribute('data-state', 'checked')
   })
 
-  it('should display disabled badge when disabled', async () => {
+  it('should display Hidden label and unchecked Switch when disabled', async () => {
     vi.useRealTimers()
     const systems = [createMockSystem({ enabled: false })]
     mockFetch.mockResolvedValueOnce({
@@ -150,8 +154,12 @@ describe('SystemsList', () => {
     render(<SystemsList />, { wrapper: createQueryWrapper() })
 
     await waitFor(() => {
-      expect(screen.getByText('Disabled')).toBeInTheDocument()
+      expect(screen.getByText('Hidden')).toBeInTheDocument()
     })
+
+    const toggle = screen.getByTestId('toggle-system-f47ac10b-58cc-4372-a567-0e02b2c3d479')
+    expect(toggle).toBeInTheDocument()
+    expect(toggle).toHaveAttribute('data-state', 'unchecked')
   })
 
   it('should display status badge when status available', async () => {
@@ -280,7 +288,7 @@ describe('SystemsList', () => {
     const row = screen.getByTestId('system-row-test-id')
     expect(row).toContainElement(screen.getByTestId('edit-system-test-id'))
     expect(row).toContainElement(screen.getByText('operational'))
-    expect(row).toContainElement(screen.getByText('Enabled'))
+    expect(row).toContainElement(screen.getByText('Visible'))
   })
 
   it('should render delete button for non-deleted systems (Story 3.4)', async () => {
@@ -525,5 +533,109 @@ describe('SystemsList', () => {
     })
 
     expect(screen.getByLabelText('Move ENEOS down')).toBeInTheDocument()
+  })
+
+  // =======================
+  // Toggle Switch (Story 3.6, AC #1, #4)
+  // =======================
+
+  it('should render toggle Switch for each system', async () => {
+    vi.useRealTimers()
+    const systems = [
+      createMockSystem({ id: 'id-1', name: 'System 1', enabled: true }),
+      createMockSystem({ id: 'id-2', name: 'System 2', enabled: false }),
+    ]
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ data: systems, error: null }),
+    })
+
+    render(<SystemsList />, { wrapper: createQueryWrapper() })
+
+    await waitFor(() => {
+      expect(screen.getByTestId('toggle-system-id-1')).toBeInTheDocument()
+    })
+
+    expect(screen.getByTestId('toggle-system-id-2')).toBeInTheDocument()
+    expect(screen.getByTestId('toggle-system-id-1')).toHaveAttribute('data-state', 'checked')
+    expect(screen.getByTestId('toggle-system-id-2')).toHaveAttribute('data-state', 'unchecked')
+  })
+
+  it('should disable Switch for soft-deleted systems (AC #4)', async () => {
+    vi.useRealTimers()
+    const systems = [
+      createMockSystem({
+        id: 'deleted-id',
+        name: 'Deleted System',
+        enabled: false,
+        deletedAt: '2026-02-05T12:00:00Z',
+      }),
+    ]
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ data: systems, error: null }),
+    })
+
+    render(<SystemsList />, { wrapper: createQueryWrapper() })
+
+    await waitFor(() => {
+      expect(screen.getByTestId('toggle-system-deleted-id')).toBeInTheDocument()
+    })
+
+    expect(screen.getByTestId('toggle-system-deleted-id')).toBeDisabled()
+  })
+
+  it('should trigger toggle mutation when Switch is clicked (AC #1)', async () => {
+    vi.useRealTimers()
+    const systems = [
+      createMockSystem({ id: 'id-1', name: 'System 1', enabled: true }),
+    ]
+
+    // First fetch: load systems
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ data: systems, error: null }),
+    })
+
+    render(<SystemsList />, { wrapper: createQueryWrapper() })
+
+    await waitFor(() => {
+      expect(screen.getByTestId('toggle-system-id-1')).toBeInTheDocument()
+    })
+
+    // Second fetch: toggle mutation
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () =>
+        Promise.resolve({
+          data: createMockSystem({ id: 'id-1', enabled: false }),
+          error: null,
+        }),
+    })
+
+    fireEvent.click(screen.getByTestId('toggle-system-id-1'))
+
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalledWith('/api/systems/id-1/toggle', expect.objectContaining({
+        method: 'PATCH',
+      }))
+    })
+  })
+
+  it('should have accessible label on Switch', async () => {
+    vi.useRealTimers()
+    const systems = [
+      createMockSystem({ id: 'id-1', name: 'ENEOS', enabled: true }),
+    ]
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ data: systems, error: null }),
+    })
+
+    render(<SystemsList />, { wrapper: createQueryWrapper() })
+
+    await waitFor(() => {
+      expect(screen.getByLabelText('Toggle ENEOS visibility')).toBeInTheDocument()
+    })
   })
 })

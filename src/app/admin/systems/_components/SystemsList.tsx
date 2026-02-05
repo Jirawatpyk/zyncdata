@@ -2,13 +2,14 @@
 
 import { useQuery } from '@tanstack/react-query'
 import { systemsQueryOptions } from '@/lib/admin/queries/systems'
-import { useReorderSystems } from '@/lib/admin/mutations/systems'
+import { useReorderSystems, useToggleSystem } from '@/lib/admin/mutations/systems'
 import LoadingSpinner from '@/components/patterns/LoadingSpinner'
 import SystemsEmptyState from './SystemsEmptyState'
 import AddSystemDialog from './AddSystemDialog'
 import EditSystemDialog from './EditSystemDialog'
 import DeleteSystemDialog from './DeleteSystemDialog'
 import { Button } from '@/components/ui/button'
+import { Switch } from '@/components/ui/switch'
 import { ChevronUp, ChevronDown } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -16,6 +17,7 @@ import { cn } from '@/lib/utils'
 export default function SystemsList() {
   const { data: systems, isPending, isError } = useQuery(systemsQueryOptions)
   const reorder = useReorderSystems()
+  const toggle = useToggleSystem()
 
   const handleMove = (index: number, direction: 'up' | 'down') => {
     if (!systems) return
@@ -31,6 +33,16 @@ export default function SystemsList() {
       {
         onSuccess: () => toast.success('Order updated'),
         onError: () => toast.error('Failed to reorder systems'),
+      },
+    )
+  }
+
+  const handleToggle = (systemId: string, enabled: boolean) => {
+    toggle.mutate(
+      { id: systemId, enabled },
+      {
+        onSuccess: () => toast.success(enabled ? 'System enabled' : 'System disabled'),
+        onError: () => toast.error('Failed to toggle system visibility'),
       },
     )
   }
@@ -132,16 +144,18 @@ export default function SystemsList() {
                   Deleted
                 </span>
               )}
-              <span
-                className={cn(
-                  'rounded-full px-2 py-0.5 text-xs font-medium',
-                  system.enabled
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'bg-gray-100 text-gray-500',
-                )}
-              >
-                {system.enabled ? 'Enabled' : 'Disabled'}
-              </span>
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={system.enabled}
+                  onCheckedChange={(checked) => handleToggle(system.id, checked)}
+                  disabled={system.deletedAt != null || (toggle.isPending && toggle.variables?.id === system.id)}
+                  aria-label={`Toggle ${system.name} visibility`}
+                  data-testid={`toggle-system-${system.id}`}
+                />
+                <span className="text-xs text-muted-foreground">
+                  {system.enabled ? 'Visible' : 'Hidden'}
+                </span>
+              </div>
             </div>
           </div>
         ))}
