@@ -18,6 +18,13 @@ const TEST_NAME_PREFIXES = [
   'Enable Button Test',
   'Reset Test',
   'Dup Edit Test',
+  'Duplicate Test',
+  'Loading Test',
+  'Toast Test',
+  'Toast Update',
+  'Reorder Test',
+  'Toggle Test',
+  'Updated ',
   'Test System',
 ]
 
