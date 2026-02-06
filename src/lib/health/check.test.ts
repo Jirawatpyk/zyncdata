@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { checkSystemHealth, checkSystemHealthWithRetry, isRetryable, sleep } from '@/lib/health/check'
+import { checkSystemHealth, checkSystemHealthWithRetry, isRetryable } from '@/lib/health/check'
 import type { HealthCheckResult } from '@/lib/validations/health'
 
 describe('checkSystemHealth', () => {
@@ -75,7 +75,8 @@ describe('checkSystemHealth', () => {
     const result = await checkSystemHealth(system)
 
     expect(result.status).toBe('failure')
-    expect(result.responseTime).toBeNull()
+    expect(result.responseTime).toBeTypeOf('number')
+    expect(result.responseTime).toBeGreaterThanOrEqual(0)
     expect(result.errorMessage).toBe('HTTP 503 Service Unavailable')
   })
 
@@ -298,6 +299,9 @@ describe('checkSystemHealthWithRetry', () => {
   })
 
   it('should apply exponential backoff between retries', async () => {
+    // Mock random for deterministic delays: 0.5 * 50 * 2^0 = 25ms, 0.5 * 50 * 2^1 = 50ms
+    vi.spyOn(Math, 'random').mockReturnValue(0.5)
+
     const callTimestamps: number[] = []
     vi.mocked(fetch).mockImplementation(async () => {
       callTimestamps.push(Date.now())
@@ -310,16 +314,15 @@ describe('checkSystemHealthWithRetry', () => {
     // 3 attempts total
     expect(callTimestamps).toHaveLength(3)
 
-    // First retry delay: baseDelay * 2^0 * jitter = 50 * 1 * [0.5, 1.0] → 25-50ms
+    // First retry delay: 0.5 * 50 * 2^0 = 25ms
     const firstGap = callTimestamps[1] - callTimestamps[0]
     expect(firstGap).toBeGreaterThanOrEqual(20) // allow timer imprecision
 
-    // Second retry delay: baseDelay * 2^1 * jitter = 50 * 2 * [0.5, 1.0] → 50-100ms
+    // Second retry delay: 0.5 * 50 * 2^1 = 50ms
     const secondGap = callTimestamps[2] - callTimestamps[1]
     expect(secondGap).toBeGreaterThanOrEqual(40) // allow timer imprecision
 
     // Second delay should be roughly double the first (exponential)
-    // With jitter variance, just verify second >= first
     expect(secondGap).toBeGreaterThanOrEqual(firstGap * 0.8)
   })
 
@@ -334,14 +337,3 @@ describe('checkSystemHealthWithRetry', () => {
   })
 })
 
-describe('sleep', () => {
-  it('should resolve after the specified delay', async () => {
-    vi.useFakeTimers()
-
-    const promise = sleep(1000)
-    vi.advanceTimersByTime(1000)
-    await promise
-
-    vi.useRealTimers()
-  })
-})

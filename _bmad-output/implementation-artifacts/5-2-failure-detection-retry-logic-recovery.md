@@ -1,6 +1,6 @@
 # Story 5.2: Failure Detection, Retry Logic & Recovery
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -155,10 +155,9 @@ Use **Option A** — the cron is the only writer, and service client has full ac
 - `src/lib/test-utils/mock-factories.ts` — add `consecutiveFailures: 0` to `SYSTEM_DEFAULTS`
 - `src/types/database.ts` — regenerated via `npm run db:types`
 
-**TEST BLAST RADIUS (manual `toEqual()` fixes needed in 2 files):**
-- `src/app/api/systems/[id]/route.test.ts` — 3 assertions
-- `src/lib/admin/mutations/systems.test.tsx` — 8+ assertions + cache snapshots
-- Other 8 test files using `createMockSystem` are auto-fixed by the factory update
+**TEST BLAST RADIUS:**
+- All test files using `createMockSystem()` factory were auto-fixed by adding `consecutiveFailures: 0` to SYSTEM_DEFAULTS (incl. `route.test.ts`, `systems.test.tsx`)
+- Files with inline System literals required manual `consecutive_failures` addition (6 guardrails/query test files)
 
 **CREATE (new files):**
 - `supabase/migrations/<timestamp>_add_consecutive_failures_to_systems.sql` — new column
@@ -257,7 +256,7 @@ Claude Opus 4.6
 **Created (1):**
 - `supabase/migrations/20260210000001_add_consecutive_failures_to_systems.sql`
 
-**Modified (14):**
+**Modified (16):**
 - `src/lib/health/check.ts` — added `isRetryable()`, `sleep()`, `checkSystemHealthWithRetry()`
 - `src/lib/health/check.test.ts` — 13→26 tests (+13 new)
 - `src/lib/health/mutations.ts` — added counter functions, updated `runAllHealthChecks()`
@@ -275,8 +274,21 @@ Claude Opus 4.6
 - `src/app/api/systems/[id]/toggle/route.guardrails.test.ts` — added `consecutiveFailures` (2 places)
 - `src/app/api/systems/route.guardrails.test.ts` — added `consecutiveFailures`
 
+### Code Review Fixes (AI)
+
+**H1:** Refactored `mutations.ts` — helper functions accept optional `ServiceClient` param; `runAllHealthChecks()` creates 1 client and passes it to all helpers (was N×4+1 instantiations)
+**H2:** Fixed misleading JSDoc "Atomically" → "Non-atomic" on `incrementConsecutiveFailures()`
+**H3:** Extracted `fetchWithTimeout()` helper in `check.ts` — HEAD and GET fallback each get a fresh AbortController + timeout (was sharing a single signal)
+**M1:** Fixed File List count: "Modified (14)" → "Modified (16)"
+**M2:** Corrected Dev Notes blast radius — clarified auto-fixed vs manual files
+**M3:** Removed `sleep()` export — now module-private; removed trivial standalone test
+**L1:** Changed to full jitter: `Math.random() * baseDelay * 2^attempt` (was half-jitter [0.5, 1.0))
+**L2:** HTTP 4xx/5xx errors now return actual `responseTime` (was `null` — server DID respond)
+
+Post-fix: 1232 tests passing (107 files), 0 type errors, 0 lint errors
+
 ### Test Metrics
 
 - **Test files:** 107 (was ~90 pre-story)
 - **Test suites:** 376 passed
-- **Tests:** 1233 passed
+- **Tests:** 1232 passed (1233 pre-review, −1 removed trivial sleep test)

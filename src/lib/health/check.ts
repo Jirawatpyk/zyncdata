@@ -13,7 +13,7 @@ export function isRetryable(result: HealthCheckResult): boolean {
   )
 }
 
-export const sleep = (ms: number): Promise<void> =>
+const sleep = (ms: number): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, ms))
 
 export async function checkSystemHealthWithRetry(
@@ -35,8 +35,8 @@ export async function checkSystemHealthWithRetry(
       break
     }
 
-    // Exponential backoff with jitter: delay * (0.5 + random * 0.5)
-    const delay = baseDelayMs * Math.pow(2, attempt) * (0.5 + Math.random() * 0.5)
+    // Full jitter: random delay in [0, baseDelay * 2^attempt)
+    const delay = Math.random() * baseDelayMs * Math.pow(2, attempt)
     await sleep(delay)
 
     lastResult = await checkSystemHealth(system, timeoutMs)
@@ -45,29 +45,34 @@ export async function checkSystemHealthWithRetry(
   return lastResult
 }
 
+/** Fetch a URL with a dedicated AbortController and timeout */
+async function fetchWithTimeout(
+  url: string,
+  method: string,
+  timeoutMs: number,
+): Promise<Response> {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), timeoutMs)
+  try {
+    return await fetch(url, { method, signal: controller.signal, redirect: 'manual' })
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
 export async function checkSystemHealth(
   system: { id: string; url: string },
   timeoutMs: number = DEFAULT_TIMEOUT_MS,
 ): Promise<HealthCheckResult> {
   const checkedAt = new Date().toISOString()
-  const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), timeoutMs)
 
   try {
     const start = Date.now()
-    let response = await fetch(system.url, {
-      method: 'HEAD',
-      signal: controller.signal,
-      redirect: 'manual',
-    })
+    let response = await fetchWithTimeout(system.url, 'HEAD', timeoutMs)
 
-    // Fallback to GET if HEAD returns 405
+    // Fallback to GET if HEAD returns 405 — fresh timeout for the GET request
     if (response.status === 405) {
-      response = await fetch(system.url, {
-        method: 'GET',
-        signal: controller.signal,
-        redirect: 'manual',
-      })
+      response = await fetchWithTimeout(system.url, 'GET', timeoutMs)
     }
 
     const responseTime = Date.now() - start
@@ -87,7 +92,7 @@ export async function checkSystemHealth(
     return {
       systemId: system.id,
       status: 'failure',
-      responseTime: null,
+      responseTime,
       errorMessage: `HTTP ${response.status} ${response.statusText}`,
       checkedAt,
     }
@@ -106,7 +111,5 @@ export async function checkSystemHealth(
       errorMessage: message,
       checkedAt,
     }
-  } finally {
-    clearTimeout(timer)
   }
 }

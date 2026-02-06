@@ -11,11 +11,15 @@ import { revalidatePath } from 'next/cache'
 import type { Database } from '@/types/database'
 
 type HealthCheckInsert = Database['public']['Tables']['health_checks']['Insert']
+type ServiceClient = ReturnType<typeof createServiceClient>
 
 export const DEFAULT_FAILURE_THRESHOLD = 3
 
-export async function recordHealthCheck(result: HealthCheckResult): Promise<HealthCheck> {
-  const supabase = createServiceClient()
+export async function recordHealthCheck(
+  result: HealthCheckResult,
+  client?: ServiceClient,
+): Promise<HealthCheck> {
+  const supabase = client ?? createServiceClient()
 
   const insertData: HealthCheckInsert = {
     system_id: result.systemId,
@@ -40,8 +44,9 @@ export async function updateSystemHealthStatus(
   systemId: string,
   status: string | null,
   responseTime: number | null,
+  client?: ServiceClient,
 ): Promise<void> {
-  const supabase = createServiceClient()
+  const supabase = client ?? createServiceClient()
 
   const updateData: Record<string, unknown> = {
     response_time: responseTime,
@@ -59,12 +64,15 @@ export async function updateSystemHealthStatus(
 }
 
 /**
- * Atomically increment consecutive_failures counter using read-then-write.
- * Safe because cron is the only writer (no concurrent writers).
+ * Increment consecutive_failures counter using read-then-write.
+ * Non-atomic — safe only because cron is the single writer (no concurrent writers).
  * @returns New failure count after increment
  */
-export async function incrementConsecutiveFailures(systemId: string): Promise<number> {
-  const supabase = createServiceClient()
+export async function incrementConsecutiveFailures(
+  systemId: string,
+  client?: ServiceClient,
+): Promise<number> {
+  const supabase = client ?? createServiceClient()
 
   const { data: system, error: readError } = await supabase
     .from('systems')
@@ -86,8 +94,11 @@ export async function incrementConsecutiveFailures(systemId: string): Promise<nu
   return newCount
 }
 
-export async function resetConsecutiveFailures(systemId: string): Promise<void> {
-  const supabase = createServiceClient()
+export async function resetConsecutiveFailures(
+  systemId: string,
+  client?: ServiceClient,
+): Promise<void> {
+  const supabase = client ?? createServiceClient()
 
   const { error } = await supabase
     .from('systems')
@@ -123,12 +134,12 @@ export async function runAllHealthChecks(): Promise<HealthCheckResult[]> {
       const checkResult = result.value
 
       try {
-        await recordHealthCheck(checkResult)
+        await recordHealthCheck(checkResult, supabase)
 
         if (checkResult.status === 'success') {
           // Recovery path (AC #2): reset counter and set online
-          await resetConsecutiveFailures(checkResult.systemId)
-          await updateSystemHealthStatus(checkResult.systemId, 'online', checkResult.responseTime)
+          await resetConsecutiveFailures(checkResult.systemId, supabase)
+          await updateSystemHealthStatus(checkResult.systemId, 'online', checkResult.responseTime, supabase)
 
           if (system.status === 'offline') {
             console.info(
@@ -137,10 +148,10 @@ export async function runAllHealthChecks(): Promise<HealthCheckResult[]> {
           }
         } else {
           // Failure path (AC #1): increment counter, check threshold
-          const failureCount = await incrementConsecutiveFailures(checkResult.systemId)
+          const failureCount = await incrementConsecutiveFailures(checkResult.systemId, supabase)
 
           if (failureCount >= DEFAULT_FAILURE_THRESHOLD) {
-            await updateSystemHealthStatus(checkResult.systemId, 'offline', null)
+            await updateSystemHealthStatus(checkResult.systemId, 'offline', null, supabase)
 
             if (system.status !== 'offline') {
               console.info(
@@ -149,7 +160,7 @@ export async function runAllHealthChecks(): Promise<HealthCheckResult[]> {
             }
           } else {
             // Below threshold: update last_checked_at only, keep previous status
-            await updateSystemHealthStatus(checkResult.systemId, null, null)
+            await updateSystemHealthStatus(checkResult.systemId, null, null, supabase)
           }
         }
       } catch (dbError) {
