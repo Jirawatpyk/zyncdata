@@ -25,7 +25,7 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - **Vercel** (Serverless Functions + Edge CDN)
 
 ### Key Dependencies
-- `shadcn/ui` (New York style, Radix UI) - install via CLI only (`npx shadcn@latest add <component>`), never manually create files in `src/components/ui/`
+- `shadcn/ui` (New York style, Radix UI) - install via CLI only (`npx shadcn@latest add <component>`), never manually create files in `src/components/ui/`. After install, MUST run `npm run shadcn:verify` to check for `dark:` class regressions and `min-h-11` integrity.
 - `zod` ^3.x - validation schemas in `src/lib/validations/`
 - `react-hook-form` ^7.x + `@hookform/resolvers` - form handling
 - `@tanstack/react-query` ^5.x - **CMS admin only** (`/admin/` routes). Do NOT import outside admin.
@@ -33,11 +33,13 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - `@sentry/nextjs` - error tracking
 - `@vercel/analytics` - Core Web Vitals monitoring
 - `date-fns` - all date operations (no moment.js, no raw Date manipulation)
+- `@tiptap/react` + `@tiptap/starter-kit` + `@tiptap/pm` - WYSIWYG editor (Epic 4+, admin only). MUST use `next/dynamic` with `{ ssr: false }` in a `'use client'` wrapper component — never in Server Components.
 
-### Supabase Clients (3 distinct patterns)
-- `createServerClient` - for RSC and Route Handlers (server-side)
-- `createBrowserClient` - for Client Components (browser-side)
-- `createServerClient` with cookie handling - for `middleware.ts`
+### Supabase Clients (4 factory files)
+- `src/lib/supabase/server.ts` - for RSC and Route Handlers (server-side)
+- `src/lib/supabase/client.ts` - for Client Components (browser-side)
+- `src/lib/supabase/proxy.ts` - for Next.js 16 proxy (replaces middleware.ts)
+- No `middleware.ts` — Next.js 16 uses `proxy.ts` for auth session refresh
 - Use `@supabase/ssr` ONLY. Never use deprecated `@supabase/auth-helpers-nextjs`.
 
 ### Font Loading
@@ -47,17 +49,18 @@ _This file contains critical rules and patterns that AI agents must follow when 
 ### Testing
 - **Vitest** + `@testing-library/react` - unit/integration (NOT Jest)
 - **Playwright** + `@axe-core/playwright` - E2E + accessibility
-- `size-limit` - bundle size enforcement
+- `scripts/check-bundle-budget.ts` - per-route First Load JS budget enforcement (`npm run size`)
 - Unit tests co-located as `*.test.ts` next to source files
 - E2E tests in `tests/e2e/`
+- Shared mock factories: `src/lib/test-utils/mock-factories.ts` (`createMockSystem`, `createMockSystemList`, `createMockAuth`)
 
 ### Type Management
-- `src/types/database.ts` - Supabase generated types ONLY (via `supabase gen types typescript`)
+- `src/types/database.ts` - Supabase generated types ONLY (via `npm run db:types` — safe wrapper with backup/restore on corruption)
 - All other types co-located with Zod schemas in `src/lib/validations/`
 
 ### Import Rules
 - `@/*` import alias for ALL imports - no relative paths (`../../`)
-- `middleware.ts` - single file at `src/` root, not a folder
+- `proxy.ts` - single file at `src/` root (Next.js 16 replaces middleware.ts)
 
 ---
 
@@ -208,11 +211,12 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - Database operations go through domain modules in `src/lib/{domain}/`
 - Supabase Realtime subscriptions only in Client Components
 
-#### Middleware (src/middleware.ts)
-- Auth check: redirect unauthenticated users from protected routes
+#### Proxy (src/proxy.ts) — Next.js 16
+- Auth session refresh: Supabase token refresh on every request
 - Role check: block non-admin users from `/admin/*` routes
 - Rate limiting: Upstash integration for auth endpoints
 - Matcher config: exclude static files, `_next`, API health checks
+- NOTE: Next.js 16 uses `proxy.ts` NOT `middleware.ts` — do NOT create middleware.ts
 
 ---
 
@@ -231,10 +235,10 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - `npm run story-metrics` - Generate File List from git diff + test counts for story documentation
 
 #### Test Data Factories
-- Location: `tests/factories/` with factory functions per domain
-- Example: `buildSystem(overrides?: Partial<System>): System`
+- Location: `src/lib/test-utils/mock-factories.ts` — shared across all test files
+- Functions: `createMockSystem(overrides?)`, `createMockSystemList(count, overrides?)`, `createMockAuth(overrides?)`
 - Every test uses factories - no inline object literals with made-up data
-- Non-negotiable for test maintainability
+- Non-negotiable for test maintainability — add new factories here as domains grow
 
 #### Unit Tests (Vitest)
 - Co-located: `UserCard.test.tsx` next to `UserCard.tsx`
@@ -415,7 +419,7 @@ steps:
   - npm run type-check
   - npm run test
   - npm run build
-  - bundle size check (fail if > 150KB JS / 50KB CSS)
+  - npm run size (per-route First Load JS budget check)
   - accessibility check
 ```
 
@@ -431,7 +435,7 @@ steps:
 - Migrations in `supabase/migrations/`
 - Generate: `supabase db diff -f migration_name`
 - Apply locally: `supabase db push`
-- Regenerate types after migration: `npm run db:types`
+- Regenerate types after migration: `npm run db:types` (safe wrapper — auto-backup/restore on corruption)
 - NEVER manually edit `src/types/database.ts` - always regenerate
 
 #### Environment Setup
@@ -459,12 +463,13 @@ steps:
 - NEVER add `generateStaticParams` to auth-gated routes
 - NEVER use `export default function handler(req, res)` - use named exports (`GET`, `POST`)
 
-#### Supabase Client Factories (3 files ONLY)
+#### Supabase Client Factories (4 files)
 - `src/lib/supabase/server.ts` - server client (RSC, Route Handlers)
 - `src/lib/supabase/client.ts` - browser client (Client Components)
-- `src/lib/supabase/middleware.ts` - middleware client
-- ALL files import from these 3 - no inline `createClient()` calls anywhere else
+- `src/lib/supabase/proxy.ts` - proxy client (Next.js 16 proxy, replaces middleware.ts)
+- ALL files import from these factories - no inline `createClient()` calls anywhere else
 - No `import { createBrowserClient } from '@supabase/ssr'` in component files
+- No `middleware.ts` Supabase client — Next.js 16 uses proxy.ts
 
 #### Auth Callback Route (MANDATORY)
 - `app/auth/callback/route.ts` must exist - exchanges auth code for session
@@ -524,6 +529,8 @@ steps:
 - **Sprint Status:** `_bmad-output/implementation-artifacts/sprint-status.yaml`
 - **React Query Patterns:** `_bmad-output/implementation-artifacts/react-query-patterns.md`
 - **CMS Testing Patterns:** `_bmad-output/implementation-artifacts/cms-testing-patterns.md`
+- **WYSIWYG Testing Patterns:** `_bmad-output/implementation-artifacts/wysiwyg-testing-patterns.md`
+- **shadcn Component Registry:** `_bmad-output/implementation-artifacts/shadcn-component-registry.md`
 - **Security Checklist:** `_bmad-output/implementation-artifacts/security-pre-review-checklist.md`
 
 ---
@@ -542,4 +549,4 @@ steps:
 - Review quarterly for outdated rules
 - Remove rules that become obvious over time
 
-Last Updated: 2026-02-04
+Last Updated: 2026-02-06
