@@ -20,6 +20,7 @@ const TEST_NAME_PREFIXES = [
   'Dup Edit Test',
   'Duplicate Test',
   'Loading Test',
+  'Logo Test',
   'Toast Test',
   'Toast Update',
   'Reorder Test',
