@@ -11,7 +11,7 @@ jobs:
     steps:
       - name: Trigger health check
         run: |
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+          STATUS=$(curl -sL -o /dev/null -w "%{http_code}" \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
             "${{ secrets.SITE_URL }}/api/cron/health-check")
           echo "Health check response: $STATUS"
