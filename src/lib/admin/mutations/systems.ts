@@ -115,7 +115,7 @@ export function useUpdateSystem() {
                 url: updates.url,
                 description: updates.description ?? null,
                 enabled: updates.enabled,
-                category: updates.category ?? s.category,
+                category: updates.category !== undefined ? (updates.category ?? null) : s.category,
               }
             : s,
         ) ?? [],

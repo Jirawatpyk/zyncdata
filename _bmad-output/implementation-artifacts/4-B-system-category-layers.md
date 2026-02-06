@@ -1,6 +1,6 @@
 # Story 4-B: System Category Layers (Grouped Systems Display)
 
-Status: review
+Status: done
 
 ## Story
 
@@ -103,13 +103,28 @@ The current "Explore" systems section shows a flat grid of all enabled systems. 
 
 ### Completion Notes
 
-- **1020 tests passing** across 86 test files (was 986 baseline → +34 new tests)
+- **1048 tests passing** across 89 test files (was 986 baseline → +62 new tests incl. 4-A)
+- **Story-metrics:** 1091/1091 tests passed (331/332 suites)
+- **CategoryTabs:** 14 unit tests (7 original + 7 from code review: keyboard nav, tabindex, fade-in)
 - **Bundle budget:** Landing page 242.6 KB / 250 KB (within budget)
-- **Type check:** Clean (0 errors)
+- **Type check:** Clean (0 story-related errors; 1 pre-existing error in HeroEditor.test.tsx)
 - **Lint:** 0 errors, 9 warnings (all pre-existing)
 - **Security checklist:** All applicable items checked (see below)
 - All 9 ACs satisfied
 - Cloud migration and seed data pushed successfully
+- Code review: 7 issues found, all fixed (H1, M1-M3, L1-L3)
+
+### Code Review Fixes Applied
+
+| # | Severity | Issue | Fix |
+|---|----------|-------|-----|
+| H1 | HIGH | Optimistic update can't clear category to null (`?? s.category`) | Changed to `!== undefined` guard in `mutations/systems.ts` |
+| M1 | MEDIUM | No fade-in transition on tab switch (AC#3) | Added `animate-tab-fade-in` CSS animation + conditional render wrapper |
+| M2 | MEDIUM | Unused `tabs.tsx` dead code | Deleted `src/components/ui/tabs.tsx` |
+| M3 | MEDIUM | Missing ARIA keyboard nav (roving tabindex, arrow keys) | Added `tabIndex`, `onKeyDown` with ArrowLeft/Right/Home/End |
+| L1 | LOW | File List claimed `database.ts` modified (not in git) | Corrected File List |
+| L2 | LOW | `systemSchema.category` accepts any string | Documented as intentional (DB response can contain any value) |
+| L3 | LOW | Mock factory `createMockSystemList` generates non-UUID IDs | Fixed to use valid UUID v4 format |
 
 ### Security Checklist Evaluation
 
@@ -129,15 +144,15 @@ The current "Explore" systems section shows a flat grid of all enabled systems. 
 |------|-------------|
 | `supabase/migrations/20260208000001_add_category_to_systems.sql` | Migration: add category column |
 | `src/app/_components/CategoryTabs.tsx` | Client component: tab bar for category switching |
-| `src/app/_components/CategoryTabs.test.tsx` | Unit tests for CategoryTabs (7 tests) |
-| `src/components/ui/tabs.tsx` | shadcn Tabs primitive (installed via CLI) |
+| `src/app/_components/CategoryTabs.test.tsx` | Unit tests for CategoryTabs (14 tests) |
+| ~~`src/components/ui/tabs.tsx`~~ | ~~shadcn Tabs primitive~~ (removed in code review — unused dead code) |
 | `tests/e2e/landing-page-categories.spec.ts` | E2E tests for category tabs |
 
 ### Modified Files
 | File | Description |
 |------|-------------|
 | `supabase/seed.sql` | Updated with categories + 10 new sample systems |
-| `src/types/database.ts` | Regenerated — includes `category` column |
+| ~~`src/types/database.ts`~~ | ~~Regenerated~~ (not in git diff — types were already up-to-date) |
 | `src/lib/validations/system.ts` | Added SYSTEM_CATEGORIES, CATEGORY_LABELS, category to schemas |
 | `src/lib/systems/queries.ts` | Added category to SELECT columns + getEnabledSystemsByCategory() |
 | `src/app/(public)/page.tsx` | Replaced SystemGrid with CategoryTabs using children pattern |
@@ -159,6 +174,7 @@ The current "Explore" systems section shows a flat grid of all enabled systems. 
 | Date | Change | Author |
 |------|--------|--------|
 | 2026-02-06 | Story implemented: DB migration, seed data, validation schemas, queries, CategoryTabs component, landing page update, admin forms, unit tests (34 new), E2E tests, cloud push | Dev Agent (Amelia) |
+| 2026-02-06 | Code review: Fixed H1 optimistic update bug, M1 fade-in transition, M2 dead code removal, M3 keyboard a11y, L1/L3 doc+test fixes (+7 tests) | Code Review (Dev Agent) |
 
 ## Scope Additions
 

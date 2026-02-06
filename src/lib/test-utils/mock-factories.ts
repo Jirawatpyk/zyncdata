@@ -8,6 +8,8 @@
 import type { System } from '@/lib/validations/system'
 import type { User } from '@supabase/supabase-js'
 import type { AuthResult } from '@/lib/auth/guard'
+import type { HeroContent, PillarsContent, FooterContent } from '@/lib/validations/content'
+import type { LandingPageContent } from '@/lib/content/queries'
 
 // ── System ──────────────────────────────────────────────────────────
 
@@ -35,7 +37,7 @@ export function createMockSystem(overrides?: Partial<System>): System {
 export function createMockSystemList(count: number, overrides?: Partial<System>): System[] {
   return Array.from({ length: count }, (_, i) =>
     createMockSystem({
-      id: `system-${i + 1}`,
+      id: `00000000-0000-4000-a000-${String(i + 1).padStart(12, '0')}`,
       name: `System ${i + 1}`,
       url: `https://system-${i + 1}.example.com`,
       displayOrder: i,
@@ -50,6 +52,54 @@ export function createMockAuth(overrides?: Partial<AuthResult>): AuthResult {
   return {
     user: { id: 'user-123', email: 'admin@example.com' } as User,
     role: 'admin',
+    ...overrides,
+  }
+}
+
+// ── Content ────────────────────────────────────────────────────────
+
+const HERO_DEFAULTS: HeroContent = {
+  title: 'Test Title',
+  subtitle: 'Test Subtitle',
+  description: '<p>Test description</p>',
+}
+
+export function createMockHeroContent(overrides?: Partial<HeroContent>): HeroContent {
+  return { ...HERO_DEFAULTS, ...overrides }
+}
+
+const PILLARS_DEFAULTS: PillarsContent = {
+  heading: 'Our Pillars',
+  items: [
+    {
+      title: 'Test Pillar',
+      description: 'Test pillar description',
+      url: 'https://example.com',
+      icon: 'Shield',
+    },
+  ],
+}
+
+export function createMockPillarsContent(overrides?: Partial<PillarsContent>): PillarsContent {
+  return { ...PILLARS_DEFAULTS, ...overrides }
+}
+
+const FOOTER_DEFAULTS: FooterContent = {
+  copyright: '2026 zyncdata. All rights reserved.',
+  contactEmail: 'contact@example.com',
+  links: [{ label: 'Privacy', url: '/privacy' }],
+}
+
+export function createMockFooterContent(overrides?: Partial<FooterContent>): FooterContent {
+  return { ...FOOTER_DEFAULTS, ...overrides }
+}
+
+export function createMockLandingPageContent(overrides?: Partial<LandingPageContent>): LandingPageContent {
+  return {
+    hero: createMockHeroContent(),
+    pillars: createMockPillarsContent(),
+    systems: { heading: 'Our Systems', subtitle: 'Monitoring & management' },
+    footer: createMockFooterContent(),
     ...overrides,
   }
 }
