@@ -19,7 +19,7 @@ export const systemsContentSchema = z.object({
 export const footerContentSchema = z
   .object({
     copyright: z.string(),
-    contact_email: z.string().email(),
+    contact_email: z.string().email().optional(),
     links: z.array(z.object({ label: z.string(), url: z.string() })),
   })
   .transform((data) => ({

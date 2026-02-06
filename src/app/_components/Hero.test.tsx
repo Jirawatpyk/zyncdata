@@ -33,17 +33,19 @@ function findByType(node: unknown, type: string): unknown | null {
 
 describe('Hero', () => {
   const defaultProps = {
-    title: 'DxT AI Platform',
+    title: 'DxT Smart Platform & Solutions',
     subtitle: 'Enterprise Access Management',
-    description: 'Your centralized hub for accessing and monitoring all DxT AI systems.',
+    description: 'One portal to access and monitor all DxT systems. Complete visibility.',
   }
 
-  it('should render title as H1', () => {
+  it('should render title as H1 with DxT brand split', () => {
     const jsx = Hero(defaultProps)
-    const h1 = findByType(jsx, 'h1') as { props: { children: string } } | null
+    const h1 = findByType(jsx, 'h1') as { props: { children: unknown } } | null
 
     expect(h1).not.toBeNull()
-    expect(h1!.props.children).toBe('DxT AI Platform')
+    const text = extractText(h1)
+    expect(text).toContain('DxT')
+    expect(text).toContain('Smart Platform & Solutions')
   })
 
   it('should render subtitle as styled paragraph', () => {
@@ -57,16 +59,45 @@ describe('Hero', () => {
     const jsx = Hero(defaultProps)
     const text = extractText(jsx)
 
-    expect(text).toContain('Your centralized hub')
+    expect(text).toContain('One portal to access')
+  })
+
+  it('should style DxT x character with brand color', () => {
+    const jsx = Hero(defaultProps)
+    const seen = new WeakSet()
+    const rendered = JSON.stringify(jsx, (_key, value) => {
+      if (typeof value === 'object' && value !== null) {
+        if (seen.has(value)) return undefined
+        seen.add(value)
+      }
+      return value
+    })
+
+    expect(rendered).toContain('text-dxt-primary')
   })
 
   it('should have responsive typography classes', () => {
     const jsx = Hero(defaultProps)
-    const h1 = findByType(jsx, 'h1') as { props: { className: string } } | null
+    const seen = new WeakSet()
+    const rendered = JSON.stringify(jsx, (_key, value) => {
+      if (typeof value === 'object' && value !== null) {
+        if (seen.has(value)) return undefined
+        seen.add(value)
+      }
+      return value
+    })
+
+    expect(rendered).toContain('text-5xl')
+    expect(rendered).toContain('md:text-7xl')
+  })
+
+  it('should render non-DxT title as single line', () => {
+    const jsx = Hero({ ...defaultProps, title: 'Other Platform' })
+    const h1 = findByType(jsx, 'h1') as { props: { children: unknown } } | null
 
     expect(h1).not.toBeNull()
-    expect(h1!.props.className).toContain('text-4xl')
-    expect(h1!.props.className).toContain('md:text-6xl')
+    const text = extractText(h1)
+    expect(text).toContain('Other Platform')
   })
 
   it('should render as section element', () => {

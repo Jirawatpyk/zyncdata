@@ -34,7 +34,8 @@ describe('Header', () => {
     const jsx = (Header as (props: Record<string, never>) => JSX.Element)({})
     const text = extractText(jsx)
 
-    expect(text).toContain('DxT AI Platform')
+    expect(text).toContain('DxT')
+    expect(text).toContain('Smart Platform')
   })
 
   it('should render AuthButton in nav', () => {

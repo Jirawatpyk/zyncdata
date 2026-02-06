@@ -4,8 +4,8 @@ import Link from 'next/link'
 import { getSystemByName } from '@/lib/systems/queries'
 
 export const metadata: Metadata = {
-  title: 'Coming Soon - DxT AI Platform',
-  description: 'This system is coming soon to the DxT AI Platform.',
+  title: 'Coming Soon - DxT Smart Platform & Solutions',
+  description: 'This system is coming soon to the DxT Smart Platform & Solutions.',
 }
 
 export default async function ComingSoonPage(props: {

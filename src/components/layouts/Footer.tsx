@@ -7,7 +7,7 @@ interface FooterLink {
 
 interface FooterProps {
   copyright: string
-  contactEmail: string
+  contactEmail?: string
   links: FooterLink[]
 }
 
@@ -19,12 +19,12 @@ export default function Footer({ copyright, contactEmail, links }: FooterProps) 
       <div className="mx-auto max-w-7xl px-4 py-10 md:px-8">
         <div className="flex flex-col items-center gap-5 text-center">
           {/* Brand mark */}
-          <div className="flex items-center gap-2">
-            <span className="flex h-7 w-7 items-center justify-center rounded-md bg-gradient-to-br from-dxt-primary to-dxt-secondary text-xs font-bold text-white">
-              Dx
-            </span>
-            <span className="text-sm font-semibold text-slate-300">DxT AI Platform</span>
-          </div>
+          <span className="text-sm tracking-tight">
+            <span className="font-bold text-slate-200">D</span>
+            <span className="font-bold text-dxt-primary">x</span>
+            <span className="font-bold text-slate-200">T</span>
+            <span className="font-medium text-slate-400"> Smart Platform &amp; Solutions</span>
+          </span>
 
           {links.length > 0 && (
             <nav aria-label="Footer navigation" className="flex gap-6">
@@ -51,15 +51,17 @@ export default function Footer({ copyright, contactEmail, links }: FooterProps) 
               )}
             </nav>
           )}
-          <p className="text-sm text-slate-400">
-            Contact:{' '}
-            <a
-              href={`mailto:${contactEmail}`}
-              className="rounded-sm text-dxt-accent hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-dxt-primary motion-safe:transition-colors"
-            >
-              {contactEmail}
-            </a>
-          </p>
+          {contactEmail && (
+            <p className="text-sm text-slate-400">
+              Contact:{' '}
+              <a
+                href={`mailto:${contactEmail}`}
+                className="rounded-sm text-dxt-accent hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-dxt-primary motion-safe:transition-colors"
+              >
+                {contactEmail}
+              </a>
+            </p>
+          )}
           <p className="text-xs text-slate-400">&copy; {copyright}</p>
         </div>
       </div>

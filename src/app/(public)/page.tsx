@@ -12,13 +12,13 @@ import FadeInOnScroll from '@/components/animations/FadeInOnScroll'
 export const revalidate = 60
 
 export const metadata: Metadata = {
-  title: 'DxT AI Platform - Enterprise Access Management',
+  title: 'DxT Smart Platform & Solutions',
   description:
-    'Your centralized hub for accessing and monitoring all DxT AI systems.',
+    'One portal to access and monitor all DxT systems. Complete visibility.',
   openGraph: {
-    title: 'DxT AI Platform - Enterprise Access Management',
+    title: 'DxT Smart Platform & Solutions',
     description:
-      'Your centralized hub for accessing and monitoring all DxT AI systems.',
+      'One portal to access and monitor all DxT systems. Complete visibility.',
     type: 'website',
   },
 }

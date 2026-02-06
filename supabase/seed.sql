@@ -18,21 +18,20 @@ ON CONFLICT (name) DO NOTHING;
 -- =============================================================================
 INSERT INTO landing_page_content (section_name, content, metadata) VALUES
   ('hero', '{
-    "title": "DxT AI Platform",
+    "title": "DxT Smart Platform & Solutions",
     "subtitle": "Enterprise Access Management",
-    "description": "Your centralized hub for accessing and monitoring all DxT AI systems. One portal, complete visibility."
+    "description": "One portal to access and monitor all DxT systems. Complete visibility."
   }'::jsonb, '{}'::jsonb),
   ('intro', '{
     "heading": "About DxT AI",
     "body": "DxT AI builds intelligent solutions that streamline operations and enhance productivity. Our platform provides unified access to all systems with real-time health monitoring and comprehensive management tools."
   }'::jsonb, '{}'::jsonb),
   ('systems', '{
-    "heading": "Our Systems",
+    "heading": "Explore",
     "subtitle": "Access all your enterprise AI tools from one place"
   }'::jsonb, '{}'::jsonb),
   ('footer', '{
-    "copyright": "2026 DxT AI. All rights reserved.",
-    "contact_email": "support@dxt-ai.com",
+    "copyright": "2026 DxT Corporation Co., Ltd.",
     "links": []
   }'::jsonb, '{}'::jsonb)
 ON CONFLICT (section_name) DO NOTHING;

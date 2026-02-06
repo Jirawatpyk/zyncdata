@@ -7,13 +7,15 @@ export default function Header() {
       <div className="mx-auto flex h-[76px] max-w-7xl items-center justify-between px-4 md:px-8">
         <Link
           href="/"
-          className="flex items-center gap-2 rounded-sm font-bold text-gray-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-dxt-primary"
-          aria-label="DxT AI Platform - Home"
+          className="flex items-center rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-dxt-primary"
+          aria-label="DxT Smart Platform & Solutions - Home"
         >
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-dxt-primary to-dxt-secondary text-sm font-bold text-white shadow-sm shadow-dxt-primary/25">
-            Dx
+          <span className="text-lg tracking-tight">
+            <span className="font-bold text-gray-800">D</span>
+            <span className="font-bold text-dxt-primary">x</span>
+            <span className="font-bold text-gray-800">T</span>
+            <span className="font-medium text-gray-600"> Smart Platform &amp; Solutions</span>
           </span>
-          <span className="text-lg">DxT AI Platform</span>
         </Link>
         <nav aria-label="Main">
           <AuthButton />

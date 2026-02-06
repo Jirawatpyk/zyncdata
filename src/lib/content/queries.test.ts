@@ -17,9 +17,9 @@ describe('getLandingPageContent', () => {
         {
           section_name: 'hero',
           content: {
-            title: 'DxT AI Platform',
+            title: 'DxT Smart Platform & Solutions',
             subtitle: 'Enterprise Access Management',
-            description: 'Your centralized hub.',
+            description: 'One portal to access and monitor.',
           },
         },
         {
@@ -32,15 +32,14 @@ describe('getLandingPageContent', () => {
         {
           section_name: 'systems',
           content: {
-            heading: 'Our Systems',
+            heading: 'Explore',
             subtitle: 'Access all your enterprise AI tools from one place',
           },
         },
         {
           section_name: 'footer',
           content: {
-            copyright: '2026 DxT AI. All rights reserved.',
-            contact_email: 'support@dxt-ai.com',
+            copyright: '2026 DxT Corporation Co., Ltd.',
             links: [],
           },
         },
@@ -63,21 +62,21 @@ describe('getLandingPageContent', () => {
     const result = await getLandingPageContent()
 
     expect(result.hero).toEqual({
-      title: 'DxT AI Platform',
+      title: 'DxT Smart Platform & Solutions',
       subtitle: 'Enterprise Access Management',
-      description: 'Your centralized hub.',
+      description: 'One portal to access and monitor.',
     })
     expect(result.intro).toEqual({
       heading: 'About DxT AI',
       body: 'DxT AI builds intelligent solutions.',
     })
     expect(result.systems).toEqual({
-      heading: 'Our Systems',
+      heading: 'Explore',
       subtitle: 'Access all your enterprise AI tools from one place',
     })
     expect(result.footer).toEqual({
-      copyright: '2026 DxT AI. All rights reserved.',
-      contactEmail: 'support@dxt-ai.com',
+      copyright: '2026 DxT Corporation Co., Ltd.',
+      contactEmail: undefined,
       links: [],
     })
   })

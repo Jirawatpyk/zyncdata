@@ -9,7 +9,7 @@ interface HeroProps {
 
 export default function Hero({ title, subtitle, description }: HeroProps) {
   return (
-    <section className="relative overflow-x-clip bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 py-24 motion-safe:animate-gradient-shift md:py-36">
+    <section className="relative overflow-x-clip bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 pt-16 pb-24 motion-safe:animate-gradient-shift md:pt-24 md:pb-36">
       {/* Decorative background elements */}
       <div className="absolute inset-0 overflow-x-clip" aria-hidden="true">
         <div className="absolute -left-20 -top-20 h-72 w-72 rounded-full bg-dxt-primary/20 blur-3xl motion-safe:animate-float-a" />
@@ -20,10 +20,23 @@ export default function Hero({ title, subtitle, description }: HeroProps) {
       </div>
 
       <div className="relative mx-auto max-w-3xl px-4 text-center">
-        <h1 className="text-4xl font-bold tracking-tight text-white motion-safe:animate-fade-up md:text-6xl">
-          {title}
+        <h1 className="font-bold tracking-tight text-white motion-safe:animate-fade-up">
+          {title.startsWith('DxT') ? (
+            <>
+              <span className="block text-5xl md:text-7xl">
+                <span>D</span>
+                <span className="text-dxt-primary">x</span>
+                <span>T</span>
+              </span>
+              <span className="mt-1 block text-2xl md:text-4xl">
+                {title.slice(3).trim()}
+              </span>
+            </>
+          ) : (
+            <span className="text-4xl md:text-6xl">{title}</span>
+          )}
         </h1>
-        <p className="mt-4 bg-gradient-to-r from-dxt-accent to-dxt-primary bg-clip-text text-2xl font-semibold text-transparent motion-safe:animate-fade-up-delay-1 md:text-3xl">
+        <p className="mt-6 bg-gradient-to-r from-dxt-accent to-dxt-primary bg-clip-text text-2xl font-semibold text-transparent motion-safe:animate-fade-up-delay-1 md:text-3xl">
           {subtitle}
         </p>
         <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-slate-300 motion-safe:animate-fade-up-delay-2">

@@ -42,14 +42,13 @@ describe('LoginForm', () => {
     const homeLink = screen.getByTestId('login-home-link')
     expect(homeLink).toBeInTheDocument()
     expect(homeLink).toHaveAttribute('href', '/')
-    expect(homeLink).toHaveAttribute('aria-label', 'DxT AI Platform - Home')
+    expect(homeLink).toHaveAttribute('aria-label', 'DxT Smart Platform & Solutions - Home')
   })
 
   it('should render heading and description', () => {
     render(<LoginForm />)
 
     expect(screen.getByRole('heading', { name: 'Sign in' })).toBeInTheDocument()
-    expect(screen.getByText('Enter your credentials to access the CMS')).toBeInTheDocument()
   })
 
   it('should have correct input types', () => {

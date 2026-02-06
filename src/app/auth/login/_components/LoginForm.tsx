@@ -42,20 +42,19 @@ export default function LoginForm() {
         <Link
           href="/"
           className="mx-auto flex w-fit flex-col items-center gap-1.5 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-dxt-primary focus-visible:ring-offset-4"
-          aria-label="DxT AI Platform - Home"
+          aria-label="DxT Smart Platform & Solutions - Home"
           data-testid="login-home-link"
         >
-          <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-dxt-primary to-dxt-secondary font-bold text-white shadow-sm shadow-dxt-primary/25">
-            Dx
+          <span className="text-2xl tracking-tight">
+            <span className="font-bold text-gray-800">D</span>
+            <span className="font-bold text-dxt-primary">x</span>
+            <span className="font-bold text-gray-800">T</span>
           </span>
           <span className="text-sm font-medium text-muted-foreground">
-            DxT AI Platform
+            Smart Platform &amp; Solutions
           </span>
         </Link>
-        <div className="space-y-1">
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">Sign in</h1>
-          <p className="text-sm text-muted-foreground">Enter your credentials to access the CMS</p>
-        </div>
+        <h1 className="sr-only">Sign in</h1>
       </div>
 
       <form action={formAction} className="space-y-4">

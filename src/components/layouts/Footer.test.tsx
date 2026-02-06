@@ -16,8 +16,7 @@ function extractText(node: unknown): string {
 
 describe('Footer', () => {
   const defaultProps = {
-    copyright: '2026 DxT AI. All rights reserved.',
-    contactEmail: 'support@dxt-ai.com',
+    copyright: '2026 DxT Corporation Co., Ltd.',
     links: [] as { label: string; url: string }[],
   }
 
@@ -25,14 +24,21 @@ describe('Footer', () => {
     const jsx = Footer(defaultProps)
     const text = extractText(jsx)
 
-    expect(text).toContain('2026 DxT AI. All rights reserved.')
+    expect(text).toContain('2026 DxT Corporation Co., Ltd.')
   })
 
-  it('should render contact email', () => {
+  it('should not render contact when contactEmail is omitted', () => {
     const jsx = Footer(defaultProps)
     const text = extractText(jsx)
 
-    expect(text).toContain('support@dxt-ai.com')
+    expect(text).not.toContain('Contact:')
+  })
+
+  it('should render contact email when provided', () => {
+    const jsx = Footer({ ...defaultProps, contactEmail: 'test@example.com' })
+    const text = extractText(jsx)
+
+    expect(text).toContain('test@example.com')
   })
 
   it('should render as footer element', () => {
