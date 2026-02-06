@@ -4,7 +4,7 @@ import { getEnabledSystems } from '@/lib/systems/queries'
 import { getLandingPageContent } from '@/lib/content/queries'
 import Footer from '@/components/layouts/Footer'
 import Hero from '@/app/_components/Hero'
-import IntroSection from '@/app/_components/IntroSection'
+import PillarsSection from '@/app/_components/PillarsSection'
 import SystemCard from '@/components/patterns/SystemCard'
 import GridSkeleton from '@/app/_components/GridSkeleton'
 import FadeInOnScroll from '@/components/animations/FadeInOnScroll'
@@ -63,9 +63,9 @@ export default async function Home() {
           subtitle={content.hero.subtitle}
           description={content.hero.description}
         />
-        <IntroSection
-          heading={content.intro.heading}
-          body={content.intro.body}
+        <PillarsSection
+          heading={content.pillars.heading}
+          items={content.pillars.items}
         />
         <section className="py-16 md:py-20">
           <div className="mx-auto max-w-7xl px-4 md:px-8">

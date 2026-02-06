@@ -14,7 +14,7 @@ INSERT INTO systems (name, url, logo_url, description, status, display_order, en
 ON CONFLICT (name) DO NOTHING;
 
 -- =============================================================================
--- Landing Page Content (AC #4) — hero, intro, footer sections
+-- Landing Page Content (AC #4) — hero, pillars, systems, footer sections
 -- =============================================================================
 INSERT INTO landing_page_content (section_name, content, metadata) VALUES
   ('hero', '{
@@ -22,9 +22,34 @@ INSERT INTO landing_page_content (section_name, content, metadata) VALUES
     "subtitle": "Enterprise Access Management",
     "description": "One portal to access and monitor all DxT systems. Complete visibility."
   }'::jsonb, '{}'::jsonb),
-  ('intro', '{
-    "heading": "About DxT AI",
-    "body": "DxT AI builds intelligent solutions that streamline operations and enhance productivity. Our platform provides unified access to all systems with real-time health monitoring and comprehensive management tools."
+  ('pillars', '{
+    "heading": "Our Pillars",
+    "items": [
+      {
+        "title": "DxT Smart Platform",
+        "description": "Unified ecosystem connecting CRM, ERP, HR, and AI tools into one enterprise platform.",
+        "url": "https://ba-sls.eqho.dev/login",
+        "icon": "building"
+      },
+      {
+        "title": "DxT Solutions",
+        "description": "AI-powered multilingual platforms and automated workflows that help B2B teams scale with precision.",
+        "url": "https://www.dxt-solutions.com/",
+        "icon": "lightbulb"
+      },
+      {
+        "title": "DxT AI & Data Management",
+        "description": "Tailored data training services and AI model management designed for each business''s unique needs.",
+        "url": "https://www.dxt-ai.com/",
+        "icon": "brain"
+      },
+      {
+        "title": "DxT Game",
+        "description": "End-to-end game localization, cultural adaptation, and scalable services for international markets.",
+        "url": null,
+        "icon": "gamepad"
+      }
+    ]
   }'::jsonb, '{}'::jsonb),
   ('systems', '{
     "heading": "Explore",

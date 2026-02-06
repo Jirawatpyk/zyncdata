@@ -23,10 +23,17 @@ describe('getLandingPageContent', () => {
           },
         },
         {
-          section_name: 'intro',
+          section_name: 'pillars',
           content: {
-            heading: 'About DxT AI',
-            body: 'DxT AI builds intelligent solutions.',
+            heading: 'Our Pillars',
+            items: [
+              {
+                title: 'DxT Smart Platform',
+                description: 'Integrated ecosystem.',
+                url: 'https://ba-sls.eqho.dev/login',
+                icon: 'building',
+              },
+            ],
           },
         },
         {
@@ -58,7 +65,7 @@ describe('getLandingPageContent', () => {
     expect(mockSelect).toHaveBeenCalledWith('section_name, content')
   })
 
-  it('should return structured content map with hero, intro, systems, footer', async () => {
+  it('should return structured content map with hero, pillars, systems, footer', async () => {
     const result = await getLandingPageContent()
 
     expect(result.hero).toEqual({
@@ -66,9 +73,16 @@ describe('getLandingPageContent', () => {
       subtitle: 'Enterprise Access Management',
       description: 'One portal to access and monitor.',
     })
-    expect(result.intro).toEqual({
-      heading: 'About DxT AI',
-      body: 'DxT AI builds intelligent solutions.',
+    expect(result.pillars).toEqual({
+      heading: 'Our Pillars',
+      items: [
+        {
+          title: 'DxT Smart Platform',
+          description: 'Integrated ecosystem.',
+          url: 'https://ba-sls.eqho.dev/login',
+          icon: 'building',
+        },
+      ],
     })
     expect(result.systems).toEqual({
       heading: 'Explore',
@@ -98,8 +112,13 @@ describe('getLandingPageContent', () => {
           content: { title: 'DxT' },
         },
         {
-          section_name: 'intro',
-          content: { heading: 'About', body: 'Text' },
+          section_name: 'pillars',
+          content: {
+            heading: 'Pillars',
+            items: [
+              { title: 'P1', description: 'D1', url: 'https://example.com', icon: 'building' },
+            ],
+          },
         },
         {
           section_name: 'systems',
@@ -118,5 +137,39 @@ describe('getLandingPageContent', () => {
     })
 
     await expect(getLandingPageContent()).rejects.toThrow()
+  })
+
+  it('should return fallback pillars when pillars section missing from DB', async () => {
+    mockSelect.mockResolvedValue({
+      data: [
+        {
+          section_name: 'hero',
+          content: {
+            title: 'DxT Smart Platform & Solutions',
+            subtitle: 'Enterprise Access Management',
+            description: 'One portal to access and monitor.',
+          },
+        },
+        {
+          section_name: 'systems',
+          content: {
+            heading: 'Explore',
+            subtitle: 'Access all your enterprise AI tools from one place',
+          },
+        },
+        {
+          section_name: 'footer',
+          content: {
+            copyright: '2026 DxT Corporation Co., Ltd.',
+            links: [],
+          },
+        },
+      ],
+      error: null,
+    })
+
+    const result = await getLandingPageContent()
+
+    expect(result.pillars).toEqual({ heading: 'Our Pillars', items: [] })
   })
 })

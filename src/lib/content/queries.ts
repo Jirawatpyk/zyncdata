@@ -1,21 +1,23 @@
 import { createClient } from '@/lib/supabase/server'
 import {
   heroContentSchema,
-  introContentSchema,
+  pillarsContentSchema,
   systemsContentSchema,
   footerContentSchema,
   type HeroContent,
-  type IntroContent,
+  type PillarsContent,
   type SystemsContent,
   type FooterContent,
 } from '@/lib/validations/content'
 
 export interface LandingPageContent {
   hero: HeroContent
-  intro: IntroContent
+  pillars: PillarsContent
   systems: SystemsContent
   footer: FooterContent
 }
+
+const PILLARS_FALLBACK: PillarsContent = { heading: 'Our Pillars', items: [] }
 
 export async function getLandingPageContent(): Promise<LandingPageContent> {
   const supabase = await createClient()
@@ -31,7 +33,9 @@ export async function getLandingPageContent(): Promise<LandingPageContent> {
 
   return {
     hero: heroContentSchema.parse(contentMap.hero),
-    intro: introContentSchema.parse(contentMap.intro),
+    pillars: contentMap.pillars
+      ? pillarsContentSchema.parse(contentMap.pillars)
+      : PILLARS_FALLBACK,
     systems: systemsContentSchema.parse(contentMap.systems),
     footer: footerContentSchema.parse(contentMap.footer),
   }

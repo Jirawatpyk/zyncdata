@@ -9,14 +9,11 @@ interface HeroProps {
 
 export default function Hero({ title, subtitle, description }: HeroProps) {
   return (
-    <section className="relative overflow-x-clip bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 pt-16 pb-24 motion-safe:animate-gradient-shift md:pt-24 md:pb-36">
+    <section className="relative overflow-x-clip bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 pt-16 pb-24 md:pt-24 md:pb-36">
       {/* Decorative background elements */}
       <div className="absolute inset-0 overflow-x-clip" aria-hidden="true">
         <div className="absolute -left-20 -top-20 h-72 w-72 rounded-full bg-dxt-primary/20 blur-3xl motion-safe:animate-float-a" />
         <div className="absolute -bottom-20 -right-20 h-72 w-72 rounded-full bg-dxt-secondary/20 blur-3xl motion-safe:animate-float-b" />
-        <div className="absolute left-1/2 top-1/2 h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full bg-dxt-accent/10 blur-3xl motion-safe:animate-float-c" />
-        {/* Radial spotlight for depth */}
-        <div className="absolute left-1/2 top-1/2 h-[800px] w-[800px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-dxt-primary/[0.04] blur-3xl" />
       </div>
 
       <div className="relative mx-auto max-w-3xl px-4 text-center">
@@ -45,7 +42,7 @@ export default function Hero({ title, subtitle, description }: HeroProps) {
         <div className="mt-10 motion-safe:animate-fade-up-delay-3">
           <Link
             href="/auth/login"
-            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-dxt-primary to-dxt-secondary px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-dxt-primary/25 hover:shadow-xl hover:shadow-dxt-primary/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-dxt-primary focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 motion-safe:animate-glow-pulse motion-safe:transition-all motion-safe:duration-200"
+            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-dxt-primary to-dxt-secondary px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-dxt-primary/25 hover:shadow-xl hover:shadow-dxt-primary/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-dxt-primary focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 motion-safe:transition-all motion-safe:duration-200"
           >
             Get Started
             <ArrowRight size={16} aria-hidden="true" />

@@ -950,18 +950,102 @@ So that I know which systems are online and how recent the data is before clicki
 
 ## Epic 4: Content & Branding Management
 
-Admins can customize the entire landing page experience - edit hero/intro/footer content, change color schemes from the DxT palette, select fonts, upload platform logo and favicon. Preview changes across different device sizes before publishing. Publish makes changes live instantly. (Version history deferred to Phase 2.)
+Admins can customize the entire landing page experience - edit hero/pillars/footer content, change color schemes from the DxT palette, select fonts, upload platform logo and favicon. Preview changes across different device sizes before publishing. Publish makes changes live instantly. Two prerequisite landing-page stories (4-A, 4-B) redesign the public page layout before CMS editing stories begin. (Version history deferred to Phase 2.)
 
-### Story 4.1: Content Section Editor with WYSIWYG (Hero, Intro, Footer)
+### Story 4-A: Landing Page Pillars Section (Replace About/Intro)
+
+As a visitor,
+I want to see the four DxT business pillars (DxT Smart Platform, DxT Solutions, DxT AI & Data Management, DxT Game) on the landing page,
+So that I can understand the full scope of DxT services and navigate to each pillar's website.
+
+**Acceptance Criteria:**
+
+**Given** I am on the landing page
+**When** I scroll past the Hero
+**Then** I see a section with 4 pillar cards arranged in a responsive grid (1 col mobile, 2 col tablet, 4 col wide desktop ≥1280px)
+
+**Given** I view a pillar card
+**When** I read its content
+**Then** I see a pillar name (title), a short description, and a "Visit" or "Learn More" link/button
+
+**Given** I click a pillar's external link
+**When** the browser navigates
+**Then** it opens in a new tab (`target="_blank"` with `rel="noopener noreferrer"`)
+
+**Given** the pillar data is stored in `landing_page_content`
+**When** the page loads
+**Then** the pillars section renders data from the `pillars` section in the database
+
+**Given** I view the page on any device
+**When** I interact with pillar cards
+**Then** each card meets 44px minimum touch target and passes WCAG 2.1 AA contrast requirements
+
+**Given** the intro section previously existed
+**When** this story is complete
+**Then** the `IntroSection` component is replaced by `PillarsSection` on the landing page, and the `intro` DB section is replaced by `pillars`
+
+**Given** the landing page uses enterprise/premium design language
+**When** I view the Hero section
+**Then** decorative animations are minimal (no glow-pulse on CTA, no gradient-shift on background, max 2 floating orbs)
+
+**Design:** Minimal Cards (enterprise/premium) — border-l-2 accent, no shadow, hover:bg-slate-50, Lucide icons. Hero animations toned down for consistency.
+
+### Story 4-B: System Category Layers (Grouped Systems Display)
+
+As a visitor,
+I want to see systems organized into three business categories (DxT Smart Platform, DxT Solutions, DxT Game) on the landing page,
+So that I can easily find and access systems relevant to each DxT business unit.
+
+**Acceptance Criteria:**
+
+**Given** the `systems` table
+**When** this story is implemented
+**Then** each system has a `category` column (TEXT, nullable) that classifies it under a business unit
+
+**Given** I am on the landing page
+**When** I scroll to the systems section
+**Then** I see a tab bar with 3 category tabs and the active tab's systems displayed in a card grid
+
+**Given** I click a category tab
+**When** the tab activates
+**Then** I see that category's system cards with a fade-in transition, and the tab shows as visually active (cyan underline + cyan text)
+
+**Given** a category has no enabled systems
+**When** I view the systems section
+**Then** that category tab is hidden (not rendered)
+
+**Given** the admin CMS
+**When** an admin adds/edits a system
+**Then** they can assign a category from a predefined list or leave it empty
+
+**Given** systems exist without a category (NULL)
+**When** they are displayed
+**Then** they appear in an "Other" group at the bottom
+
+**Given** I am on a mobile device
+**When** I view the systems section
+**Then** the layout is responsive (1 col mobile, 2 col tablet, 3 col desktop per category group)
+
+**Given** I view the systems tabs on first load
+**When** no tab has been clicked
+**Then** the first tab (Smart Platform) is active by default
+
+**Given** I view the tabs on mobile (< 640px)
+**When** the screen is narrow
+**Then** tab icons are hidden and only text labels are shown
+
+**Design:** Underline Tabs (enterprise/premium) — Children Pattern for server/client boundary. CategoryTabs is `'use client'` thin wrapper (~2 KB), SystemCards remain Server Components (0 KB client JS). DB migration adds `category` TEXT column. Manual `reduce()` for grouping (ES2017 safe).
+
+### Story 4.1: Content Section Editor with WYSIWYG (Hero, Pillars, Footer)
 
 As an Admin,
-I want to edit the hero section, intro text, and footer content using a rich text editor,
+I want to edit the hero section, pillars, and footer content using a rich text editor,
 So that I can format content professionally without developer help.
 
 **Acceptance Criteria:**
 
 **Given** I am on the Content management page
-**When** I select a section to edit (hero, intro, or footer)
+**When** I select a section to edit (hero, pillars, or footer)
 **Then** I see a TipTap WYSIWYG editor pre-populated with the current published content for that section
 **And** the editor supports: bold, italic, headings, links, and lists (minimal toolbar for non-technical users)
 
@@ -970,8 +1054,8 @@ So that I can format content professionally without developer help.
 **Then** the changes are saved as a draft in the landing_page_content table
 **And** the save operation completes within 1 second (NFR-P3)
 
-**Given** I am editing the intro section
-**When** I modify the about text or platform purpose
+**Given** I am editing the pillars section
+**When** I modify pillar titles, descriptions, or links
 **Then** the changes are saved as a draft
 
 **Given** I am editing the footer section

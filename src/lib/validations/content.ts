@@ -6,9 +6,16 @@ export const heroContentSchema = z.object({
   description: z.string(),
 })
 
-export const introContentSchema = z.object({
+export const pillarItemSchema = z.object({
+  title: z.string(),
+  description: z.string(),
+  url: z.string().url().nullable(),
+  icon: z.string().optional(),
+})
+
+export const pillarsContentSchema = z.object({
   heading: z.string(),
-  body: z.string(),
+  items: z.array(pillarItemSchema).min(1),
 })
 
 export const systemsContentSchema = z.object({
@@ -29,6 +36,7 @@ export const footerContentSchema = z
   }))
 
 export type HeroContent = z.infer<typeof heroContentSchema>
-export type IntroContent = z.infer<typeof introContentSchema>
+export type PillarItem = z.infer<typeof pillarItemSchema>
+export type PillarsContent = z.infer<typeof pillarsContentSchema>
 export type SystemsContent = z.infer<typeof systemsContentSchema>
 export type FooterContent = z.infer<typeof footerContentSchema>
