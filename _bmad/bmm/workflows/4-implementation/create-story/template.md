@@ -56,4 +56,4 @@ so that {{benefit}}.
 
 ### File List
 
-<!-- P2 (Epic 3 Retro): MANDATORY — run `npm run story-metrics` and verify File List matches actual changes before marking done -->
+<!-- P2 (Epic 3 Retro): Verify File List matches all new/modified/deleted files. Post-commit: run `npm run story-metrics` to cross-check. -->

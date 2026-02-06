@@ -328,8 +328,8 @@
     <action>Run the full regression suite (do not skip)</action>
     <action>Confirm File List includes every changed file</action>
 
-    <!-- P2 (Epic 3 Retro): Mandatory File List verification via story-metrics -->
-    <critical>MUST run `npm run story-metrics` and verify its output matches the File List section before marking story as review. If File List has missing or extra files compared to actual changes, update the File List to match reality.</critical>
+    <!-- P2 (Epic 3 Retro): File List verification — story-metrics runs post-commit (code-review phase), not here.
+         Dev agent: manually verify File List matches all new/modified/deleted files before marking review. -->
 
     <!-- Security Pre-Review Checklist (Epic 2 Retro Action Item P4) -->
     <critical>MUST complete security checklist BEFORE marking story as review</critical>
@@ -356,7 +356,7 @@
       - Change Log includes summary of changes
       - Only permitted story sections were modified
       - Scope Additions table documents any unplanned changes (P4 retro action)
-      - File List verified via `npm run story-metrics` (P2 retro action)
+      - File List manually verified against all changed files (P2 retro action — `npm run story-metrics` runs post-commit in code-review)
     </action>
 
     <!-- Mark story ready for review - sprint status conditional -->
