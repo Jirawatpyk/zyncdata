@@ -1,35 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import Hero from '@/app/_components/Hero'
-
-function extractText(node: unknown): string {
-  if (typeof node === 'string') return node
-  if (typeof node === 'number') return String(node)
-  if (!node) return ''
-  if (Array.isArray(node)) return node.map(extractText).join('')
-  if (typeof node === 'object' && node !== null && 'props' in node) {
-    const el = node as { props: { children?: unknown } }
-    return extractText(el.props.children)
-  }
-  return ''
-}
-
-function findByType(node: unknown, type: string): unknown | null {
-  if (!node) return null
-  if (typeof node === 'object' && node !== null && 'type' in node) {
-    if ((node as { type: unknown }).type === type) return node
-    const el = node as { props?: { children?: unknown } }
-    if (el.props?.children) {
-      if (Array.isArray(el.props.children)) {
-        for (const child of el.props.children) {
-          const found = findByType(child, type)
-          if (found) return found
-        }
-      }
-      return findByType(el.props.children, type)
-    }
-  }
-  return null
-}
+import { extractText, findByType, safeStringify } from '@/lib/test-utils/jsx-helpers'
 
 describe('Hero', () => {
   const defaultProps = {
@@ -64,28 +35,14 @@ describe('Hero', () => {
 
   it('should style DxT x character with brand color', () => {
     const jsx = Hero(defaultProps)
-    const seen = new WeakSet()
-    const rendered = JSON.stringify(jsx, (_key, value) => {
-      if (typeof value === 'object' && value !== null) {
-        if (seen.has(value)) return undefined
-        seen.add(value)
-      }
-      return value
-    })
+    const rendered = safeStringify(jsx)
 
     expect(rendered).toContain('text-dxt-primary')
   })
 
   it('should have responsive typography classes', () => {
     const jsx = Hero(defaultProps)
-    const seen = new WeakSet()
-    const rendered = JSON.stringify(jsx, (_key, value) => {
-      if (typeof value === 'object' && value !== null) {
-        if (seen.has(value)) return undefined
-        seen.add(value)
-      }
-      return value
-    })
+    const rendered = safeStringify(jsx)
 
     expect(rendered).toContain('text-5xl')
     expect(rendered).toContain('md:text-7xl')

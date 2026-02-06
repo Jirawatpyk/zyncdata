@@ -33,7 +33,7 @@ export function PillarCard({ title, description, url, icon }: PillarItem) {
           <ExternalLink size={14} aria-hidden="true" />
         </a>
       ) : (
-        <span className="mt-4 inline-block text-xs text-gray-400">Coming Soon</span>
+        <span className="mt-4 inline-flex min-h-11 items-center text-xs text-gray-400">Coming Soon</span>
       )}
     </div>
   )

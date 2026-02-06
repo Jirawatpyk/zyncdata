@@ -64,9 +64,9 @@ The current "About DxT AI" intro section is a simple heading + body paragraph. T
   - [x] 6.4 IntroSection.test.tsx — kept unchanged (component not removed per 5.3)
   - [x] 6.5 Hero.test.tsx — no assertions referenced removed classes, no changes needed
 
-- [ ] Task 7: Push seed data to cloud (AC: #4)
-  - [ ] 7.1 Run `supabase db push` if any migration needed
-  - [ ] 7.2 Create temp script to upsert `pillars` section and remove `intro` section on cloud
+- [x] Task 7: Push seed data to cloud (AC: #4)
+  - [x] 7.1 No schema migration needed for this story (4-B migration skipped)
+  - [x] 7.2 Temp script upserted `pillars` section and deleted `intro` section on cloud
 
 ## Dev Notes
 
@@ -154,6 +154,8 @@ page.tsx
 | `src/app/(public)/page.tsx` | Edit |
 | `src/lib/content/queries.test.ts` | Edit |
 | `src/app/(public)/loading.tsx` | Edit (CR) |
+| `src/app/_components/Hero.test.tsx` | Edit (CR) |
+| `src/lib/test-utils/jsx-helpers.ts` | New (CR) |
 | `_bmad-output/planning-artifacts/epics.md` | Edit |
 
 ## Change Log
@@ -162,6 +164,7 @@ page.tsx
 |------|--------|
 | 2026-02-06 | Story 4-A implementation: replaced IntroSection with PillarsSection (4 pillar cards), toned down Hero animations, updated Zod schemas and queries with deploy-safe fallback, 11 new tests |
 | 2026-02-06 | Code review fixes: updated loading.tsx skeleton to match PillarsSection layout, exported PillarCard for testability, added deploy-safety comment on PILLARS_FALLBACK, documented missing file list entries |
+| 2026-02-06 | Code review LOW fixes: extracted shared JSX test helpers to `jsx-helpers.ts`, added min-h-11 to Coming Soon span, pushed pillars seed to cloud, Task 7 done |
 
 ## Scope Additions
 
