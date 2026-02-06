@@ -7,6 +7,7 @@ import SectionCard from './SectionCard'
 import HeroEditor from './HeroEditor'
 import PillarsEditor from './PillarsEditor'
 import FooterEditor from './FooterEditor'
+import PreviewButton from '@/app/admin/_components/PreviewButton'
 
 type EditingSection = 'hero' | 'pillars' | 'footer' | null
 
@@ -28,6 +29,9 @@ export default function ContentManager() {
 
   return (
     <div data-testid="content-manager">
+      <div className="mb-4 flex justify-end">
+        <PreviewButton />
+      </div>
       <div className="space-y-4">
         <SectionCard
           sectionName="hero"

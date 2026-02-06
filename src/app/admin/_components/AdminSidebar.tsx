@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Monitor, FileText, Palette, BarChart3, Settings, X } from 'lucide-react'
+import { Monitor, FileText, Palette, Eye, BarChart3, Settings, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 
@@ -16,6 +16,7 @@ const navItems: NavItem[] = [
   { label: 'Systems', href: '/admin/systems', icon: Monitor },
   { label: 'Content', href: '/admin/content', icon: FileText },
   { label: 'Branding', href: '/admin/branding', icon: Palette },
+  { label: 'Preview', href: '/admin/preview', icon: Eye },
   { label: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
   { label: 'Settings', href: '/admin/settings', icon: Settings },
 ]

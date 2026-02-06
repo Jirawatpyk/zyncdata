@@ -7,6 +7,7 @@ import { contentQueryOptions } from '@/lib/admin/queries/content'
 import { COLOR_SCHEME_PALETTES, FONT_FAMILY_MAP } from '@/lib/validations/content'
 import { Button } from '@/components/ui/button'
 import { Pencil } from 'lucide-react'
+import PreviewButton from '@/app/admin/_components/PreviewButton'
 import ColorSchemeEditor from './ColorSchemeEditor'
 import FontSelector from './FontSelector'
 import LogoUploader from './LogoUploader'
@@ -23,7 +24,10 @@ export default function BrandingManager() {
 
   return (
     <div data-testid="branding-manager">
-      <h1 className="mb-6 text-2xl font-bold text-foreground">Theme &amp; Branding</h1>
+      <div className="mb-6 flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-foreground">Theme &amp; Branding</h1>
+        <PreviewButton />
+      </div>
 
       <div className="grid gap-6 md:grid-cols-2">
         {/* Color Scheme */}
