@@ -1,5 +1,7 @@
 import Image from 'next/image'
 import { cn } from '@/lib/utils'
+import StatusBadge from '@/components/patterns/StatusBadge'
+import RelativeTime from '@/components/patterns/RelativeTime'
 
 interface SystemCardProps {
   name: string
@@ -7,9 +9,10 @@ interface SystemCardProps {
   logoUrl: string | null
   description: string | null
   status: string | null
+  lastCheckedAt: string | null
 }
 
-export default function SystemCard({ name, url, logoUrl, description, status }: SystemCardProps) {
+export default function SystemCard({ name, url, logoUrl, description, status, lastCheckedAt }: SystemCardProps) {
   const isComingSoon = status === 'coming_soon'
   const href = isComingSoon ? `/coming-soon?system=${encodeURIComponent(name)}` : url
   const target = isComingSoon ? undefined : '_blank'
@@ -55,6 +58,10 @@ export default function SystemCard({ name, url, logoUrl, description, status }: 
               {description}
             </p>
           )}
+          <div className="mt-2 flex flex-col gap-1">
+            <StatusBadge status={status} />
+            {!isComingSoon && <RelativeTime lastCheckedAt={lastCheckedAt} />}
+          </div>
         </div>
         {/* Arrow indicator */}
         <svg

@@ -1,5 +1,76 @@
 import { describe, it, expect } from 'vitest'
-import { createSystemSchema, updateSystemSchema, deleteSystemSchema, reorderSystemsSchema, toggleSystemSchema, uploadLogoSchema, MAX_LOGO_SIZE } from './system'
+import { systemSchema, createSystemSchema, updateSystemSchema, deleteSystemSchema, reorderSystemsSchema, toggleSystemSchema, uploadLogoSchema, MAX_LOGO_SIZE } from './system'
+
+describe('systemSchema', () => {
+  // Story 3.8: Validate full system object including lastCheckedAt
+
+  const validSystem = {
+    id: '550e8400-e29b-41d4-a716-446655440000',
+    name: 'TINEDY',
+    url: 'https://tinedy.example.com',
+    logoUrl: null,
+    description: 'Task management system',
+    status: null,
+    responseTime: null,
+    displayOrder: 1,
+    enabled: true,
+    createdAt: '2026-01-01T00:00:00.000Z',
+    updatedAt: '2026-01-01T00:00:00.000Z',
+    deletedAt: null,
+    lastCheckedAt: null,
+  }
+
+  it('should accept valid system with null lastCheckedAt', () => {
+    const result = systemSchema.safeParse(validSystem)
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.lastCheckedAt).toBeNull()
+    }
+  })
+
+  it('should accept valid system with timestamp lastCheckedAt', () => {
+    const result = systemSchema.safeParse({
+      ...validSystem,
+      lastCheckedAt: '2026-02-07T10:30:00.000Z',
+    })
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.lastCheckedAt).toBe('2026-02-07T10:30:00.000Z')
+    }
+  })
+
+  it('should accept valid system with online status', () => {
+    const result = systemSchema.safeParse({
+      ...validSystem,
+      status: 'online',
+      lastCheckedAt: '2026-02-07T10:30:00.000Z',
+    })
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.status).toBe('online')
+      expect(result.data.lastCheckedAt).toBe('2026-02-07T10:30:00.000Z')
+    }
+  })
+
+  it('should accept valid system with offline status', () => {
+    const result = systemSchema.safeParse({
+      ...validSystem,
+      status: 'offline',
+      lastCheckedAt: '2026-02-07T10:30:00.000Z',
+    })
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.status).toBe('offline')
+    }
+  })
+
+  it('should reject system missing lastCheckedAt field', () => {
+    const { lastCheckedAt: _, ...withoutLastCheckedAt } = validSystem
+    void _
+    const result = systemSchema.safeParse(withoutLastCheckedAt)
+    expect(result.success).toBe(false)
+  })
+})
 
 describe('createSystemSchema', () => {
   // AC #3, #4: Validate required fields and URL format

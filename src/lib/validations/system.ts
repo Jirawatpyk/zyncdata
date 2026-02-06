@@ -32,6 +32,7 @@ export const systemSchema = z.object({
   createdAt: z.string(),
   updatedAt: z.string(),
   deletedAt: z.string().nullable(),
+  lastCheckedAt: z.string().nullable(),
 })
 
 export type System = z.infer<typeof systemSchema>

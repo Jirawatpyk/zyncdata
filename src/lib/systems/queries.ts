@@ -4,7 +4,7 @@ import { toCamelCase } from '@/lib/utils/transform'
 import { z } from 'zod'
 
 export const SYSTEM_SELECT_COLUMNS =
-  'id, name, url, logo_url, description, status, response_time, display_order, enabled, created_at, updated_at, deleted_at'
+  'id, name, url, logo_url, description, status, response_time, display_order, enabled, created_at, updated_at, deleted_at, last_checked_at'
 
 export async function getSystemByName(name: string): Promise<System | null> {
   const supabase = await createClient()

@@ -198,10 +198,13 @@ test.describe('Delete System Flow', () => {
       await expect(updatedRow.getByText('Deleted')).toBeVisible({ timeout: 5000 })
 
       // Navigate to public landing page
+      // ISR stale-while-revalidate may serve cached version on first request
+      // after revalidatePath('/'), so reload to get the freshly regenerated page.
       await adminPage.goto('/')
+      await adminPage.reload()
 
       // The deleted system should NOT appear on the public page
-      await expect(adminPage.getByText(system.name)).not.toBeVisible()
+      await expect(adminPage.getByText(system.name)).not.toBeVisible({ timeout: 10000 })
     })
 
     test('[P1] should recover deleted system via Edit (AC #5)', async ({

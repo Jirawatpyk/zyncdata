@@ -8,7 +8,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getEnabledSystems, getSystemByName, getSystems } from '@/lib/systems/queries'
 
 const EXPECTED_SELECT =
-  'id, name, url, logo_url, description, status, response_time, display_order, enabled, created_at, updated_at, deleted_at'
+  'id, name, url, logo_url, description, status, response_time, display_order, enabled, created_at, updated_at, deleted_at, last_checked_at'
 
 describe('getEnabledSystems', () => {
   const mockSelect = vi.fn()
@@ -33,6 +33,7 @@ describe('getEnabledSystems', () => {
           created_at: '2026-01-01T00:00:00Z',
           updated_at: '2026-01-01T00:00:00Z',
           deleted_at: null,
+          last_checked_at: null,
         },
         {
           id: 'a23bc45d-67ef-8901-b234-5c6d7e8f9012',
@@ -47,6 +48,7 @@ describe('getEnabledSystems', () => {
           created_at: '2026-01-02T00:00:00Z',
           updated_at: '2026-01-02T00:00:00Z',
           deleted_at: null,
+          last_checked_at: null,
         },
       ],
       error: null,
@@ -86,6 +88,7 @@ describe('getEnabledSystems', () => {
       createdAt: '2026-01-01T00:00:00Z',
       updatedAt: '2026-01-01T00:00:00Z',
       deletedAt: null,
+      lastCheckedAt: null,
     })
     expect(result[1].logoUrl).toBeNull()
     expect(result[1].status).toBe('coming_soon')
@@ -132,6 +135,7 @@ describe('getSystemByName', () => {
         created_at: '2026-01-01T00:00:00Z',
         updated_at: '2026-01-01T00:00:00Z',
         deleted_at: null,
+        last_checked_at: null,
       },
       error: null,
     })
@@ -170,6 +174,7 @@ describe('getSystemByName', () => {
       createdAt: '2026-01-01T00:00:00Z',
       updatedAt: '2026-01-01T00:00:00Z',
       deletedAt: null,
+      lastCheckedAt: null,
     })
   })
 
@@ -211,6 +216,7 @@ describe('getSystems', () => {
           created_at: '2026-01-01T00:00:00Z',
           updated_at: '2026-01-01T00:00:00Z',
           deleted_at: null,
+          last_checked_at: null,
         },
         {
           id: 'a23bc45d-67ef-8901-b234-5c6d7e8f9012',
@@ -225,6 +231,7 @@ describe('getSystems', () => {
           created_at: '2026-01-02T00:00:00Z',
           updated_at: '2026-01-02T00:00:00Z',
           deleted_at: null,
+          last_checked_at: null,
         },
       ],
       error: null,
@@ -267,6 +274,7 @@ describe('getSystems', () => {
       createdAt: '2026-01-01T00:00:00Z',
       updatedAt: '2026-01-01T00:00:00Z',
       deletedAt: null,
+      lastCheckedAt: null,
     })
     expect(result[1]).toEqual({
       id: 'a23bc45d-67ef-8901-b234-5c6d7e8f9012',
@@ -281,6 +289,7 @@ describe('getSystems', () => {
       createdAt: '2026-01-02T00:00:00Z',
       updatedAt: '2026-01-02T00:00:00Z',
       deletedAt: null,
+      lastCheckedAt: null,
     })
   })
 
