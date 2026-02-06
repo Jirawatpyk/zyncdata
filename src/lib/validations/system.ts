@@ -15,10 +15,17 @@ export const CATEGORY_LABELS: Record<SystemCategory, string> = {
   dxt_game: 'DxT Game',
 }
 
+/** Auto-prepend https:// if no protocol is provided */
+const urlWithAutoProtocol = z
+  .string()
+  .min(1, 'URL required')
+  .transform((val) => (!/^https?:\/\//i.test(val) ? `https://${val}` : val))
+  .pipe(z.string().url('Valid URL required'))
+
 // Input schema for creating a new system (AC: #3, #4)
 export const createSystemSchema = z.object({
   name: z.string().min(1, 'Name required').max(100, 'Name must be 100 characters or less'),
-  url: z.string().url('Valid URL required'),
+  url: urlWithAutoProtocol,
   description: z
     .string()
     .max(500, 'Description must be 500 characters or less')
@@ -59,7 +66,7 @@ export type System = z.infer<typeof systemSchema>
 export const updateSystemSchema = z.object({
   id: z.string().uuid('Invalid system ID'),
   name: z.string().min(1, 'Name required').max(100, 'Name must be 100 characters or less'),
-  url: z.string().url('Valid URL required'),
+  url: urlWithAutoProtocol,
   description: z
     .string()
     .max(500, 'Description must be 500 characters or less')

@@ -180,10 +180,10 @@ describe('createSystemSchema', () => {
       expect(result.success).toBe(true)
     })
 
-    it('should reject invalid URL (AC #3)', () => {
+    it('should reject truly invalid URL (AC #3)', () => {
       const result = createSystemSchema.safeParse({
         name: 'ENEOS',
-        url: 'not-a-url',
+        url: '://missing-host',
       })
       expect(result.success).toBe(false)
       if (!result.success) {
@@ -198,16 +198,19 @@ describe('createSystemSchema', () => {
       })
       expect(result.success).toBe(false)
       if (!result.success) {
-        expect(result.error.issues[0].message).toBe('Valid URL required')
+        expect(result.error.issues[0].message).toBe('URL required')
       }
     })
 
-    it('should reject URL without protocol', () => {
+    it('should auto-prepend https:// when protocol is missing', () => {
       const result = createSystemSchema.safeParse({
         name: 'ENEOS',
         url: 'eneos.example.com',
       })
-      expect(result.success).toBe(false)
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data.url).toBe('https://eneos.example.com')
+      }
     })
   })
 
@@ -470,14 +473,25 @@ describe('updateSystemSchema', () => {
       }
     })
 
-    it('should reject invalid URL (AC #3)', () => {
+    it('should reject truly invalid URL (AC #3)', () => {
       const result = updateSystemSchema.safeParse({
         ...validInput,
-        url: 'not-a-url',
+        url: '://missing-host',
       })
       expect(result.success).toBe(false)
       if (!result.success) {
         expect(result.error.issues[0].message).toBe('Valid URL required')
+      }
+    })
+
+    it('should auto-prepend https:// when protocol is missing', () => {
+      const result = updateSystemSchema.safeParse({
+        ...validInput,
+        url: 'timelog.zyncdata.app',
+      })
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data.url).toBe('https://timelog.zyncdata.app')
       }
     })
 
