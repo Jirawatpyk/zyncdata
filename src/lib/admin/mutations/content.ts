@@ -5,7 +5,7 @@ import { unwrapResponse } from '@/lib/admin/queries/api-adapter'
 import { toast } from 'sonner'
 
 interface UpdateSectionInput {
-  section: 'hero' | 'pillars' | 'footer'
+  section: 'hero' | 'pillars' | 'footer' | 'theme'
   content: Record<string, unknown>
 }
 

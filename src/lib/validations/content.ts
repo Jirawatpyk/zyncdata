@@ -35,8 +35,35 @@ export const footerContentSchema = z
     links: data.links,
   }))
 
+// Theme & Branding (Story 4-2)
+export const COLOR_SCHEMES = ['dxt-default', 'ocean-blue', 'midnight-purple'] as const
+export type ColorScheme = (typeof COLOR_SCHEMES)[number]
+
+export const FONT_OPTIONS = ['nunito', 'inter', 'open-sans'] as const
+export type FontOption = (typeof FONT_OPTIONS)[number]
+
+export const themeContentSchema = z.object({
+  colorScheme: z.enum(COLOR_SCHEMES),
+  font: z.enum(FONT_OPTIONS),
+  logoUrl: z.string().url().nullable(),
+  faviconUrl: z.string().url().nullable(),
+})
+
+export const COLOR_SCHEME_PALETTES: Record<ColorScheme, { primary: string; secondary: string; accent: string }> = {
+  'dxt-default': { primary: '#41b9d5', secondary: '#5371ff', accent: '#6ce6e9' },
+  'ocean-blue': { primary: '#0077b6', secondary: '#00b4d8', accent: '#90e0ef' },
+  'midnight-purple': { primary: '#7c3aed', secondary: '#a78bfa', accent: '#c4b5fd' },
+}
+
+export const FONT_FAMILY_MAP: Record<FontOption, string> = {
+  'nunito': "'Nunito', sans-serif",
+  'inter': "'Inter', sans-serif",
+  'open-sans': "'Open Sans', sans-serif",
+}
+
 export type HeroContent = z.infer<typeof heroContentSchema>
 export type PillarItem = z.infer<typeof pillarItemSchema>
 export type PillarsContent = z.infer<typeof pillarsContentSchema>
 export type SystemsContent = z.infer<typeof systemsContentSchema>
 export type FooterContent = z.infer<typeof footerContentSchema>
+export type ThemeContent = z.infer<typeof themeContentSchema>

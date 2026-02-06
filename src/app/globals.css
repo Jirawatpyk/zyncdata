@@ -8,12 +8,12 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-nunito);
 
-  /* DxT Brand Colors */
-  --color-dxt-primary: #41b9d5;
-  --color-dxt-secondary: #5371ff;
-  --color-dxt-accent: #6ce6e9;
-  --color-dxt-dark: #545454;
-  --color-dxt-light: #ffffff;
+  /* DxT Brand Colors — references runtime vars */
+  --color-dxt-primary: var(--dxt-primary);
+  --color-dxt-secondary: var(--dxt-secondary);
+  --color-dxt-accent: var(--dxt-accent);
+  --color-dxt-dark: var(--dxt-dark);
+  --color-dxt-light: var(--dxt-light);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -53,6 +53,13 @@
 }
 
 :root {
+  /* DxT Brand Colors — runtime-overridable */
+  --dxt-primary: #41b9d5;
+  --dxt-secondary: #5371ff;
+  --dxt-accent: #6ce6e9;
+  --dxt-dark: #545454;
+  --dxt-light: #ffffff;
+
   --radius: 0.625rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);

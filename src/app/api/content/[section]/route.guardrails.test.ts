@@ -3,7 +3,7 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { NextResponse } from 'next/server'
-import { createMockAuth, createMockHeroContent } from '@/lib/test-utils/mock-factories'
+import { createMockAuth, createMockHeroContent, createMockThemeContent } from '@/lib/test-utils/mock-factories'
 
 vi.mock('@/lib/auth/guard', () => ({
   requireApiAuth: vi.fn(),
@@ -82,14 +82,14 @@ describe('PATCH /api/content/[section] Guardrails', () => {
       expect(response.status).toBe(404)
     })
 
-    it('[P0] Valid section names MUST be accepted: hero, pillars, footer', async () => {
+    it('[P0] Valid section names MUST be accepted: hero, pillars, footer, theme', async () => {
       vi.mocked(requireApiAuth).mockResolvedValue(createMockAuth())
       vi.mocked(updateSectionContent).mockResolvedValue({
         id: '1', section_name: 'hero', content: {}, metadata: null,
         updated_by: 'user-123', created_at: '', updated_at: '',
       })
 
-      for (const section of ['hero', 'pillars', 'footer']) {
+      for (const section of ['hero', 'pillars', 'footer', 'theme']) {
         vi.clearAllMocks()
         vi.mocked(requireApiAuth).mockResolvedValue(createMockAuth())
         vi.mocked(updateSectionContent).mockResolvedValue({
@@ -97,11 +97,11 @@ describe('PATCH /api/content/[section] Guardrails', () => {
           updated_by: 'user-123', created_at: '', updated_at: '',
         })
 
-        const body = section === 'hero'
-          ? createMockHeroContent()
-          : section === 'pillars'
-            ? { heading: 'Test', items: [{ title: 'A', description: 'B', url: null }] }
-            : { copyright: 'Test', links: [] }
+        let body: unknown
+        if (section === 'hero') body = createMockHeroContent()
+        else if (section === 'pillars') body = { heading: 'Test', items: [{ title: 'A', description: 'B', url: null }] }
+        else if (section === 'theme') body = createMockThemeContent()
+        else body = { copyright: 'Test', links: [] }
 
         const response = await PATCH(makeRequest(body), makeParams(section))
         expect(response.status).not.toBe(404)
@@ -202,6 +202,65 @@ describe('PATCH /api/content/[section] Guardrails', () => {
       const [, content] = vi.mocked(updateSectionContent).mock.calls[0]
       expect(content).toHaveProperty('contact_email', 'test@example.com')
       expect(content).not.toHaveProperty('contactEmail')
+    })
+  })
+
+  describe('P1: Theme Validation', () => {
+    it('[P1] Valid theme content MUST be accepted', async () => {
+      vi.mocked(requireApiAuth).mockResolvedValue(createMockAuth())
+      vi.mocked(updateSectionContent).mockResolvedValue({
+        id: '1', section_name: 'theme', content: {}, metadata: null,
+        updated_by: 'user-123', created_at: '', updated_at: '',
+      })
+
+      const response = await PATCH(
+        makeRequest(createMockThemeContent()),
+        makeParams('theme'),
+      )
+
+      expect(response.status).toBe(200)
+      expect(updateSectionContent).toHaveBeenCalledTimes(1)
+    })
+
+    it('[P1] Invalid colorScheme MUST return 400', async () => {
+      vi.mocked(requireApiAuth).mockResolvedValue(createMockAuth())
+
+      const response = await PATCH(
+        makeRequest({ ...createMockThemeContent(), colorScheme: 'invalid-scheme' }),
+        makeParams('theme'),
+      )
+      const body = await response.json()
+
+      expect(response.status).toBe(400)
+      expect(body.error.code).toBe('VALIDATION_ERROR')
+    })
+
+    it('[P1] Invalid font MUST return 400', async () => {
+      vi.mocked(requireApiAuth).mockResolvedValue(createMockAuth())
+
+      const response = await PATCH(
+        makeRequest({ ...createMockThemeContent(), font: 'comic-sans' }),
+        makeParams('theme'),
+      )
+
+      expect(response.status).toBe(400)
+    })
+
+    it('[P1] Theme fields MUST be sanitized (defense-in-depth)', async () => {
+      vi.mocked(requireApiAuth).mockResolvedValue(createMockAuth())
+      vi.mocked(updateSectionContent).mockResolvedValue({
+        id: '1', section_name: 'theme', content: {}, metadata: null,
+        updated_by: 'user-123', created_at: '', updated_at: '',
+      })
+
+      await PATCH(
+        makeRequest(createMockThemeContent()),
+        makeParams('theme'),
+      )
+
+      const [, content] = vi.mocked(updateSectionContent).mock.calls[0]
+      expect(content.colorScheme).toBe('dxt-default')
+      expect(content.font).toBe('nunito')
     })
   })
 

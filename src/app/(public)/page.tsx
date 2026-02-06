@@ -13,16 +13,20 @@ import FadeInOnScroll from '@/components/animations/FadeInOnScroll'
 
 export const revalidate = 60
 
-export const metadata: Metadata = {
-  title: 'DxT Smart Platform & Solutions',
-  description:
-    'One portal to access and monitor all DxT systems. Complete visibility.',
-  openGraph: {
+export async function generateMetadata(): Promise<Metadata> {
+  const content = await getLandingPageContent()
+  return {
     title: 'DxT Smart Platform & Solutions',
     description:
       'One portal to access and monitor all DxT systems. Complete visibility.',
-    type: 'website',
-  },
+    openGraph: {
+      title: 'DxT Smart Platform & Solutions',
+      description:
+        'One portal to access and monitor all DxT systems. Complete visibility.',
+      type: 'website',
+    },
+    icons: content.theme.faviconUrl ? { icon: content.theme.faviconUrl } : undefined,
+  }
 }
 
 async function SystemsByCategory() {

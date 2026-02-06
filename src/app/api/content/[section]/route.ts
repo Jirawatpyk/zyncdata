@@ -5,10 +5,11 @@ import { updateSectionContent } from '@/lib/content/mutations'
 import {
   heroContentSchema,
   pillarsContentSchema,
+  themeContentSchema,
 } from '@/lib/validations/content'
 import { stripHtml, sanitizeHtml } from '@/lib/content/sanitize'
 
-const VALID_SECTIONS = ['hero', 'pillars', 'footer'] as const
+const VALID_SECTIONS = ['hero', 'pillars', 'footer', 'theme'] as const
 type ValidSection = (typeof VALID_SECTIONS)[number]
 
 // Zod schema for each section (input validation — before DB transform)
@@ -22,6 +23,7 @@ const sectionSchemas: Record<ValidSection, z.ZodTypeAny> = {
     contactEmail: z.string().email().optional(),
     links: z.array(z.object({ label: z.string().min(1, 'Label is required'), url: z.string().min(1, 'URL is required') })),
   }),
+  theme: themeContentSchema,
 }
 
 /** Sanitize hero content: strip HTML from plain text, sanitize rich text */
@@ -55,6 +57,16 @@ function sanitizeAndTransformFooterContent(content: { copyright: string; contact
       label: stripHtml(link.label),
       url: link.url,
     })),
+  }
+}
+
+/** Sanitize theme content — defense-in-depth: strip HTML from enum fields */
+function sanitizeThemeContent(content: { colorScheme: string; font: string; logoUrl: string | null; faviconUrl: string | null }) {
+  return {
+    colorScheme: stripHtml(content.colorScheme),
+    font: stripHtml(content.font),
+    logoUrl: content.logoUrl,
+    faviconUrl: content.faviconUrl,
   }
 }
 
@@ -99,6 +111,8 @@ export async function PATCH(
       dbContent = sanitizeHeroContent(validated as { title: string; subtitle: string; description: string })
     } else if (sectionKey === 'pillars') {
       dbContent = sanitizePillarsContent(validated as { heading: string; items: Array<{ title: string; description: string; url: string | null; icon?: string }> })
+    } else if (sectionKey === 'theme') {
+      dbContent = sanitizeThemeContent(validated as { colorScheme: string; font: string; logoUrl: string | null; faviconUrl: string | null })
     } else {
       dbContent = sanitizeAndTransformFooterContent(validated as { copyright: string; contactEmail?: string; links: Array<{ label: string; url: string }> })
     }
