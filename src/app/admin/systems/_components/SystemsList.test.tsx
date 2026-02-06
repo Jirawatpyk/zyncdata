@@ -582,6 +582,29 @@ describe('SystemsList', () => {
     expect(screen.getByTestId('category-badge-id-3')).toHaveTextContent('DxT Game')
   })
 
+  it('should apply color-coded classes per category', async () => {
+    vi.useRealTimers()
+    const systems = [
+      createMockSystem({ id: 'id-1', name: 'S1', category: 'dxt_smart_platform', displayOrder: 0 }),
+      createMockSystem({ id: 'id-2', name: 'S2', category: 'dxt_solutions', displayOrder: 1 }),
+      createMockSystem({ id: 'id-3', name: 'S3', category: 'dxt_game', displayOrder: 2 }),
+    ]
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ data: systems, error: null }),
+    })
+
+    render(<SystemsList />, { wrapper: createQueryWrapper() })
+
+    await waitFor(() => {
+      expect(screen.getByTestId('category-badge-id-1')).toBeInTheDocument()
+    })
+
+    expect(screen.getByTestId('category-badge-id-1')).toHaveClass('bg-cyan-100', 'text-cyan-800')
+    expect(screen.getByTestId('category-badge-id-2')).toHaveClass('bg-violet-100', 'text-violet-800')
+    expect(screen.getByTestId('category-badge-id-3')).toHaveClass('bg-amber-100', 'text-amber-800')
+  })
+
   // =======================
   // Toggle Switch (Story 3.6, AC #1, #4)
   // =======================

@@ -15,6 +15,12 @@ import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { CATEGORY_LABELS, type SystemCategory } from '@/lib/validations/system'
 
+const CATEGORY_BADGE_COLORS: Record<string, string> = {
+  dxt_smart_platform: 'bg-cyan-100 text-cyan-800',
+  dxt_solutions: 'bg-violet-100 text-violet-800',
+  dxt_game: 'bg-amber-100 text-amber-800',
+}
+
 export default function SystemsList() {
   const { data: systems, isPending, isError } = useQuery(systemsQueryOptions)
   const reorder = useReorderSystems()
@@ -91,7 +97,10 @@ export default function SystemsList() {
                 <span className="font-medium text-foreground">{system.name}</span>
                 {system.category && (
                   <span
-                    className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground"
+                    className={cn(
+                      'rounded-full px-2 py-0.5 text-xs font-medium',
+                      CATEGORY_BADGE_COLORS[system.category] ?? 'bg-muted text-muted-foreground',
+                    )}
                     data-testid={`category-badge-${system.id}`}
                   >
                     {CATEGORY_LABELS[system.category as SystemCategory] ?? system.category}
