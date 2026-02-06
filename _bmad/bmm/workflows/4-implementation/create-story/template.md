@@ -36,6 +36,14 @@ so that {{benefit}}.
 
 - Cite all technical details with source paths and sections, e.g. [Source: docs/<file>.md#Section]
 
+## Scope Additions
+
+<!-- P4 (Epic 3 Retro): Document unplanned changes in real-time as they happen -->
+
+| Change | Reason | Impact |
+|--------|--------|--------|
+| (none) | — | — |
+
 ## Dev Agent Record
 
 ### Agent Model Used
@@ -47,3 +55,5 @@ so that {{benefit}}.
 ### Completion Notes List
 
 ### File List
+
+<!-- P2 (Epic 3 Retro): MANDATORY — run `npm run story-metrics` and verify File List matches actual changes before marking done -->

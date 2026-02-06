@@ -4,7 +4,7 @@
   <critical>Communicate all responses in {communication_language} and language MUST be tailored to {user_skill_level}</critical>
   <critical>Generate all documents in {document_output_language}</critical>
   <critical>Only modify the story file in these areas: Tasks/Subtasks checkboxes, Dev Agent Record (Debug Log, Completion Notes), File List,
-    Change Log, and Status</critical>
+    Change Log, Scope Additions, and Status</critical>
   <critical>Execute ALL steps in exact order; do NOT skip steps</critical>
   <critical>Absolutely DO NOT stop because of "milestones", "significant progress", or "session boundaries". Continue in a single execution
     until the story is COMPLETE (all ACs satisfied and all tasks/subtasks checked) UNLESS a HALT condition is triggered or the USER gives
@@ -310,6 +310,9 @@
       <action>Add Change Log entry: "Addressed code review findings - {{resolved_count}} items resolved (Date: {{date}})"</action>
     </check>
 
+    <!-- P4 (Epic 3 Retro): Track scope additions in real-time -->
+    <action>If ANY work was done that is NOT mapped to an existing task/subtask in the story, add it to the "Scope Additions" table immediately with Change, Reason, and Impact</action>
+
     <action>Save the story file</action>
     <action>Determine if more incomplete tasks remain</action>
     <action if="more tasks remain">
@@ -324,6 +327,9 @@
     <action>Verify ALL tasks and subtasks are marked [x] (re-scan the story document now)</action>
     <action>Run the full regression suite (do not skip)</action>
     <action>Confirm File List includes every changed file</action>
+
+    <!-- P2 (Epic 3 Retro): Mandatory File List verification via story-metrics -->
+    <critical>MUST run `npm run story-metrics` and verify its output matches the File List section before marking story as review. If File List has missing or extra files compared to actual changes, update the File List to match reality.</critical>
 
     <!-- Security Pre-Review Checklist (Epic 2 Retro Action Item P4) -->
     <critical>MUST complete security checklist BEFORE marking story as review</critical>
@@ -349,6 +355,8 @@
       - Dev Agent Record contains implementation notes
       - Change Log includes summary of changes
       - Only permitted story sections were modified
+      - Scope Additions table documents any unplanned changes (P4 retro action)
+      - File List verified via `npm run story-metrics` (P2 retro action)
     </action>
 
     <!-- Mark story ready for review - sprint status conditional -->
