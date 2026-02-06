@@ -75,7 +75,7 @@ development_status:
   epic-4: in-progress
   4-A-landing-page-pillars-section: done                    # Replace About/Intro with 4 Pillars
   4-B-system-category-layers: done                     # Group systems into 3 category layers + CMS update
-  4-1-content-section-editor-with-wysiwyg: in-progress
+  4-1-content-section-editor-with-wysiwyg: review
   4-2-theme-branding-customization: backlog
   4-3-preview-mode-client-side: backlog
   4-4-publish-changes: backlog

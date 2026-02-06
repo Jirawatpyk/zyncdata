@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useForm, type SubmitHandler, type Resolver } from 'react-hook-form'
+import { useForm, useWatch, type SubmitHandler, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import type { z } from 'zod'
 import {
@@ -68,6 +68,8 @@ export default function AddSystemDialog({
       category: null,
     },
   })
+
+  const watchedName = useWatch({ control: form.control, name: 'name' })
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
     setServerError(null)
@@ -233,7 +235,7 @@ export default function AddSystemDialog({
             {/* Logo upload */}
             <LogoUpload
               currentLogoUrl={null}
-              systemName={form.watch('name') || 'New System'}
+              systemName={watchedName || 'New System'}
               isUploading={uploadLogo.isPending}
               onUpload={handlePendingLogoSelect}
               onRemove={handlePendingLogoRemove}

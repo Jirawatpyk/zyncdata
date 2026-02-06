@@ -4,7 +4,6 @@ import { axe } from 'jest-axe'
 import SystemsList from './SystemsList'
 import { createQueryWrapper } from '@/lib/test-utils'
 import { createMockSystem } from '@/lib/test-utils/mock-factories'
-import type { System } from '@/lib/validations/system'
 
 const mockFetch = vi.fn()
 global.fetch = mockFetch

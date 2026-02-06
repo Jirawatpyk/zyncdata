@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useForm, type SubmitHandler, type Resolver } from 'react-hook-form'
+import { useForm, useWatch, type SubmitHandler, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import type { z } from 'zod'
 import {
@@ -79,6 +79,8 @@ export default function EditSystemDialog({
       category: system.category as FormValues['category'],
     },
   })
+
+  const watchedName = useWatch({ control: form.control, name: 'name' })
 
   // Reset form to system values when dialog opens (AC #1)
   useEffect(() => {
@@ -257,7 +259,7 @@ export default function EditSystemDialog({
             {/* Logo upload */}
             <LogoUpload
               currentLogoUrl={system.logoUrl}
-              systemName={form.watch('name') || system.name}
+              systemName={watchedName || system.name}
               isUploading={uploadLogo.isPending}
               onUpload={handleLogoUpload}
               onRemove={handleLogoRemove}

@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { NextResponse } from 'next/server'
 import { PATCH } from './route'
 import { createMockSystem, createMockAuth } from '@/lib/test-utils/mock-factories'
-import type { System } from '@/lib/validations/system'
 
 const mockRequireApiAuth = vi.fn()
 const mockIsAuthError = vi.fn()

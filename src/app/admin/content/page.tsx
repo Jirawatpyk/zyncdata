@@ -1,5 +1,6 @@
-import { FileText } from 'lucide-react'
-import EmptyState from '@/components/patterns/EmptyState'
+import { Suspense } from 'react'
+import ContentManager from './_components/ContentManager'
+import ContentLoadingSkeleton from './loading'
 
 export const metadata = {
   title: 'Content | Admin | zyncdata',
@@ -15,13 +16,9 @@ export default function ContentPage() {
         </p>
       </div>
 
-      <div className="rounded-lg border border-border bg-card">
-        <EmptyState
-          icon={<FileText className="h-12 w-12" />}
-          title="Content Management Coming Soon"
-          description="This feature will be available in Epic 4."
-        />
-      </div>
+      <Suspense fallback={<ContentLoadingSkeleton />}>
+        <ContentManager />
+      </Suspense>
     </div>
   )
 }
