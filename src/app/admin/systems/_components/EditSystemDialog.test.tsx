@@ -162,7 +162,7 @@ describe('EditSystemDialog', () => {
 
     // Clear URL and type invalid
     await user.clear(screen.getByTestId('system-url-input'))
-    await user.type(screen.getByTestId('system-url-input'), 'not-a-valid-url')
+    await user.type(screen.getByTestId('system-url-input'), '://missing-host')
     await user.click(screen.getByTestId('submit-button'))
 
     await waitFor(() => {

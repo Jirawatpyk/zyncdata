@@ -212,7 +212,7 @@ describe('PATCH /api/systems/[id]', () => {
 
     const request = createRequest({
       name: 'Updated',
-      url: 'not-a-url',
+      url: '://missing-host',
       enabled: true,
     })
     const response = await PATCH(request, createParams())

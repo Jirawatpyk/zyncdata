@@ -146,7 +146,7 @@ describe('POST /api/systems', () => {
 
     const request = createRequest({
       name: 'Test System',
-      url: 'not-a-url',
+      url: '://missing-host',
       enabled: true,
     })
     const response = await POST(request)

@@ -112,9 +112,9 @@ describe('AddSystemDialog', () => {
       expect(screen.getByTestId('add-system-form')).toBeInTheDocument()
     })
 
-    // Fill name and invalid URL
+    // Fill name and truly invalid URL (even after https:// auto-prepend)
     await user.type(screen.getByTestId('system-name-input'), 'Test System')
-    await user.type(screen.getByTestId('system-url-input'), 'not-a-valid-url')
+    await user.type(screen.getByTestId('system-url-input'), '://missing-host')
     await user.click(screen.getByTestId('submit-button'))
 
     await waitFor(() => {
