@@ -9,7 +9,7 @@ import type { System } from '@/lib/validations/system'
 import type { HealthCheck } from '@/lib/validations/health'
 import type { User } from '@supabase/supabase-js'
 import type { AuthResult } from '@/lib/auth/guard'
-import type { HeroContent, PillarsContent, FooterContent } from '@/lib/validations/content'
+import type { HeroContent, PillarsContent, FooterContent, ThemeContent } from '@/lib/validations/content'
 import type { LandingPageContent } from '@/lib/content/queries'
 
 // ── System ──────────────────────────────────────────────────────────
@@ -29,6 +29,7 @@ const SYSTEM_DEFAULTS: System = {
   deletedAt: null,
   lastCheckedAt: null,
   category: null,
+  consecutiveFailures: 0,
 }
 
 export function createMockSystem(overrides?: Partial<System>): System {
@@ -120,12 +121,26 @@ export function createMockFooterContent(overrides?: Partial<FooterContent>): Foo
   return { ...FOOTER_DEFAULTS, ...overrides }
 }
 
+// ── Theme ────────────────────────────────────────────────────────
+
+const THEME_DEFAULTS: ThemeContent = {
+  colorScheme: 'dxt-default',
+  font: 'nunito',
+  logoUrl: null,
+  faviconUrl: null,
+}
+
+export function createMockThemeContent(overrides?: Partial<ThemeContent>): ThemeContent {
+  return { ...THEME_DEFAULTS, ...overrides }
+}
+
 export function createMockLandingPageContent(overrides?: Partial<LandingPageContent>): LandingPageContent {
   return {
     hero: createMockHeroContent(),
     pillars: createMockPillarsContent(),
     systems: { heading: 'Our Systems', subtitle: 'Monitoring & management' },
     footer: createMockFooterContent(),
+    theme: createMockThemeContent(),
     ...overrides,
   }
 }

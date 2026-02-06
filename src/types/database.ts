@@ -126,6 +126,7 @@ export type Database = {
       systems: {
         Row: {
           category: string | null
+          consecutive_failures: number
           created_at: string
           deleted_at: string | null
           description: string | null
@@ -142,6 +143,7 @@ export type Database = {
         }
         Insert: {
           category?: string | null
+          consecutive_failures?: number
           created_at?: string
           deleted_at?: string | null
           description?: string | null
@@ -158,6 +160,7 @@ export type Database = {
         }
         Update: {
           category?: string | null
+          consecutive_failures?: number
           created_at?: string
           deleted_at?: string | null
           description?: string | null

@@ -98,6 +98,7 @@ describe('GET /api/systems Guardrails', () => {
           updatedAt: '2026-01-01T00:00:00Z',
           deletedAt: null,
           lastCheckedAt: null,
+          consecutiveFailures: 0,
         },
       ])
 

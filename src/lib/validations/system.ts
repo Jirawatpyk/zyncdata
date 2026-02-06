@@ -50,6 +50,7 @@ export const systemSchema = z.object({
   deletedAt: z.string().nullable(),
   lastCheckedAt: z.string().nullable(),
   category: z.string().nullable(),
+  consecutiveFailures: z.number().int(),
 })
 
 export type System = z.infer<typeof systemSchema>

@@ -64,6 +64,7 @@ describe('PATCH /api/systems/[id]/toggle Guardrails', () => {
         updatedAt: '2026-01-01T00:00:00Z',
         deletedAt: null,
         lastCheckedAt: null,
+        consecutiveFailures: 0,
       })
 
       await PATCH(createRequest({ enabled: false }), createParams())
@@ -164,6 +165,7 @@ describe('PATCH /api/systems/[id]/toggle Guardrails', () => {
         updatedAt: '2026-01-01T00:00:00Z',
         deletedAt: null,
         lastCheckedAt: null,
+        consecutiveFailures: 0,
       })
 
       const response = await PATCH(createRequest({ enabled: true }), createParams())

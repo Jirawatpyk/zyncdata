@@ -36,6 +36,7 @@ describe('getSystems Guardrails', () => {
           deleted_at: null,
           last_checked_at: null,
           category: null,
+          consecutive_failures: 0,
         },
       ],
       error: null,

@@ -19,6 +19,7 @@ describe('systemSchema', () => {
     deletedAt: null,
     lastCheckedAt: null,
     category: null,
+    consecutiveFailures: 0,
   }
 
   it('should accept valid system with null lastCheckedAt', () => {

@@ -418,6 +418,7 @@ Recent commits show consistent patterns:
 |--------|--------|--------|
 | Used typed `HealthCheckInsert` instead of `toSnakeCase()` for insert | Supabase typed client rejects `Record<string, unknown>` | No functional impact, better type safety |
 | `updateSystemHealthStatus` accepts `status: string \| null` | On failure, status must NOT be changed (AC #3) | Null means "don't update status field" |
+| Changed `redirect: 'follow'` → `redirect: 'manual'` in `check.ts` | Systems behind auth (e.g., Google OAuth) return 307 → auth page → 400; following redirects causes false failures | 3xx responses treated as success directly — server is running even if behind auth |
 
 ## Dev Agent Record
 

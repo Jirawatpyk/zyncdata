@@ -86,6 +86,7 @@ const MOCK_SYSTEM = {
   category: null,
   deletedAt: null,
   lastCheckedAt: null,
+  consecutiveFailures: 0,
 }
 
 describe('POST /api/systems/[id]/logo Guardrails', () => {
