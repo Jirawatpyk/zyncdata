@@ -518,6 +518,71 @@ describe('SystemsList', () => {
   })
 
   // =======================
+  // Category badge (Story 4-B, Task 7.6)
+  // =======================
+
+  it('should display category badge when system has a category', async () => {
+    vi.useRealTimers()
+    const systems = [
+      createMockSystem({ id: 'cat-id', name: 'Platform System', category: 'dxt_smart_platform' }),
+    ]
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ data: systems, error: null }),
+    })
+
+    render(<SystemsList />, { wrapper: createQueryWrapper() })
+
+    await waitFor(() => {
+      expect(screen.getByTestId('category-badge-cat-id')).toBeInTheDocument()
+    })
+
+    expect(screen.getByTestId('category-badge-cat-id')).toHaveTextContent('DxT Smart Platform')
+  })
+
+  it('should NOT display category badge when category is null', async () => {
+    vi.useRealTimers()
+    const systems = [
+      createMockSystem({ id: 'no-cat-id', name: 'No Category', category: null }),
+    ]
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ data: systems, error: null }),
+    })
+
+    render(<SystemsList />, { wrapper: createQueryWrapper() })
+
+    await waitFor(() => {
+      expect(screen.getByTestId('system-row-no-cat-id')).toBeInTheDocument()
+    })
+
+    expect(screen.queryByTestId('category-badge-no-cat-id')).not.toBeInTheDocument()
+  })
+
+  it('should display correct labels for each category', async () => {
+    vi.useRealTimers()
+    const systems = [
+      createMockSystem({ id: 'id-1', name: 'S1', category: 'dxt_smart_platform', displayOrder: 0 }),
+      createMockSystem({ id: 'id-2', name: 'S2', category: 'dxt_solutions', displayOrder: 1 }),
+      createMockSystem({ id: 'id-3', name: 'S3', category: 'dxt_game', displayOrder: 2 }),
+    ]
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ data: systems, error: null }),
+    })
+
+    render(<SystemsList />, { wrapper: createQueryWrapper() })
+
+    await waitFor(() => {
+      expect(screen.getByTestId('category-badge-id-1')).toBeInTheDocument()
+    })
+
+    expect(screen.getByTestId('category-badge-id-1')).toHaveTextContent('DxT Smart Platform')
+    expect(screen.getByTestId('category-badge-id-2')).toHaveTextContent('DxT Solutions')
+    expect(screen.getByTestId('category-badge-id-3')).toHaveTextContent('DxT Game')
+  })
+
+  // =======================
   // Toggle Switch (Story 3.6, AC #1, #4)
   // =======================
 

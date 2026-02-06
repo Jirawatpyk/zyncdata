@@ -67,6 +67,12 @@ The current "Explore" systems section shows a flat grid of all enabled systems. 
   - [x] 7.4 Update `src/lib/admin/mutations/systems.ts` — include `category` in optimistic updates
   - [x] 7.5 API routes already pass body through to mutations — no changes needed
 
+- [x] Task 7.6: Show category badge in SystemsList (AC: #5)
+  - [x] 7.6.1 Import `CATEGORY_LABELS` and `SystemCategory` from validations
+  - [x] 7.6.2 Render category badge inline next to system name (only when category is not null)
+  - [x] 7.6.3 Use `CATEGORY_LABELS` for human-readable display, fallback to raw value
+  - [x] 7.6.4 Add 3 unit tests: badge shown, badge hidden when null, correct labels for all categories
+
 - [x] Task 8: Update tests (AC: #1-#7)
   - [x] 8.1 Update `src/lib/systems/queries.test.ts` — test `getEnabledSystemsByCategory()` grouping logic
   - [x] 8.2 Create `src/app/_components/CategoryTabs.test.tsx` — 7 unit tests
@@ -157,6 +163,8 @@ The current "Explore" systems section shows a flat grid of all enabled systems. 
 | `src/lib/systems/queries.ts` | Added category to SELECT columns + getEnabledSystemsByCategory() |
 | `src/app/(public)/page.tsx` | Replaced SystemGrid with CategoryTabs using children pattern |
 | `src/app/admin/systems/_components/AddSystemDialog.tsx` | Added category dropdown |
+| `src/app/admin/systems/_components/SystemsList.tsx` | Added category badge next to system name |
+| `src/app/admin/systems/_components/SystemsList.test.tsx` | Added 3 category badge tests |
 | `src/app/admin/systems/_components/EditSystemDialog.tsx` | Added category dropdown |
 | `src/lib/admin/mutations/systems.ts` | Added category to optimistic updates |
 | `src/lib/test-utils/mock-factories.ts` | Added category: null to SYSTEM_DEFAULTS |
@@ -175,6 +183,7 @@ The current "Explore" systems section shows a flat grid of all enabled systems. 
 |------|--------|--------|
 | 2026-02-06 | Story implemented: DB migration, seed data, validation schemas, queries, CategoryTabs component, landing page update, admin forms, unit tests (34 new), E2E tests, cloud push | Dev Agent (Amelia) |
 | 2026-02-06 | Code review: Fixed H1 optimistic update bug, M1 fade-in transition, M2 dead code removal, M3 keyboard a11y, L1/L3 doc+test fixes (+7 tests) | Code Review (Dev Agent) |
+| 2026-02-06 | Task 7.6: Added category badge to admin SystemsList — shows CATEGORY_LABELS next to system name (+3 tests, 31 total in file) | Dev Agent (Amelia) |
 
 ## Scope Additions
 

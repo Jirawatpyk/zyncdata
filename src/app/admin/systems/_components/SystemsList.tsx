@@ -13,6 +13,7 @@ import { Switch } from '@/components/ui/switch'
 import { ChevronUp, ChevronDown } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import { CATEGORY_LABELS, type SystemCategory } from '@/lib/validations/system'
 
 export default function SystemsList() {
   const { data: systems, isPending, isError } = useQuery(systemsQueryOptions)
@@ -86,7 +87,17 @@ export default function SystemsList() {
             data-testid={`system-row-${system.id}`}
           >
             <div className="flex flex-col gap-0.5">
-              <span className="font-medium text-foreground">{system.name}</span>
+              <div className="flex items-center gap-2">
+                <span className="font-medium text-foreground">{system.name}</span>
+                {system.category && (
+                  <span
+                    className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground"
+                    data-testid={`category-badge-${system.id}`}
+                  >
+                    {CATEGORY_LABELS[system.category as SystemCategory] ?? system.category}
+                  </span>
+                )}
+              </div>
               <span className="text-sm text-muted-foreground">
                 {system.url}
               </span>
