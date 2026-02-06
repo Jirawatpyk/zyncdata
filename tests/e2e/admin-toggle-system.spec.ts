@@ -32,7 +32,7 @@ test.describe('Toggle System Visibility Flow', () => {
       await adminPage.getByTestId('system-url-input').fill(systemUrl)
       // Set category so system appears in default active tab on landing page
       await adminPage.getByTestId('system-category-select').click()
-      await adminPage.getByText('DxT Smart Platform').click()
+      await adminPage.getByRole('option', { name: 'DxT Smart Platform' }).click()
       await adminPage.getByTestId('submit-button').click()
 
       await expect(adminPage.getByTestId('add-system-dialog')).not.toBeVisible({
