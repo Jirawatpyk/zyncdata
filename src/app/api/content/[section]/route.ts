@@ -60,13 +60,25 @@ function sanitizeAndTransformFooterContent(content: { copyright: string; contact
   }
 }
 
-/** Sanitize theme content — defense-in-depth: strip HTML from enum fields */
+/** Restrict URL to https:// protocol only (defense-in-depth) */
+function sanitizeUrl(url: string | null): string | null {
+  if (!url) return null
+  try {
+    const parsed = new URL(url)
+    if (parsed.protocol !== 'https:') return null
+    return url
+  } catch {
+    return null
+  }
+}
+
+/** Sanitize theme content — defense-in-depth: strip HTML from enum fields, restrict URL schemes */
 function sanitizeThemeContent(content: { colorScheme: string; font: string; logoUrl: string | null; faviconUrl: string | null }) {
   return {
     colorScheme: stripHtml(content.colorScheme),
     font: stripHtml(content.font),
-    logoUrl: content.logoUrl,
-    faviconUrl: content.faviconUrl,
+    logoUrl: sanitizeUrl(content.logoUrl),
+    faviconUrl: sanitizeUrl(content.faviconUrl),
   }
 }
 

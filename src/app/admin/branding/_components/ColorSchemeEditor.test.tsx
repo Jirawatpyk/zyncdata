@@ -74,6 +74,7 @@ describe('ColorSchemeEditor', () => {
         content: expect.objectContaining({ colorScheme: 'midnight-purple' }),
       }),
     )
+    expect(onOpenChange).toHaveBeenCalledWith(false)
   })
 
   it('shows color swatches for each scheme', () => {

@@ -246,6 +246,17 @@ describe('PATCH /api/content/[section] Guardrails', () => {
       expect(response.status).toBe(400)
     })
 
+    it('[P1] Invalid logoUrl MUST return 400', async () => {
+      vi.mocked(requireApiAuth).mockResolvedValue(createMockAuth())
+
+      const response = await PATCH(
+        makeRequest({ ...createMockThemeContent(), logoUrl: 'not-a-url' }),
+        makeParams('theme'),
+      )
+
+      expect(response.status).toBe(400)
+    })
+
     it('[P1] Theme fields MUST be sanitized (defense-in-depth)', async () => {
       vi.mocked(requireApiAuth).mockResolvedValue(createMockAuth())
       vi.mocked(updateSectionContent).mockResolvedValue({

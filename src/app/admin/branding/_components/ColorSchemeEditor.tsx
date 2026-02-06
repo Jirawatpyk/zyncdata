@@ -46,11 +46,15 @@ function ColorSchemeEditorContent({ currentTheme, onOpenChange }: { currentTheme
   const isDirty = selected !== currentTheme.colorScheme
 
   async function handleSave() {
-    await updateSection.mutateAsync({
-      section: 'theme',
-      content: { ...currentTheme, colorScheme: selected } as unknown as Record<string, unknown>,
-    })
-    onOpenChange(false)
+    try {
+      await updateSection.mutateAsync({
+        section: 'theme',
+        content: { ...currentTheme, colorScheme: selected } as unknown as Record<string, unknown>,
+      })
+      onOpenChange(false)
+    } catch {
+      // Error already handled by mutation's onError callback
+    }
   }
 
   return (

@@ -16,7 +16,7 @@ export default function Header({ logoUrl }: HeaderProps) {
           aria-label="DxT Smart Platform & Solutions - Home"
         >
           {logoUrl ? (
-            <Image src={logoUrl} alt="DxT Smart Platform & Solutions" width={160} height={40} className="h-10 w-auto" />
+            <Image src={logoUrl} alt="DxT Smart Platform & Solutions" width={160} height={40} className="h-10 w-auto" unoptimized />
           ) : (
             <span className="text-lg tracking-tight">
               <span className="font-bold text-gray-800">D</span>

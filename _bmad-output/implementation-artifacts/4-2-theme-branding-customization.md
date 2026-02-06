@@ -1,6 +1,6 @@
 # Story 4.2: Theme & Branding Customization
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -664,10 +664,37 @@ Claude Opus 4.6 (claude-opus-4-6)
 - Dialog state reset uses mount/unmount pattern instead of useEffect+setState to satisfy ESLint rules
 - Dynamic favicon via `generateMetadata()` in page.tsx — falls back to `icon.svg` when null
 
+### Code Review Fixes (CR 4-2)
+
+**HIGH (5 fixed):**
+- H1: Font switching broken — `<body>` used `font-nunito` instead of `font-sans`; public layout div needed `className="font-sans"` to consume `--font-sans` override
+- H2: RLS policy pattern mismatch — branding bucket used `::text` cast instead of `(select ...)` pattern from corrected system-logos migration
+- H3: Silent file size rejection — added `toast.error()` feedback when file exceeds max size in LogoUploader/FaviconUploader
+- H4: Unhandled promise rejections — wrapped all `mutateAsync` calls in try/catch in ColorSchemeEditor, FontSelector, LogoUploader, FaviconUploader
+- H5: Bucket allowed JPEG but app rejected it — removed `image/jpeg` from migration `allowed_mime_types`
+
+**MEDIUM (8 fixed):**
+- M1: Seed INSERT without ON CONFLICT — added `ON CONFLICT (section_name) DO NOTHING`
+- M2: Storage delete errors silently swallowed — added `console.warn` logging in branding-mutations.ts
+- M3: logoUrl/faviconUrl accepted any URL scheme — added `sanitizeUrl()` restricting to `https:` in content route sanitizer
+- M4: File input not reset after upload — added `fileInputRef.current.value = ''` reset in LogoUploader/FaviconUploader
+- M5: No file upload happy path test — added upload + oversized file tests to LogoUploader.test/FaviconUploader.test
+- M6: Type cast `as unknown as Record<>` — accepted as-is (documented tradeoff for JSONB content system)
+- M7: Missing onOpenChange assertions — added to ColorSchemeEditor/FontSelector/LogoUploader/FaviconUploader tests
+- M8: All 3 fonts always preloaded — added `preload: false` to Inter and Open Sans (non-default fonts)
+
+**LOW (7 fixed):**
+- L1/L2: Story File List corrections — removed false `mock-factories.ts` claim, added `sprint-status.yaml`
+- L3: No `.max(255)` on fileName — added to both branding upload schemas
+- L4: No `.min(1)` on fileSize — added to both branding upload schemas
+- L5: Header Image missing `unoptimized` — added to match admin component pattern
+- L6: Skip link `bg-white` → `bg-background` — semantic token
+- L7: No test for invalid URL in logoUrl — added to content route guardrails test
+
 ### Test Counts
 
 - **Test suites:** 107 files passed
-- **Tests:** 1233 passed, 0 failed
+- **Tests:** 1237 passed, 0 failed
 - **New test files:** 8 (BrandingManager, ColorSchemeEditor, FontSelector, LogoUploader, FaviconUploader, theme-provider, branding/logo API, branding/favicon API)
 - **Updated test files:** 1 (content/[section] route guardrails — added theme tests)
 
@@ -704,14 +731,14 @@ Claude Opus 4.6 (claude-opus-4-6)
 - `src/app/globals.css` — two-level CSS variable indirection for runtime theming
 - `src/lib/validations/content.ts` — COLOR_SCHEMES, FONT_OPTIONS, themeContentSchema, palettes, font map
 - `src/lib/content/queries.ts` — theme in LandingPageContent, React.cache(), THEME_FALLBACK
-- `src/app/api/content/[section]/route.ts` — 'theme' in VALID_SECTIONS + sectionSchemas + sanitize
+- `src/app/api/content/[section]/route.ts` — 'theme' in VALID_SECTIONS + sectionSchemas + sanitize + sanitizeUrl()
 - `src/lib/admin/mutations/content.ts` — 'theme' added to UpdateSectionInput union
-- `src/app/(public)/layout.tsx` — async Server Component, CSS vars injection, logo prop
+- `src/app/(public)/layout.tsx` — async Server Component, CSS vars injection, logo prop, font-sans class
 - `src/app/(public)/page.tsx` — static metadata → generateMetadata() for dynamic favicon
-- `src/components/layouts/Header.tsx` — logoUrl prop, conditional Image/text rendering
-- `src/app/layout.tsx` — load all 3 fonts (Nunito, Inter, Open Sans)
+- `src/components/layouts/Header.tsx` — logoUrl prop, conditional Image/text rendering, unoptimized
+- `src/app/layout.tsx` — load all 3 fonts (Nunito, Inter, Open Sans), font-sans on body, preload:false
 - `src/app/admin/_components/AdminSidebar.tsx` — Branding nav item with Palette icon
-- `src/lib/test-utils/mock-factories.ts` — createMockThemeContent, updated createMockLandingPageContent
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` — story 4-2 status
 - `src/app/api/content/[section]/route.guardrails.test.ts` — added theme validation tests
 
 ### Change Log
@@ -727,5 +754,14 @@ Claude Opus 4.6 (claude-opus-4-6)
 | React Query branding mutations | feature | admin/mutations/branding.ts, admin/mutations/content.ts |
 | Admin branding page + components | feature | admin/branding/** |
 | Theme applied to landing page | feature | (public)/layout.tsx, (public)/page.tsx, Header.tsx, layout.tsx, theme-provider.ts |
-| Mock factories for theme | test | mock-factories.ts |
 | Test coverage for all new code | test | 8 new test files, 1 updated |
+| CR: Fix font switching (body font-sans + public layout class) | fix | layout.tsx, (public)/layout.tsx |
+| CR: Fix RLS policy pattern (select subquery) | fix | 20260211000001_create_branding_bucket.sql |
+| CR: Add toast error + try/catch + file input reset | fix | LogoUploader.tsx, FaviconUploader.tsx |
+| CR: Add try/catch for mutateAsync | fix | ColorSchemeEditor.tsx, FontSelector.tsx |
+| CR: Remove JPEG from bucket + ON CONFLICT seed | fix | 20260211000001_create_branding_bucket.sql |
+| CR: Storage delete error logging | fix | branding-mutations.ts |
+| CR: URL scheme restriction (sanitizeUrl) | fix | api/content/[section]/route.ts |
+| CR: Font preload:false, Header unoptimized, skip link bg-background | fix | layout.tsx, Header.tsx, (public)/layout.tsx |
+| CR: Validation (fileName max, fileSize min) | fix | validations/branding.ts |
+| CR: Test coverage (upload flow, onOpenChange, invalid URL) | test | 4 uploader tests, 2 editor tests, content guardrails |

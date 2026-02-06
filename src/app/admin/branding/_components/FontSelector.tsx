@@ -46,11 +46,15 @@ function FontSelectorContent({ currentTheme, onOpenChange }: { currentTheme: The
   const isDirty = selected !== currentTheme.font
 
   async function handleSave() {
-    await updateSection.mutateAsync({
-      section: 'theme',
-      content: { ...currentTheme, font: selected } as unknown as Record<string, unknown>,
-    })
-    onOpenChange(false)
+    try {
+      await updateSection.mutateAsync({
+        section: 'theme',
+        content: { ...currentTheme, font: selected } as unknown as Record<string, unknown>,
+      })
+      onOpenChange(false)
+    } catch {
+      // Error already handled by mutation's onError callback
+    }
   }
 
   return (

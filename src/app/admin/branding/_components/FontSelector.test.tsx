@@ -74,6 +74,7 @@ describe('FontSelector', () => {
         content: expect.objectContaining({ font: 'open-sans' }),
       }),
     )
+    expect(onOpenChange).toHaveBeenCalledWith(false)
   })
 
   it('shows font preview text with font-family styling', () => {

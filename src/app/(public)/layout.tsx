@@ -12,10 +12,10 @@ export default async function PublicLayout({
   const fontVar = getThemeFontVar(content.theme)
 
   return (
-    <div style={{ ...cssVars, '--font-sans': fontVar } as React.CSSProperties}>
+    <div className="font-sans" style={{ ...cssVars, '--font-sans': fontVar } as React.CSSProperties}>
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:bg-white focus:p-4 focus:text-dxt-primary"
+        className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:bg-background focus:p-4 focus:text-dxt-primary"
       >
         Skip to content
       </a>

@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Loader2, Upload, Trash2 } from 'lucide-react'
+import { toast } from 'sonner'
 import { useUploadFavicon, useDeleteFavicon } from '@/lib/admin/mutations/branding'
 
 interface FaviconUploaderProps {
@@ -32,19 +33,31 @@ export default function FaviconUploader({ open, onOpenChange, currentFaviconUrl 
     if (!file) return
 
     if (file.size > MAX_SIZE) {
-      return // Zod validation on the API will catch this too
+      toast.error('File must be less than 64 KB')
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      return
     }
 
     const formData = new FormData()
     formData.append('file', file)
 
-    await uploadFavicon.mutateAsync(formData)
-    onOpenChange(false)
+    try {
+      await uploadFavicon.mutateAsync(formData)
+      onOpenChange(false)
+    } catch {
+      // Error already handled by mutation's onError callback
+    } finally {
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
   }
 
   async function handleDelete() {
-    await deleteFavicon.mutateAsync()
-    onOpenChange(false)
+    try {
+      await deleteFavicon.mutateAsync()
+      onOpenChange(false)
+    } catch {
+      // Error already handled by mutation's onError callback
+    }
   }
 
   const isPending = uploadFavicon.isPending || deleteFavicon.isPending

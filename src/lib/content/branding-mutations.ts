@@ -26,7 +26,8 @@ export async function uploadBrandingAsset(
   if (currentUrl && isSupabaseStorageUrl(currentUrl)) {
     const oldPath = extractBrandingStoragePath(currentUrl)
     if (oldPath) {
-      await supabase.storage.from('branding').remove([oldPath])
+      const { error: removeError } = await supabase.storage.from('branding').remove([oldPath])
+      if (removeError) console.warn('[branding] Failed to remove old file:', oldPath, removeError.message)
     }
   }
 
@@ -64,7 +65,8 @@ export async function deleteBrandingAsset(
   if (isSupabaseStorageUrl(currentUrl)) {
     const path = extractBrandingStoragePath(currentUrl)
     if (path) {
-      await supabase.storage.from('branding').remove([path])
+      const { error: removeError } = await supabase.storage.from('branding').remove([path])
+      if (removeError) console.warn('[branding] Failed to remove file:', path, removeError.message)
     }
   }
 

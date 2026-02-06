@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Loader2, Upload, Trash2 } from 'lucide-react'
+import { toast } from 'sonner'
 import { useUploadLogo, useDeleteLogo } from '@/lib/admin/mutations/branding'
 
 interface LogoUploaderProps {
@@ -32,19 +33,31 @@ export default function LogoUploader({ open, onOpenChange, currentLogoUrl }: Log
     if (!file) return
 
     if (file.size > MAX_SIZE) {
-      return // Zod validation on the API will catch this too
+      toast.error('File must be less than 512 KB')
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      return
     }
 
     const formData = new FormData()
     formData.append('file', file)
 
-    await uploadLogo.mutateAsync(formData)
-    onOpenChange(false)
+    try {
+      await uploadLogo.mutateAsync(formData)
+      onOpenChange(false)
+    } catch {
+      // Error already handled by mutation's onError callback
+    } finally {
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
   }
 
   async function handleDelete() {
-    await deleteLogo.mutateAsync()
-    onOpenChange(false)
+    try {
+      await deleteLogo.mutateAsync()
+      onOpenChange(false)
+    } catch {
+      // Error already handled by mutation's onError callback
+    }
   }
 
   const isPending = uploadLogo.isPending || deleteLogo.isPending

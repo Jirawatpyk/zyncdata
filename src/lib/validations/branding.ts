@@ -16,8 +16,8 @@ export const ALLOWED_FAVICON_TYPES = [
 ] as const
 
 export const uploadBrandingLogoSchema = z.object({
-  fileName: z.string().min(1, 'File name required'),
-  fileSize: z.number().max(MAX_LOGO_SIZE, 'File must be less than 512KB'),
+  fileName: z.string().min(1, 'File name required').max(255, 'File name too long'),
+  fileSize: z.number().min(1, 'File cannot be empty').max(MAX_LOGO_SIZE, 'File must be less than 512KB'),
   fileType: z
     .string()
     .refine(
@@ -28,8 +28,8 @@ export const uploadBrandingLogoSchema = z.object({
 })
 
 export const uploadBrandingFaviconSchema = z.object({
-  fileName: z.string().min(1, 'File name required'),
-  fileSize: z.number().max(MAX_FAVICON_SIZE, 'File must be less than 64KB'),
+  fileName: z.string().min(1, 'File name required').max(255, 'File name too long'),
+  fileSize: z.number().min(1, 'File cannot be empty').max(MAX_FAVICON_SIZE, 'File must be less than 64KB'),
   fileType: z
     .string()
     .refine(

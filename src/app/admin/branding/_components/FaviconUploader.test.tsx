@@ -64,13 +64,15 @@ describe('FaviconUploader', () => {
     expect(screen.queryByTestId('delete-favicon-button')).not.toBeInTheDocument()
   })
 
-  it('calls delete mutation when remove is clicked', async () => {
+  it('calls delete mutation and closes dialog when remove is clicked', async () => {
     const user = userEvent.setup()
-    renderUploader({ currentFaviconUrl: 'https://example.com/favicon.png' })
+    const onOpenChange = vi.fn()
+    renderUploader({ currentFaviconUrl: 'https://example.com/favicon.png', onOpenChange })
 
     await user.click(screen.getByTestId('delete-favicon-button'))
 
     expect(mockDeleteMutateAsync).toHaveBeenCalled()
+    expect(onOpenChange).toHaveBeenCalledWith(false)
   })
 
   it('has hidden file input with correct accept attribute', () => {
@@ -79,5 +81,37 @@ describe('FaviconUploader', () => {
     const input = screen.getByTestId('favicon-file-input')
     expect(input).toBeInTheDocument()
     expect(input).toHaveAttribute('accept', 'image/png,image/svg+xml,image/x-icon')
+  })
+
+  it('calls upload mutation when file is selected', async () => {
+    const user = userEvent.setup()
+    const onOpenChange = vi.fn()
+    renderUploader({ onOpenChange })
+
+    const file = new File(['favicon-data'], 'favicon.png', { type: 'image/png' })
+    const input = screen.getByTestId('favicon-file-input')
+
+    await user.upload(input, file)
+
+    expect(mockUploadMutateAsync).toHaveBeenCalledWith(expect.any(FormData))
+    expect(onOpenChange).toHaveBeenCalledWith(false)
+  })
+
+  it('shows toast error when file exceeds max size', async () => {
+    const { toast } = await import('sonner')
+    vi.spyOn(toast, 'error')
+
+    const user = userEvent.setup()
+    renderUploader()
+
+    // Create a file larger than 64 KB
+    const largeContent = new Uint8Array(65 * 1024)
+    const file = new File([largeContent], 'large.png', { type: 'image/png' })
+    const input = screen.getByTestId('favicon-file-input')
+
+    await user.upload(input, file)
+
+    expect(mockUploadMutateAsync).not.toHaveBeenCalled()
+    expect(toast.error).toHaveBeenCalledWith('File must be less than 64 KB')
   })
 })
