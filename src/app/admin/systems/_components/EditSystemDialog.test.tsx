@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { axe } from 'jest-axe'
 import EditSystemDialog from './EditSystemDialog'
 import { createQueryWrapper } from '@/lib/test-utils'
-import type { System } from '@/lib/validations/system'
+import { createMockSystem } from '@/lib/test-utils/mock-factories'
 
 const mockFetch = vi.fn()
 global.fetch = mockFetch
@@ -17,27 +17,8 @@ vi.mock('sonner', () => ({
   },
 }))
 
-function createMockSystem(overrides?: Partial<System>): System {
-  return {
-    id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
-    name: 'Test System',
-    url: 'https://example.com',
-    logoUrl: null,
-    description: 'Original description',
-    status: null,
-    responseTime: null,
-    displayOrder: 0,
-    enabled: true,
-    createdAt: '2026-01-01T00:00:00Z',
-    updatedAt: '2026-01-01T00:00:00Z',
-    deletedAt: null,
-    lastCheckedAt: null,
-    ...overrides,
-  }
-}
-
 describe('EditSystemDialog', () => {
-  const defaultSystem = createMockSystem()
+  const defaultSystem = createMockSystem({ description: 'Original description' })
 
   beforeEach(() => {
     vi.clearAllMocks()

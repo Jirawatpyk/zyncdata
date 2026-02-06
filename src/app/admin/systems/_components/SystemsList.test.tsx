@@ -3,29 +3,11 @@ import { render, screen, waitFor, act, fireEvent } from '@testing-library/react'
 import { axe } from 'jest-axe'
 import SystemsList from './SystemsList'
 import { createQueryWrapper } from '@/lib/test-utils'
+import { createMockSystem } from '@/lib/test-utils/mock-factories'
 import type { System } from '@/lib/validations/system'
 
 const mockFetch = vi.fn()
 global.fetch = mockFetch
-
-function createMockSystem(overrides?: Partial<System>): System {
-  return {
-    id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
-    name: 'Test System',
-    url: 'https://example.com',
-    logoUrl: null,
-    description: null,
-    status: 'operational',
-    responseTime: 100,
-    displayOrder: 0,
-    enabled: true,
-    createdAt: '2026-01-01T00:00:00Z',
-    updatedAt: '2026-01-01T00:00:00Z',
-    deletedAt: null,
-    lastCheckedAt: null,
-    ...overrides,
-  }
-}
 
 describe('SystemsList', () => {
   beforeEach(() => {

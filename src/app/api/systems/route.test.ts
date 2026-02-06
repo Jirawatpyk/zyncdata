@@ -1,8 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { NextResponse } from 'next/server'
 import { GET, POST } from './route'
-import type { AuthResult } from '@/lib/auth/guard'
-import type { User } from '@supabase/supabase-js'
+import { createMockSystem, createMockAuth } from '@/lib/test-utils/mock-factories'
 import type { System } from '@/lib/validations/system'
 
 const mockRequireApiAuth = vi.fn()
@@ -22,13 +21,6 @@ vi.mock('@/lib/systems/queries', () => ({
 vi.mock('@/lib/systems/mutations', () => ({
   createSystem: (input: unknown) => mockCreateSystem(input),
 }))
-
-function createMockAuth(): AuthResult {
-  return {
-    user: { id: 'user-123', email: 'admin@example.com' } as User,
-    role: 'admin',
-  }
-}
 
 describe('GET /api/systems', () => {
   beforeEach(() => {
@@ -92,25 +84,6 @@ describe('GET /api/systems', () => {
     expect(body).toEqual({ data: [], error: null })
   })
 })
-
-function createMockSystem(overrides?: Partial<System>): System {
-  return {
-    id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
-    name: 'Test System',
-    url: 'https://example.com',
-    logoUrl: null,
-    description: null,
-    status: null,
-    responseTime: null,
-    displayOrder: 0,
-    enabled: true,
-    createdAt: '2026-01-01T00:00:00Z',
-    updatedAt: '2026-01-01T00:00:00Z',
-    deletedAt: null,
-    lastCheckedAt: null,
-    ...overrides,
-  }
-}
 
 function createRequest(body: unknown): Request {
   return new Request('http://localhost/api/systems', {

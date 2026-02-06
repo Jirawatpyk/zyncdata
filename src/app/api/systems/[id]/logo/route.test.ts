@@ -1,8 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { NextResponse } from 'next/server'
 import { POST, DELETE } from './route'
-import type { AuthResult } from '@/lib/auth/guard'
-import type { User } from '@supabase/supabase-js'
+import { createMockSystem, createMockAuth } from '@/lib/test-utils/mock-factories'
 import type { System } from '@/lib/validations/system'
 
 const mockRequireApiAuth = vi.fn()
@@ -19,32 +18,6 @@ vi.mock('@/lib/systems/mutations', () => ({
   uploadSystemLogo: (...args: unknown[]) => mockUploadSystemLogo(...args),
   deleteSystemLogo: (...args: unknown[]) => mockDeleteSystemLogo(...args),
 }))
-
-function createMockAuth(): AuthResult {
-  return {
-    user: { id: 'user-123', email: 'admin@example.com' } as User,
-    role: 'admin',
-  }
-}
-
-function createMockSystem(overrides?: Partial<System>): System {
-  return {
-    id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
-    name: 'Test System',
-    url: 'https://example.com',
-    logoUrl: null,
-    description: null,
-    status: null,
-    responseTime: null,
-    displayOrder: 0,
-    enabled: true,
-    createdAt: '2026-01-01T00:00:00Z',
-    updatedAt: '2026-01-01T00:00:00Z',
-    deletedAt: null,
-    lastCheckedAt: null,
-    ...overrides,
-  }
-}
 
 const TEST_UUID = 'f47ac10b-58cc-4372-a567-0e02b2c3d479'
 

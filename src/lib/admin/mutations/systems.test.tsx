@@ -2,30 +2,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook, waitFor } from '@testing-library/react'
 import { useCreateSystem, useUpdateSystem, useDeleteSystem, useReorderSystems, useToggleSystem, useUploadLogo, useDeleteLogo } from './systems'
 import { createQueryWrapper, createTestQueryClient } from '@/lib/test-utils'
+import { createMockSystem } from '@/lib/test-utils/mock-factories'
 import { QueryClientProvider } from '@tanstack/react-query'
 import type { System } from '@/lib/validations/system'
 
 const mockFetch = vi.fn()
 global.fetch = mockFetch
-
-function createMockSystem(overrides?: Partial<System>): System {
-  return {
-    id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
-    name: 'Test System',
-    url: 'https://example.com',
-    logoUrl: null,
-    description: null,
-    status: null,
-    responseTime: null,
-    displayOrder: 0,
-    enabled: true,
-    createdAt: '2026-01-01T00:00:00Z',
-    updatedAt: '2026-01-01T00:00:00Z',
-    deletedAt: null,
-    lastCheckedAt: null,
-    ...overrides,
-  }
-}
 
 describe('useCreateSystem', () => {
   beforeEach(() => {
