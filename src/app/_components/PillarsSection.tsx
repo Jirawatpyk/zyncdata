@@ -27,13 +27,13 @@ export function PillarCard({ title, description, url, icon }: PillarItem) {
           href={url}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-4 inline-flex min-h-11 items-center gap-1 font-medium text-dxt-primary hover:underline"
+          className="mt-4 inline-flex min-h-11 items-center gap-1 font-medium text-cyan-700 hover:underline"
         >
           Visit
           <ExternalLink size={14} aria-hidden="true" />
         </a>
       ) : (
-        <span className="mt-4 inline-flex min-h-11 items-center text-xs text-gray-400">Coming Soon</span>
+        <span className="mt-4 inline-flex min-h-11 items-center text-xs text-gray-500">Coming Soon</span>
       )}
     </div>
   )

@@ -81,8 +81,8 @@ export default function CategoryTabs({ tabs, children }: CategoryTabsProps) {
               className={cn(
                 'flex cursor-pointer items-center gap-2 border-b-2 px-1 pb-3 text-sm font-medium transition-colors duration-200',
                 isActive
-                  ? 'border-dxt-primary text-dxt-primary'
-                  : 'border-transparent text-gray-400 hover:text-gray-600',
+                  ? 'border-dxt-primary text-cyan-700'
+                  : 'border-transparent text-gray-500 hover:text-gray-700',
               )}
             >
               {Icon && <Icon className="hidden h-4 w-4 sm:inline" aria-hidden="true" />}

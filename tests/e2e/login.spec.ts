@@ -18,7 +18,7 @@ test.describe('Login Page', () => {
 
   test('should render heading and description', async ({ page }) => {
     await expect(page.getByRole('heading', { name: 'Sign in' })).toBeVisible()
-    await expect(page.getByText('Enter your credentials to access the CMS')).toBeVisible()
+    await expect(page.getByText('Smart Platform & Solutions')).toBeVisible()
   })
 
   test('should have correct input types', async ({ page }) => {

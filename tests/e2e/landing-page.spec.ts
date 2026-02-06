@@ -6,15 +6,15 @@ test.describe('Landing Page', () => {
     await page.goto('/')
   })
 
-  test('should load with hero section, intro section, system cards, and footer', async ({
+  test('should load with hero section, pillars section, system cards, and footer', async ({
     page,
   }) => {
     // Hero
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
     await expect(page.getByRole('heading', { level: 2 }).first()).toBeVisible()
 
-    // Intro section
-    await expect(page.getByTestId('intro-section')).toBeVisible()
+    // Pillars section (replaced IntroSection in story 4-2)
+    await expect(page.getByTestId('pillars-section')).toBeVisible()
 
     // System cards
     await expect(page.locator('[aria-label^="Visit "]').first()).toBeVisible()
@@ -57,16 +57,15 @@ test.describe('Landing Page', () => {
     const skipLink = page.locator('a[href="#main-content"]')
     await expect(skipLink).toBeFocused()
 
-    // Continue tabbing to reach cards
-    // Tab through: Home link → Auth button → "Get Started" hero CTA
-    await page.keyboard.press('Tab') // DxT AI Platform link
-    await page.keyboard.press('Tab') // Login or Dashboard link
-    await page.keyboard.press('Tab') // "Get Started" CTA in hero
-
-    // Tab to first system card
-    await page.keyboard.press('Tab')
+    // Tab through header, hero, pillar links, and category tabs to reach system cards
+    // The number of pillar links varies, so loop until we reach a system card
     const firstCard = page.locator('[aria-label^="Visit "]').first()
-    await expect(firstCard).toBeFocused()
+    let reached = false
+    for (let i = 0; i < 20 && !reached; i++) {
+      await page.keyboard.press('Tab')
+      reached = await firstCard.evaluate((el) => el === document.activeElement)
+    }
+    expect(reached).toBe(true)
   })
 
   test('should have no accessibility violations', async ({ page }) => {
