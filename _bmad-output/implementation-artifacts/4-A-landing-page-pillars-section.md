@@ -1,6 +1,6 @@
 # Story 4-A: Landing Page Pillars Section (Replace About/Intro)
 
-Status: review
+Status: done
 
 ## Story
 
@@ -153,15 +153,19 @@ page.tsx
 | `src/app/_components/Hero.tsx` | Edit |
 | `src/app/(public)/page.tsx` | Edit |
 | `src/lib/content/queries.test.ts` | Edit |
+| `src/app/(public)/loading.tsx` | Edit (CR) |
+| `_bmad-output/planning-artifacts/epics.md` | Edit |
 
 ## Change Log
 
 | Date | Change |
 |------|--------|
 | 2026-02-06 | Story 4-A implementation: replaced IntroSection with PillarsSection (4 pillar cards), toned down Hero animations, updated Zod schemas and queries with deploy-safe fallback, 11 new tests |
+| 2026-02-06 | Code review fixes: updated loading.tsx skeleton to match PillarsSection layout, exported PillarCard for testability, added deploy-safety comment on PILLARS_FALLBACK, documented missing file list entries |
 
 ## Scope Additions
 
 | Change | Reason | Impact |
 |--------|--------|--------|
 | Seed data descriptions refined via Party Mode (Sophia's parallel-structure rewrite) | User approved concise, parallel-structure descriptions over raw PDF text for better card visual balance | No code impact — seed data only |
+| Hero float-b orb repositioned `-bottom-20` → `bottom-32` | Post-commit positioning tweak to avoid overlap with bottom gradient fade | Visual only — no logic change |

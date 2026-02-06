@@ -13,7 +13,7 @@ export default function Hero({ title, subtitle, description }: HeroProps) {
       {/* Decorative background elements */}
       <div className="absolute inset-0 overflow-x-clip" aria-hidden="true">
         <div className="absolute -left-20 -top-20 h-72 w-72 rounded-full bg-dxt-primary/20 blur-3xl motion-safe:animate-float-a" />
-        <div className="absolute -bottom-20 -right-20 h-72 w-72 rounded-full bg-dxt-secondary/20 blur-3xl motion-safe:animate-float-b" />
+        <div className="absolute bottom-32 -right-20 h-72 w-72 rounded-full bg-dxt-secondary/20 blur-3xl motion-safe:animate-float-b" />
       </div>
 
       <div className="relative mx-auto max-w-3xl px-4 text-center">

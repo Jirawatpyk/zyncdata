@@ -90,6 +90,7 @@ export type Database = {
       }
       systems: {
         Row: {
+          category: string | null
           created_at: string
           deleted_at: string | null
           description: string | null
@@ -105,6 +106,7 @@ export type Database = {
           url: string
         }
         Insert: {
+          category?: string | null
           created_at?: string
           deleted_at?: string | null
           description?: string | null
@@ -120,6 +122,7 @@ export type Database = {
           url: string
         }
         Update: {
+          category?: string | null
           created_at?: string
           deleted_at?: string | null
           description?: string | null

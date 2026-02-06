@@ -14,7 +14,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   gamepad: Gamepad2,
 }
 
-function PillarCard({ title, description, url, icon }: PillarItem) {
+export function PillarCard({ title, description, url, icon }: PillarItem) {
   const IconComponent = (icon && ICON_MAP[icon]) || Building2
 
   return (

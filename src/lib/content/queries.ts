@@ -17,6 +17,9 @@ export interface LandingPageContent {
   footer: FooterContent
 }
 
+// Deploy-safety fallback: bypasses pillarsContentSchema.parse() (which requires min 1 item)
+// because this covers the case where the DB section doesn't exist yet during deploy.
+// PillarsSection handles empty items by returning null.
 const PILLARS_FALLBACK: PillarsContent = { heading: 'Our Pillars', items: [] }
 
 export async function getLandingPageContent(): Promise<LandingPageContent> {
