@@ -93,6 +93,7 @@ describe('GET /api/systems Guardrails', () => {
           responseTime: 100,
           displayOrder: 0,
           enabled: true,
+          category: null,
           createdAt: '2026-01-01T00:00:00Z',
           updatedAt: '2026-01-01T00:00:00Z',
           deletedAt: null,

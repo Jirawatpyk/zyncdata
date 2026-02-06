@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { systemSchema, createSystemSchema, updateSystemSchema, deleteSystemSchema, reorderSystemsSchema, toggleSystemSchema, uploadLogoSchema, MAX_LOGO_SIZE } from './system'
+import { systemSchema, createSystemSchema, updateSystemSchema, deleteSystemSchema, reorderSystemsSchema, toggleSystemSchema, uploadLogoSchema, MAX_LOGO_SIZE, SYSTEM_CATEGORIES, CATEGORY_LABELS } from './system'
 
 describe('systemSchema', () => {
   // Story 3.8: Validate full system object including lastCheckedAt
@@ -18,6 +18,7 @@ describe('systemSchema', () => {
     updatedAt: '2026-01-01T00:00:00.000Z',
     deletedAt: null,
     lastCheckedAt: null,
+    category: null,
   }
 
   it('should accept valid system with null lastCheckedAt', () => {
@@ -68,6 +69,29 @@ describe('systemSchema', () => {
     const { lastCheckedAt: _, ...withoutLastCheckedAt } = validSystem
     void _
     const result = systemSchema.safeParse(withoutLastCheckedAt)
+    expect(result.success).toBe(false)
+  })
+
+  it('should accept system with category string', () => {
+    const result = systemSchema.safeParse({ ...validSystem, category: 'dxt_smart_platform' })
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.category).toBe('dxt_smart_platform')
+    }
+  })
+
+  it('should accept system with null category', () => {
+    const result = systemSchema.safeParse(validSystem)
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.category).toBeNull()
+    }
+  })
+
+  it('should reject system missing category field', () => {
+    const { category: _, ...withoutCategory } = validSystem
+    void _
+    const result = systemSchema.safeParse(withoutCategory)
     expect(result.success).toBe(false)
   })
 })
@@ -277,6 +301,57 @@ describe('createSystemSchema', () => {
     })
   })
 
+  describe('category field', () => {
+    it('should accept valid category', () => {
+      const result = createSystemSchema.safeParse({
+        name: 'ENEOS',
+        url: 'https://eneos.example.com',
+        category: 'dxt_smart_platform',
+      })
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data.category).toBe('dxt_smart_platform')
+      }
+    })
+
+    it('should accept null category (uncategorized)', () => {
+      const result = createSystemSchema.safeParse({
+        name: 'ENEOS',
+        url: 'https://eneos.example.com',
+        category: null,
+      })
+      expect(result.success).toBe(true)
+    })
+
+    it('should accept omitted category', () => {
+      const result = createSystemSchema.safeParse({
+        name: 'ENEOS',
+        url: 'https://eneos.example.com',
+      })
+      expect(result.success).toBe(true)
+    })
+
+    it('should reject invalid category value', () => {
+      const result = createSystemSchema.safeParse({
+        name: 'ENEOS',
+        url: 'https://eneos.example.com',
+        category: 'invalid_category',
+      })
+      expect(result.success).toBe(false)
+    })
+
+    it('should accept all valid category values', () => {
+      for (const cat of SYSTEM_CATEGORIES) {
+        const result = createSystemSchema.safeParse({
+          name: 'Test',
+          url: 'https://test.com',
+          category: cat,
+        })
+        expect(result.success).toBe(true)
+      }
+    })
+  })
+
   describe('complete system input', () => {
     it('should accept fully populated valid input', () => {
       const result = createSystemSchema.safeParse({
@@ -284,6 +359,7 @@ describe('createSystemSchema', () => {
         url: 'https://eneos.example.com',
         description: 'Energy management system',
         enabled: false,
+        category: 'dxt_solutions',
       })
       expect(result.success).toBe(true)
       if (result.success) {
@@ -292,6 +368,7 @@ describe('createSystemSchema', () => {
           url: 'https://eneos.example.com',
           description: 'Energy management system',
           enabled: false,
+          category: 'dxt_solutions',
         })
       }
     })
@@ -478,6 +555,35 @@ describe('updateSystemSchema', () => {
     })
   })
 
+  describe('category field', () => {
+    it('should accept valid category in update', () => {
+      const result = updateSystemSchema.safeParse({
+        ...validInput,
+        category: 'dxt_game',
+      })
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data.category).toBe('dxt_game')
+      }
+    })
+
+    it('should accept null category in update', () => {
+      const result = updateSystemSchema.safeParse({
+        ...validInput,
+        category: null,
+      })
+      expect(result.success).toBe(true)
+    })
+
+    it('should reject invalid category in update', () => {
+      const result = updateSystemSchema.safeParse({
+        ...validInput,
+        category: 'invalid',
+      })
+      expect(result.success).toBe(false)
+    })
+  })
+
   describe('complete update input', () => {
     it('should accept fully populated valid input', () => {
       const result = updateSystemSchema.safeParse(validInput)
@@ -497,6 +603,19 @@ describe('updateSystemSchema', () => {
         expect('unknownField' in result.data).toBe(false)
       }
     })
+  })
+})
+
+describe('SYSTEM_CATEGORIES constants', () => {
+  it('should have 3 categories', () => {
+    expect(SYSTEM_CATEGORIES).toHaveLength(3)
+  })
+
+  it('should have labels for all categories', () => {
+    for (const cat of SYSTEM_CATEGORIES) {
+      expect(CATEGORY_LABELS[cat]).toBeDefined()
+      expect(typeof CATEGORY_LABELS[cat]).toBe('string')
+    }
   })
 })
 

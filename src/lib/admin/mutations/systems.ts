@@ -50,6 +50,7 @@ export function useCreateSystem() {
         updatedAt: new Date().toISOString(),
         deletedAt: null,
         lastCheckedAt: null,
+        category: newSystem.category ?? null,
       }
 
       queryClient.setQueryData<System[]>(['admin', 'systems'], (old) => [
@@ -114,6 +115,7 @@ export function useUpdateSystem() {
                 url: updates.url,
                 description: updates.description ?? null,
                 enabled: updates.enabled,
+                category: updates.category ?? s.category,
               }
             : s,
         ) ?? [],

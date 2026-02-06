@@ -35,6 +35,7 @@ describe('getSystems Guardrails', () => {
           updated_at: '2026-01-02T00:00:00Z',
           deleted_at: null,
           last_checked_at: null,
+          category: null,
         },
       ],
       error: null,

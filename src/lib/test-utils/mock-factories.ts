@@ -25,6 +25,7 @@ const SYSTEM_DEFAULTS: System = {
   updatedAt: '2026-01-01T00:00:00Z',
   deletedAt: null,
   lastCheckedAt: null,
+  category: null,
 }
 
 export function createMockSystem(overrides?: Partial<System>): System {

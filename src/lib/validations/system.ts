@@ -1,5 +1,20 @@
 import { z } from 'zod'
 
+// Category constants (Story 4-B)
+export const SYSTEM_CATEGORIES = [
+  'dxt_smart_platform',
+  'dxt_solutions',
+  'dxt_game',
+] as const
+
+export type SystemCategory = (typeof SYSTEM_CATEGORIES)[number]
+
+export const CATEGORY_LABELS: Record<SystemCategory, string> = {
+  dxt_smart_platform: 'DxT Smart Platform',
+  dxt_solutions: 'DxT Solutions',
+  dxt_game: 'DxT Game',
+}
+
 // Input schema for creating a new system (AC: #3, #4)
 export const createSystemSchema = z.object({
   name: z.string().min(1, 'Name required').max(100, 'Name must be 100 characters or less'),
@@ -10,6 +25,7 @@ export const createSystemSchema = z.object({
     .optional()
     .or(z.literal('')),
   enabled: z.boolean().default(true),
+  category: z.enum(SYSTEM_CATEGORIES).nullable().optional(),
 })
 
 // Use z.input for form input type (allows optional with defaults)
@@ -33,6 +49,7 @@ export const systemSchema = z.object({
   updatedAt: z.string(),
   deletedAt: z.string().nullable(),
   lastCheckedAt: z.string().nullable(),
+  category: z.string().nullable(),
 })
 
 export type System = z.infer<typeof systemSchema>
@@ -48,6 +65,7 @@ export const updateSystemSchema = z.object({
     .optional()
     .or(z.literal('')),
   enabled: z.boolean(),
+  category: z.enum(SYSTEM_CATEGORIES).nullable().optional(),
 })
 
 export type UpdateSystemInput = z.infer<typeof updateSystemSchema>

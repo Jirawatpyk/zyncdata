@@ -26,7 +26,7 @@ import { Switch } from '@/components/ui/switch'
 import { Button } from '@/components/ui/button'
 import { Loader2, Plus } from 'lucide-react'
 import { toast } from 'sonner'
-import { createSystemSchema } from '@/lib/validations/system'
+import { createSystemSchema, SYSTEM_CATEGORIES, CATEGORY_LABELS } from '@/lib/validations/system'
 import { useCreateSystem, useUploadLogo } from '@/lib/admin/mutations/systems'
 import LogoUpload from './LogoUpload'
 
@@ -65,6 +65,7 @@ export default function AddSystemDialog({
       url: '',
       description: '',
       enabled: true,
+      category: null,
     },
   })
 
@@ -198,6 +199,33 @@ export default function AddSystemDialog({
                     />
                   </FormControl>
                   <FormMessage data-testid="description-error" />
+                </FormItem>
+              )}
+            />
+
+            {/* Category field */}
+            <FormField
+              control={form.control}
+              name="category"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Category</FormLabel>
+                  <FormControl>
+                    <select
+                      className="flex min-h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      value={field.value ?? ''}
+                      onChange={(e) => field.onChange(e.target.value || null)}
+                      data-testid="system-category-select"
+                    >
+                      <option value="">None (uncategorized)</option>
+                      {SYSTEM_CATEGORIES.map((cat) => (
+                        <option key={cat} value={cat}>
+                          {CATEGORY_LABELS[cat]}
+                        </option>
+                      ))}
+                    </select>
+                  </FormControl>
+                  <FormMessage />
                 </FormItem>
               )}
             />

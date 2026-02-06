@@ -55,6 +55,7 @@ const MOCK_SYSTEM_DB = {
   updated_at: '2026-01-01T00:00:00Z',
   deleted_at: null,
   last_checked_at: null,
+  category: null,
 }
 
 describe('createSystem', () => {
@@ -428,6 +429,7 @@ describe('reorderSystems', () => {
       updatedAt: '2026-01-01T00:00:00Z',
       deletedAt: null,
       lastCheckedAt: null,
+      category: null,
     },
     {
       id: TEST_UUID,
@@ -443,6 +445,7 @@ describe('reorderSystems', () => {
       updatedAt: '2026-01-01T00:00:00Z',
       deletedAt: null,
       lastCheckedAt: null,
+      category: null,
     },
   ]
 

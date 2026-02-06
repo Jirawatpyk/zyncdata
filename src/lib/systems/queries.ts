@@ -4,7 +4,7 @@ import { toCamelCase } from '@/lib/utils/transform'
 import { z } from 'zod'
 
 export const SYSTEM_SELECT_COLUMNS =
-  'id, name, url, logo_url, description, status, response_time, display_order, enabled, created_at, updated_at, deleted_at, last_checked_at'
+  'id, name, url, logo_url, description, status, response_time, display_order, enabled, created_at, updated_at, deleted_at, last_checked_at, category'
 
 export async function getSystemByName(name: string): Promise<System | null> {
   const supabase = await createClient()
@@ -20,6 +20,19 @@ export async function getSystemByName(name: string): Promise<System | null> {
   if (!data) return null
 
   return systemSchema.parse(toCamelCase<System>(data))
+}
+
+/**
+ * Get enabled systems grouped by category.
+ * Systems with NULL category go to 'other' bucket.
+ */
+export async function getEnabledSystemsByCategory(): Promise<Record<string, System[]>> {
+  const systems = await getEnabledSystems()
+  return systems.reduce<Record<string, System[]>>((acc, s) => {
+    const key = s.category ?? 'other'
+    ;(acc[key] ??= []).push(s)
+    return acc
+  }, {})
 }
 
 export async function getEnabledSystems(): Promise<System[]> {

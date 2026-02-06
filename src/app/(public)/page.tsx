@@ -1,10 +1,12 @@
 import { Suspense } from 'react'
 import type { Metadata } from 'next'
-import { getEnabledSystems } from '@/lib/systems/queries'
+import { getEnabledSystemsByCategory } from '@/lib/systems/queries'
 import { getLandingPageContent } from '@/lib/content/queries'
+import { SYSTEM_CATEGORIES, CATEGORY_LABELS } from '@/lib/validations/system'
 import Footer from '@/components/layouts/Footer'
 import Hero from '@/app/_components/Hero'
 import PillarsSection from '@/app/_components/PillarsSection'
+import CategoryTabs from '@/app/_components/CategoryTabs'
 import SystemCard from '@/components/patterns/SystemCard'
 import GridSkeleton from '@/app/_components/GridSkeleton'
 import FadeInOnScroll from '@/components/animations/FadeInOnScroll'
@@ -23,10 +25,19 @@ export const metadata: Metadata = {
   },
 }
 
-async function SystemGrid() {
-  const systems = await getEnabledSystems()
+async function SystemsByCategory() {
+  const grouped = await getEnabledSystemsByCategory()
 
-  if (systems.length === 0) {
+  // Build visible tabs in order: defined categories + 'other' if exists
+  const tabOrder = [...SYSTEM_CATEGORIES, 'other'] as const
+  const visibleTabs = tabOrder
+    .filter((key) => grouped[key] && grouped[key].length > 0)
+    .map((key) => ({
+      key,
+      label: key === 'other' ? 'Other' : CATEGORY_LABELS[key as keyof typeof CATEGORY_LABELS],
+    }))
+
+  if (visibleTabs.length === 0) {
     return (
       <p className="py-12 text-center text-lg text-gray-600">
         No systems available
@@ -34,21 +45,32 @@ async function SystemGrid() {
     )
   }
 
+  // Build children record — Server Component content for each tab
+  const tabContent: Record<string, React.ReactNode> = {}
+  for (const tab of visibleTabs) {
+    const systems = grouped[tab.key] ?? []
+    tabContent[tab.key] = (
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {systems.map((system, index) => (
+          <FadeInOnScroll key={system.id} delay={index * 100}>
+            <SystemCard
+              name={system.name}
+              url={system.url}
+              logoUrl={system.logoUrl}
+              description={system.description}
+              status={system.status}
+              lastCheckedAt={system.lastCheckedAt}
+            />
+          </FadeInOnScroll>
+        ))}
+      </div>
+    )
+  }
+
   return (
-    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-      {systems.map((system, index) => (
-        <FadeInOnScroll key={system.id} delay={index * 100}>
-          <SystemCard
-            name={system.name}
-            url={system.url}
-            logoUrl={system.logoUrl}
-            description={system.description}
-            status={system.status}
-            lastCheckedAt={system.lastCheckedAt}
-          />
-        </FadeInOnScroll>
-      ))}
-    </div>
+    <CategoryTabs tabs={visibleTabs}>
+      {tabContent}
+    </CategoryTabs>
   )
 }
 
@@ -80,7 +102,7 @@ export default async function Home() {
               </div>
             </FadeInOnScroll>
             <Suspense fallback={<GridSkeleton />}>
-              <SystemGrid />
+              <SystemsByCategory />
             </Suspense>
           </div>
         </section>

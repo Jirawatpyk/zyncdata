@@ -83,6 +83,7 @@ const MOCK_SYSTEM = {
   enabled: true,
   createdAt: '2026-01-01T00:00:00Z',
   updatedAt: '2026-01-01T00:00:00Z',
+  category: null,
   deletedAt: null,
   lastCheckedAt: null,
 }

@@ -74,8 +74,8 @@ development_status:
   # Epic 4: Content & Branding Management (2 landing page + 4 CMS + 1 deferred)
   epic-4: in-progress
   4-A-landing-page-pillars-section: done                    # Replace About/Intro with 4 Pillars
-  4-B-system-category-layers: in-progress              # Group systems into 3 category layers + CMS update
-  4-1-content-section-editor-with-wysiwyg: backlog
+  4-B-system-category-layers: review                    # Group systems into 3 category layers + CMS update
+  4-1-content-section-editor-with-wysiwyg: ready-for-dev
   4-2-theme-branding-customization: backlog
   4-3-preview-mode-client-side: backlog
   4-4-publish-changes: backlog

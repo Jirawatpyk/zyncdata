@@ -5,10 +5,10 @@ vi.mock('@/lib/supabase/server', () => ({
 }))
 
 import { createClient } from '@/lib/supabase/server'
-import { getEnabledSystems, getSystemByName, getSystems } from '@/lib/systems/queries'
+import { getEnabledSystems, getEnabledSystemsByCategory, getSystemByName, getSystems } from '@/lib/systems/queries'
 
 const EXPECTED_SELECT =
-  'id, name, url, logo_url, description, status, response_time, display_order, enabled, created_at, updated_at, deleted_at, last_checked_at'
+  'id, name, url, logo_url, description, status, response_time, display_order, enabled, created_at, updated_at, deleted_at, last_checked_at, category'
 
 describe('getEnabledSystems', () => {
   const mockSelect = vi.fn()
@@ -34,6 +34,7 @@ describe('getEnabledSystems', () => {
           updated_at: '2026-01-01T00:00:00Z',
           deleted_at: null,
           last_checked_at: null,
+          category: 'dxt_smart_platform',
         },
         {
           id: 'a23bc45d-67ef-8901-b234-5c6d7e8f9012',
@@ -49,6 +50,7 @@ describe('getEnabledSystems', () => {
           updated_at: '2026-01-02T00:00:00Z',
           deleted_at: null,
           last_checked_at: null,
+          category: 'dxt_solutions',
         },
       ],
       error: null,
@@ -89,6 +91,7 @@ describe('getEnabledSystems', () => {
       updatedAt: '2026-01-01T00:00:00Z',
       deletedAt: null,
       lastCheckedAt: null,
+      category: 'dxt_smart_platform',
     })
     expect(result[1].logoUrl).toBeNull()
     expect(result[1].status).toBe('coming_soon')
@@ -136,6 +139,7 @@ describe('getSystemByName', () => {
         updated_at: '2026-01-01T00:00:00Z',
         deleted_at: null,
         last_checked_at: null,
+        category: 'dxt_solutions',
       },
       error: null,
     })
@@ -175,6 +179,7 @@ describe('getSystemByName', () => {
       updatedAt: '2026-01-01T00:00:00Z',
       deletedAt: null,
       lastCheckedAt: null,
+      category: 'dxt_solutions',
     })
   })
 
@@ -217,6 +222,7 @@ describe('getSystems', () => {
           updated_at: '2026-01-01T00:00:00Z',
           deleted_at: null,
           last_checked_at: null,
+          category: 'dxt_smart_platform',
         },
         {
           id: 'a23bc45d-67ef-8901-b234-5c6d7e8f9012',
@@ -232,6 +238,7 @@ describe('getSystems', () => {
           updated_at: '2026-01-02T00:00:00Z',
           deleted_at: null,
           last_checked_at: null,
+          category: null,
         },
       ],
       error: null,
@@ -275,6 +282,7 @@ describe('getSystems', () => {
       updatedAt: '2026-01-01T00:00:00Z',
       deletedAt: null,
       lastCheckedAt: null,
+      category: 'dxt_smart_platform',
     })
     expect(result[1]).toEqual({
       id: 'a23bc45d-67ef-8901-b234-5c6d7e8f9012',
@@ -290,6 +298,7 @@ describe('getSystems', () => {
       updatedAt: '2026-01-02T00:00:00Z',
       deletedAt: null,
       lastCheckedAt: null,
+      category: null,
     })
   })
 
@@ -307,5 +316,61 @@ describe('getSystems', () => {
     })
 
     await expect(getSystems()).rejects.toThrow()
+  })
+})
+
+describe('getEnabledSystemsByCategory', () => {
+  const mockSelect = vi.fn()
+  const mockEq = vi.fn()
+  const mockIs = vi.fn()
+  const mockOrder = vi.fn()
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockIs.mockReturnValue({ order: mockOrder })
+    mockEq.mockReturnValue({ is: mockIs })
+    mockSelect.mockReturnValue({ eq: mockEq })
+    vi.mocked(createClient).mockResolvedValue({
+      from: vi.fn().mockReturnValue({ select: mockSelect }),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase client mock requires partial type
+    } as any)
+  })
+
+  it('should group systems by category', async () => {
+    mockOrder.mockResolvedValue({
+      data: [
+        { id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', name: 'S1', url: 'https://s1.com', logo_url: null, description: null, status: null, response_time: null, display_order: 0, enabled: true, created_at: '2026-01-01T00:00:00Z', updated_at: '2026-01-01T00:00:00Z', deleted_at: null, last_checked_at: null, category: 'dxt_smart_platform' },
+        { id: 'a23bc45d-67ef-8901-b234-5c6d7e8f9012', name: 'S2', url: 'https://s2.com', logo_url: null, description: null, status: null, response_time: null, display_order: 1, enabled: true, created_at: '2026-01-01T00:00:00Z', updated_at: '2026-01-01T00:00:00Z', deleted_at: null, last_checked_at: null, category: 'dxt_smart_platform' },
+        { id: 'b34cd56e-78ef-4012-a345-6d7e8f901234', name: 'S3', url: 'https://s3.com', logo_url: null, description: null, status: null, response_time: null, display_order: 2, enabled: true, created_at: '2026-01-01T00:00:00Z', updated_at: '2026-01-01T00:00:00Z', deleted_at: null, last_checked_at: null, category: 'dxt_solutions' },
+      ],
+      error: null,
+    })
+
+    const result = await getEnabledSystemsByCategory()
+
+    expect(Object.keys(result)).toEqual(['dxt_smart_platform', 'dxt_solutions'])
+    expect(result.dxt_smart_platform).toHaveLength(2)
+    expect(result.dxt_solutions).toHaveLength(1)
+  })
+
+  it('should put null-category systems in other bucket', async () => {
+    mockOrder.mockResolvedValue({
+      data: [
+        { id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', name: 'S1', url: 'https://s1.com', logo_url: null, description: null, status: null, response_time: null, display_order: 0, enabled: true, created_at: '2026-01-01T00:00:00Z', updated_at: '2026-01-01T00:00:00Z', deleted_at: null, last_checked_at: null, category: null },
+      ],
+      error: null,
+    })
+
+    const result = await getEnabledSystemsByCategory()
+
+    expect(result.other).toHaveLength(1)
+    expect(result.other[0].name).toBe('S1')
+  })
+
+  it('should return empty object when no systems', async () => {
+    mockOrder.mockResolvedValue({ data: [], error: null })
+
+    const result = await getEnabledSystemsByCategory()
+    expect(result).toEqual({})
   })
 })
