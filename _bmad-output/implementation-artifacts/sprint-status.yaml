@@ -69,7 +69,7 @@ development_status:
   3-6-toggle-system-visibility: done
   3-7-system-logo-management: done
   3-8-live-status-indicators-on-landing-page: done
-  epic-3-retrospective: optional
+  epic-3-retrospective: done
 
   # Epic 4: Content & Branding Management (4 stories + 1 deferred)
   epic-4: backlog
