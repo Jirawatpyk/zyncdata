@@ -58,6 +58,41 @@ export type Database = {
         }
         Relationships: []
       }
+      health_checks: {
+        Row: {
+          checked_at: string
+          error_message: string | null
+          id: string
+          response_time: number | null
+          status: string
+          system_id: string
+        }
+        Insert: {
+          checked_at?: string
+          error_message?: string | null
+          id?: string
+          response_time?: number | null
+          status: string
+          system_id: string
+        }
+        Update: {
+          checked_at?: string
+          error_message?: string | null
+          id?: string
+          response_time?: number | null
+          status?: string
+          system_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "health_checks_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "systems"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       landing_page_content: {
         Row: {
           content: Json

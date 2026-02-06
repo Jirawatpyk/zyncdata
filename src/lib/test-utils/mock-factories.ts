@@ -6,6 +6,7 @@
  */
 
 import type { System } from '@/lib/validations/system'
+import type { HealthCheck } from '@/lib/validations/health'
 import type { User } from '@supabase/supabase-js'
 import type { AuthResult } from '@/lib/auth/guard'
 import type { HeroContent, PillarsContent, FooterContent } from '@/lib/validations/content'
@@ -41,6 +42,31 @@ export function createMockSystemList(count: number, overrides?: Partial<System>)
       name: `System ${i + 1}`,
       url: `https://system-${i + 1}.example.com`,
       displayOrder: i,
+      ...overrides,
+    }),
+  )
+}
+
+// ── Health Check ───────────────────────────────────────────────────
+
+const HEALTH_CHECK_DEFAULTS: HealthCheck = {
+  id: 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d',
+  systemId: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+  status: 'success',
+  responseTime: 150,
+  errorMessage: null,
+  checkedAt: '2026-01-01T00:00:00Z',
+}
+
+export function createMockHealthCheck(overrides?: Partial<HealthCheck>): HealthCheck {
+  return { ...HEALTH_CHECK_DEFAULTS, ...overrides }
+}
+
+export function createMockHealthCheckList(count: number, overrides?: Partial<HealthCheck>): HealthCheck[] {
+  return Array.from({ length: count }, (_, i) =>
+    createMockHealthCheck({
+      id: `00000000-0000-4000-b000-${String(i + 1).padStart(12, '0')}`,
+      checkedAt: new Date(Date.now() - i * 300_000).toISOString(),
       ...overrides,
     }),
   )
