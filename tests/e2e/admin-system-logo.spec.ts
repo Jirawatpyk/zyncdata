@@ -92,7 +92,7 @@ test.describe('System Logo Management', () => {
         // Wait for upload success toast
         await expect(adminPage.getByText('Logo uploaded')).toBeVisible({ timeout: 10000 })
       } finally {
-        fs.unlinkSync(testPngPath)
+        try { fs.unlinkSync(testPngPath) } catch { /* Windows file lock — cleaned up on next run */ }
       }
     })
 
@@ -122,7 +122,7 @@ test.describe('System Logo Management', () => {
         // Wait for remove success toast
         await expect(adminPage.getByText('Logo removed')).toBeVisible({ timeout: 10000 })
       } finally {
-        fs.unlinkSync(testPngPath)
+        try { fs.unlinkSync(testPngPath) } catch { /* Windows file lock — cleaned up on next run */ }
       }
     })
 

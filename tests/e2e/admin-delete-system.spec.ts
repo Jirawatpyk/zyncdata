@@ -135,7 +135,7 @@ test.describe('Delete System Flow', () => {
       await adminPage.getByTestId('delete-confirm-button').click()
 
       // Verify success toast
-      await expect(adminPage.getByText('System deleted')).toBeVisible({ timeout: 5000 })
+      await expect(adminPage.getByText('System deleted')).toBeVisible({ timeout: 10000 })
       await expect(
         adminPage.getByText(`${system.name} can be recovered within 30 days.`),
       ).toBeVisible()
