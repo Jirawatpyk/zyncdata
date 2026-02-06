@@ -1,6 +1,6 @@
 # Story 3.8: Live Status Indicators on Landing Page
 
-Status: review
+Status: done
 
 ## Story
 
@@ -21,7 +21,7 @@ so that I know which systems are online and how recent the data is before clicki
 - [x] Task 1: Database migration — add `last_checked_at` column to `systems` table (AC: #1)
   - [x] 1.1 Create migration `20260207000002_add_last_checked_at_to_systems.sql`
   - [x] 1.2 Add `last_checked_at TIMESTAMPTZ NULL` column
-  - [x] 1.3 Update seed.sql to include `last_checked_at` values (NULL for all — no health checks yet)
+  - [x] 1.3 ~~Update seed.sql~~ — Not needed: `last_checked_at` defaults to NULL; no seed.sql change required
   - [x] 1.4 Regenerate database types (`npm run db:types`)
 - [x] Task 2: Update validation schema and types (AC: #1)
   - [x] 2.1 Add `lastCheckedAt: z.string().nullable()` to `systemSchema` in `src/lib/validations/system.ts`
@@ -282,6 +282,13 @@ Claude Opus 4.6
 - Updated 10+ test files with `lastCheckedAt: null` / `last_checked_at: null` in System mock objects to fix Zod validation and TypeScript type errors after adding the field to `systemSchema`
 - RelativeTime test: corrected expected value for 90s → "1 minute ago" (not "2 minutes ago") — `Intl.RelativeTimeFormat` rounds 1.5 to 1
 - SystemCard tests: separated fake-timer tests from axe accessibility tests to avoid axe timeout conflicts
+- [CR] database.ts was NOT regenerated in original commit — fixed by running `npx supabase gen types typescript --local`
+- [CR] Offline StatusBadge lacked visual prominence per AC #3 — added `font-semibold` + `border-red-300`
+- [CR] `Intl.RelativeTimeFormat` was instantiated on every call — memoized with Map cache
+- [CR] StatusBadge tests used fragile `JSON.stringify(jsx)` pattern — rewritten to use `render()` + DOM queries
+- [CR] 6 files in commit missing from File List — added (admin dialog tests, E2E fixes, sprint-status)
+- [CR] `admin-delete-system.spec.ts` included unrelated ISR fix — documented as scope note
+- [CR] Task 1.3 seed.sql update was unnecessary (NULL default) — task description corrected
 
 ### Completion Notes List
 
@@ -299,6 +306,7 @@ Claude Opus 4.6
 ### Change Log
 
 - 2026-02-06: Story 3.8 implementation complete — all 8 tasks done, all tests passing
+- 2026-02-06: Code review — fixed 8 issues (1 HIGH, 5 MEDIUM, 2 LOW): database.ts regenerated, offline visual prominence added, RTF memoized, tests rewritten, File List corrected
 
 ### File List
 
@@ -332,3 +340,10 @@ Claude Opus 4.6
 - `src/app/api/systems/[id]/logo/route.test.ts` — added `lastCheckedAt` to mock
 - `src/app/api/systems/[id]/logo/route.guardrails.test.ts` — added `lastCheckedAt` to mock
 - `src/app/api/systems/reorder/route.test.ts` — added `lastCheckedAt` to mock
+- `src/app/admin/systems/_components/AddSystemDialog.test.tsx` — added `lastCheckedAt` to mock
+- `src/app/admin/systems/_components/DeleteSystemDialog.test.tsx` — added `lastCheckedAt` to mock
+- `src/app/admin/systems/_components/EditSystemDialog.test.tsx` — added `lastCheckedAt` to mock
+- `src/app/admin/systems/_components/SystemsList.test.tsx` — added `lastCheckedAt` to mock
+- `src/lib/admin/mutations/systems.ts` — added `lastCheckedAt: null` to optimistic create
+- `src/lib/admin/mutations/systems.test.tsx` — added `lastCheckedAt` to mock
+- `tests/e2e/admin-delete-system.spec.ts` — ISR reload fix (scope note: unrelated to story 3.8, fixes flaky delete verification)

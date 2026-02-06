@@ -22,7 +22,7 @@ const STATUS_CONFIG = {
   offline: {
     label: 'Offline',
     dot: 'bg-red-500',
-    badge: 'bg-red-50 text-red-700 border-red-200',
+    badge: 'bg-red-50 text-red-700 border-red-300 font-semibold',
     ping: false,
   },
   unknown: {

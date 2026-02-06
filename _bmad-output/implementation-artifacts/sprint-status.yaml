@@ -60,7 +60,7 @@ development_status:
   epic-2-retrospective: done
 
   # Epic 3: System Portfolio Management (8 stories)
-  epic-3: in-progress
+  epic-3: done
   3-1-cms-admin-panel-layout-navigation: done
   3-2-add-new-system: done
   3-3-edit-system-information: done
@@ -68,7 +68,7 @@ development_status:
   3-5-reorder-systems-display: done
   3-6-toggle-system-visibility: done
   3-7-system-logo-management: done
-  3-8-live-status-indicators-on-landing-page: review
+  3-8-live-status-indicators-on-landing-page: done
   epic-3-retrospective: optional
 
   # Epic 4: Content & Branding Management (4 stories + 1 deferred)

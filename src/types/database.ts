@@ -96,6 +96,7 @@ export type Database = {
           display_order: number
           enabled: boolean
           id: string
+          last_checked_at: string | null
           logo_url: string | null
           name: string
           response_time: number | null
@@ -110,6 +111,7 @@ export type Database = {
           display_order?: number
           enabled?: boolean
           id?: string
+          last_checked_at?: string | null
           logo_url?: string | null
           name: string
           response_time?: number | null
@@ -124,6 +126,7 @@ export type Database = {
           display_order?: number
           enabled?: boolean
           id?: string
+          last_checked_at?: string | null
           logo_url?: string | null
           name?: string
           response_time?: number | null
