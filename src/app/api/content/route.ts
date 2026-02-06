@@ -9,7 +9,8 @@ export async function GET() {
   try {
     const content = await getLandingPageContent()
     return NextResponse.json({ data: content, error: null })
-  } catch {
+  } catch (error) {
+    console.error('[GET /api/content]', error instanceof Error ? error.message : error)
     return NextResponse.json(
       {
         data: null,

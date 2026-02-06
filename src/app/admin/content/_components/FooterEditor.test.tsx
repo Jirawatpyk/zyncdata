@@ -104,4 +104,36 @@ describe('FooterEditor', () => {
 
     expect(onOpenChange).toHaveBeenCalledWith(false)
   })
+
+  it('submits form data with useUpdateSection', async () => {
+    const { useUpdateSection } = await import('@/lib/admin/mutations/content')
+    const mockMutateAsync = vi.fn().mockResolvedValue({})
+    vi.mocked(useUpdateSection).mockReturnValue({
+      mutateAsync: mockMutateAsync,
+      isPending: false,
+    } as unknown as ReturnType<typeof useUpdateSection>)
+
+    const user = userEvent.setup()
+    const onOpenChange = vi.fn()
+    const content = createMockFooterContent({
+      copyright: 'Original Copyright',
+      contactEmail: 'test@test.com',
+      links: [{ label: 'Privacy', url: '/privacy' }],
+    })
+    renderEditor({ content, onOpenChange })
+
+    // Modify copyright to make form dirty
+    const copyrightInput = screen.getByTestId('footer-copyright-input')
+    await user.clear(copyrightInput)
+    await user.type(copyrightInput, 'Updated Copyright')
+
+    await user.click(screen.getByTestId('footer-submit-button'))
+
+    await waitFor(() => {
+      expect(mockMutateAsync).toHaveBeenCalledWith({
+        section: 'footer',
+        content: expect.objectContaining({ copyright: 'Updated Copyright' }),
+      })
+    })
+  })
 })

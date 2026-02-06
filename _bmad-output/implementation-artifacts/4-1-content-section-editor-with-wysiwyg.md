@@ -1,6 +1,6 @@
 # Story 4.1: Content Section Editor with WYSIWYG (Hero, Pillars, Footer)
 
-Status: review
+Status: done
 
 ## Story
 
@@ -453,7 +453,9 @@ Recent commits show consistent patterns:
 
 | Change | Reason | Impact |
 |--------|--------|--------|
-| (none) | - | - |
+| `useWatch` refactor in AddSystemDialog/EditSystemDialog | Performance optimization — prevent full form re-renders on name watch | 2 files, no behavior change |
+| Unused `System` type import cleanup in 5 system test files | Lint hygiene during development | 5 test files, no behavior change |
+| favicon.ico → icon.svg migration | Branding update | 2 files (1 deleted, 1 added) |
 
 ## Dev Agent Record
 
@@ -484,6 +486,9 @@ Claude Opus 4.6 (claude-opus-4-6)
 ### Change Log
 
 - 2026-02-06: Implemented content section editor with WYSIWYG (Story 4.1) — all 13 tasks complete, 73 new tests added (1095 total)
+- 2026-02-06: Code review fixes — XSS attribute value escaping + href protocol whitelist, .min(1) on all required schema fields, isDirty submit button guards, sr-only labels on remove buttons, 44px Add buttons, error logging in API routes, submit tests for PillarsEditor/FooterEditor, optimistic update + rollback tests for mutation hook (9 new tests, 1105 total)
+- 2026-02-06: L1 fix — added TipTap Placeholder extension + CSS + placeholder prop on Hero description editor
+- 2026-02-06: L3 fix — replaced native `<select>` with shadcn `<Select>` in PillarsEditor, AddSystemDialog, EditSystemDialog (1144 tests, all pass)
 
 ### File List
 
@@ -491,7 +496,7 @@ Claude Opus 4.6 (claude-opus-4-6)
 - `src/app/api/content/route.ts` — GET all content API route
 - `src/app/api/content/[section]/route.ts` — PATCH section content API route
 - `src/lib/content/mutations.ts` — updateSectionContent server mutation
-- `src/lib/content/sanitize.ts` — XSS sanitization (stripHtml, sanitizeHtml)
+- `src/lib/content/sanitize.ts` — XSS sanitization (stripHtml, sanitizeHtml) with protocol whitelist + attribute escaping
 - `src/lib/admin/queries/content.ts` — contentQueryOptions (React Query)
 - `src/lib/admin/mutations/content.ts` — useUpdateSection hook
 - `src/components/patterns/DynamicTipTapEditor.tsx` — dynamic import wrapper
@@ -501,24 +506,40 @@ Claude Opus 4.6 (claude-opus-4-6)
 - `src/app/admin/content/_components/HeroEditor.tsx` — hero section editor dialog
 - `src/app/admin/content/_components/PillarsEditor.tsx` — pillars section editor dialog
 - `src/app/admin/content/_components/FooterEditor.tsx` — footer section editor dialog
+- `src/app/icon.svg` — SVG favicon (branding update)
+- `src/components/ui/select.tsx` — shadcn Select component (dark: removed, min-h-11, full width)
 
 **New test files:**
 - `src/app/api/content/route.guardrails.test.ts` — GET route guardrails (9 tests)
 - `src/app/api/content/[section]/route.guardrails.test.ts` — PATCH route guardrails (12 tests)
 - `src/lib/content/mutations.test.ts` — server mutation tests (4 tests)
-- `src/lib/content/sanitize.test.ts` — XSS sanitization tests (14 tests)
-- `src/lib/admin/mutations/content.test.tsx` — useUpdateSection hook tests (3 tests)
+- `src/lib/content/sanitize.test.ts` — XSS sanitization tests (20 tests)
+- `src/lib/admin/mutations/content.test.tsx` — useUpdateSection hook tests (5 tests)
 - `src/app/admin/content/_components/HeroEditor.test.tsx` — hero editor tests (5 tests)
-- `src/app/admin/content/_components/PillarsEditor.test.tsx` — pillars editor tests (6 tests)
-- `src/app/admin/content/_components/FooterEditor.test.tsx` — footer editor tests (6 tests)
+- `src/app/admin/content/_components/PillarsEditor.test.tsx` — pillars editor tests (7 tests)
+- `src/app/admin/content/_components/FooterEditor.test.tsx` — footer editor tests (7 tests)
 - `src/components/patterns/TipTapEditor.test.tsx` — TipTap headless tests (9 tests)
 
 **Modified files:**
-- `src/components/patterns/TipTapEditor.tsx` — enhanced with Link, H3, OL, Link dialog, aria-labels, min-h-11, disabled prop
+- `src/components/patterns/TipTapEditor.tsx` — enhanced with Link, H3, OL, Link dialog, aria-labels, min-h-11, disabled prop, placeholder support
 - `src/app/admin/content/page.tsx` — replaced empty state with Suspense + ContentManager
-- `src/lib/test-utils/mock-factories.ts` — added content mock factories
+- `src/lib/validations/content.ts` — added .min(1) to all required fields (hero, pillars, footer schemas)
+- `src/lib/test-utils.ts` — createQueryWrapper now accepts optional QueryClient parameter
+- `src/app/admin/systems/_components/AddSystemDialog.tsx` — useWatch refactor (scope addition), native select → shadcn Select (L3)
+- `src/app/admin/systems/_components/EditSystemDialog.tsx` — useWatch refactor (scope addition), native select → shadcn Select (L3)
+- `src/app/admin/systems/_components/SystemsList.test.tsx` — removed unused import (scope addition)
+- `src/app/api/systems/[id]/logo/route.test.ts` — removed unused import (scope addition)
+- `src/app/api/systems/[id]/route.test.ts` — removed unused import (scope addition)
+- `src/app/api/systems/[id]/toggle/route.test.ts` — removed unused import (scope addition)
+- `src/app/api/systems/reorder/route.test.ts` — removed unused import (scope addition)
+- `src/app/api/systems/route.test.ts` — removed unused import (scope addition)
+- `src/components/patterns/DynamicTipTapEditor.tsx` — added placeholder prop passthrough
+- `src/app/admin/content/_components/HeroEditor.tsx` — added placeholder on description WYSIWYG
+- `src/app/globals.css` — added TipTap placeholder CSS
+- `package.json` — added @tiptap/extension-link, @tiptap/extension-placeholder dependencies
 
 **Deleted files:**
 - `src/app/admin/content/_components/ContentEditor.tsx` — D2 spike replaced by DynamicTipTapEditor
+- `src/app/favicon.ico` — replaced by icon.svg
 
 <!-- P2 (Epic 3 Retro): MANDATORY - run `npm run story-metrics` and verify File List matches actual changes before marking done -->

@@ -4,6 +4,7 @@ import { useCallback, useState } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Link from '@tiptap/extension-link'
+import Placeholder from '@tiptap/extension-placeholder'
 import { cn } from '@/lib/utils'
 
 interface TipTapEditorProps {
@@ -11,9 +12,10 @@ interface TipTapEditorProps {
   onChange?: (html: string) => void
   className?: string
   disabled?: boolean
+  placeholder?: string
 }
 
-export function TipTapEditor({ content = '', onChange, className, disabled = false }: TipTapEditorProps) {
+export function TipTapEditor({ content = '', onChange, className, disabled = false, placeholder: placeholderText }: TipTapEditorProps) {
   const [showLinkInput, setShowLinkInput] = useState(false)
   const [linkUrl, setLinkUrl] = useState('')
 
@@ -21,6 +23,7 @@ export function TipTapEditor({ content = '', onChange, className, disabled = fal
     extensions: [
       StarterKit,
       Link.configure({ openOnClick: false }),
+      ...(placeholderText ? [Placeholder.configure({ placeholder: placeholderText })] : []),
     ],
     content,
     editable: !disabled,

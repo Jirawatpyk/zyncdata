@@ -18,9 +18,9 @@ const sectionSchemas: Record<ValidSection, z.ZodTypeAny> = {
   // Footer input uses camelCase (contactEmail) from the form.
   // We validate with a raw schema (no transform) then reverse-map manually.
   footer: z.object({
-    copyright: z.string(),
+    copyright: z.string().min(1, 'Copyright is required'),
     contactEmail: z.string().email().optional(),
-    links: z.array(z.object({ label: z.string(), url: z.string() })),
+    links: z.array(z.object({ label: z.string().min(1, 'Label is required'), url: z.string().min(1, 'URL is required') })),
   }),
 }
 
@@ -118,6 +118,7 @@ export async function PATCH(
       )
     }
 
+    console.error('[PATCH /api/content/section]', error instanceof Error ? error.message : error)
     return NextResponse.json(
       {
         data: null,

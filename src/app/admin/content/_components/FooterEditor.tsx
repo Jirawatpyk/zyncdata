@@ -145,7 +145,6 @@ export default function FooterEditor({ open, onOpenChange, content }: FooterEdit
                 <Button
                   type="button"
                   variant="outline"
-                  size="sm"
                   onClick={() => append({ label: '', url: '' })}
                   data-testid="add-link-button"
                 >
@@ -193,6 +192,7 @@ export default function FooterEditor({ open, onOpenChange, content }: FooterEdit
                     data-testid={`remove-link-${index}`}
                   >
                     <Trash2 className="h-4 w-4 text-destructive" />
+                    <span className="sr-only">Remove link {index + 1}</span>
                   </Button>
                 </div>
               ))}
@@ -209,7 +209,7 @@ export default function FooterEditor({ open, onOpenChange, content }: FooterEdit
               </Button>
               <Button
                 type="submit"
-                disabled={form.formState.isSubmitting}
+                disabled={form.formState.isSubmitting || !form.formState.isDirty}
                 data-testid="footer-submit-button"
               >
                 {form.formState.isSubmitting ? (

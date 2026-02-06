@@ -60,12 +60,59 @@ describe('sanitizeHtml', () => {
     expect(result).not.toContain('javascript:')
   })
 
+  it('removes data: URLs from href', () => {
+    const input = '<a href="data:text/html,<script>alert(1)</script>">Click</a>'
+    const result = sanitizeHtml(input)
+
+    expect(result).not.toContain('data:')
+    expect(result).not.toContain('href')
+  })
+
+  it('removes vbscript: URLs from href', () => {
+    const input = '<a href="vbscript:alert(1)">Click</a>'
+    const result = sanitizeHtml(input)
+
+    expect(result).not.toContain('vbscript:')
+    expect(result).not.toContain('href')
+  })
+
+  it('escapes double quotes in attribute values to prevent breakout', () => {
+    // Simulate attribute value containing a double quote (parsed from malformed HTML)
+    const input = '<a href=\'https://example.com?a=1"onclick="alert(1)\'>Link</a>'
+    const result = sanitizeHtml(input)
+
+    // Double quote in the value should be escaped to &quot;
+    expect(result).toContain('&quot;')
+    expect(result).not.toContain('onclick="alert')
+  })
+
   it('preserves safe link tags with href', () => {
     const input = '<a href="https://example.com">Link</a>'
     const result = sanitizeHtml(input)
 
     expect(result).toContain('href="https://example.com"')
     expect(result).toContain('<a')
+  })
+
+  it('allows mailto: links', () => {
+    const input = '<a href="mailto:test@example.com">Email</a>'
+    const result = sanitizeHtml(input)
+
+    expect(result).toContain('href="mailto:test@example.com"')
+  })
+
+  it('allows relative URLs in href', () => {
+    const input = '<a href="/about">About</a>'
+    const result = sanitizeHtml(input)
+
+    expect(result).toContain('href="/about"')
+  })
+
+  it('allows anchor hash links', () => {
+    const input = '<a href="#section">Jump</a>'
+    const result = sanitizeHtml(input)
+
+    expect(result).toContain('href="#section"')
   })
 
   it('strips disallowed tags (div, span, img, iframe)', () => {

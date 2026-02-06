@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 import { Loader2, Plus, Trash2 } from 'lucide-react'
 import { pillarsContentSchema, type PillarsContent } from '@/lib/validations/content'
@@ -123,7 +124,6 @@ export default function PillarsEditor({ open, onOpenChange, content }: PillarsEd
                 <Button
                   type="button"
                   variant="outline"
-                  size="sm"
                   onClick={() => append({ title: '', description: '', url: null, icon: '' })}
                   data-testid="add-pillar-button"
                 >
@@ -155,6 +155,7 @@ export default function PillarsEditor({ open, onOpenChange, content }: PillarsEd
                         data-testid={`remove-pillar-${index}`}
                       >
                         <Trash2 className="h-4 w-4 text-destructive" />
+                        <span className="sr-only">Remove pillar {index + 1}</span>
                       </Button>
                     )}
                   </div>
@@ -211,20 +212,24 @@ export default function PillarsEditor({ open, onOpenChange, content }: PillarsEd
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Icon</FormLabel>
-                        <FormControl>
-                          <select
-                            className="flex min-h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                            value={field.value ?? ''}
-                            onChange={(e) => field.onChange(e.target.value || undefined)}
-                          >
-                            <option value="">None</option>
+                        <Select
+                          onValueChange={(value) => field.onChange(value === 'none' ? undefined : value)}
+                          value={field.value ?? 'none'}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="None" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="none">None</SelectItem>
                             {ICON_OPTIONS.map((icon) => (
-                              <option key={icon} value={icon}>
+                              <SelectItem key={icon} value={icon}>
                                 {icon}
-                              </option>
+                              </SelectItem>
                             ))}
-                          </select>
-                        </FormControl>
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -244,7 +249,7 @@ export default function PillarsEditor({ open, onOpenChange, content }: PillarsEd
               </Button>
               <Button
                 type="submit"
-                disabled={form.formState.isSubmitting}
+                disabled={form.formState.isSubmitting || !form.formState.isDirty}
                 data-testid="pillars-submit-button"
               >
                 {form.formState.isSubmitting ? (

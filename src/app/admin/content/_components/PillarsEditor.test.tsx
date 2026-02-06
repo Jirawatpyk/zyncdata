@@ -96,4 +96,35 @@ describe('PillarsEditor', () => {
 
     expect(onOpenChange).toHaveBeenCalledWith(false)
   })
+
+  it('submits form data with useUpdateSection', async () => {
+    const { useUpdateSection } = await import('@/lib/admin/mutations/content')
+    const mockMutateAsync = vi.fn().mockResolvedValue({})
+    vi.mocked(useUpdateSection).mockReturnValue({
+      mutateAsync: mockMutateAsync,
+      isPending: false,
+    } as unknown as ReturnType<typeof useUpdateSection>)
+
+    const user = userEvent.setup()
+    const onOpenChange = vi.fn()
+    const content = createMockPillarsContent({
+      heading: 'Test Heading',
+      items: [{ title: 'P1', description: 'D1', url: null }],
+    })
+    renderEditor({ content, onOpenChange })
+
+    // Modify heading to make form dirty
+    const headingInput = screen.getByTestId('pillars-heading-input')
+    await user.clear(headingInput)
+    await user.type(headingInput, 'Updated Heading')
+
+    await user.click(screen.getByTestId('pillars-submit-button'))
+
+    await waitFor(() => {
+      expect(mockMutateAsync).toHaveBeenCalledWith({
+        section: 'pillars',
+        content: expect.objectContaining({ heading: 'Updated Heading' }),
+      })
+    })
+  })
 })

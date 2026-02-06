@@ -127,6 +127,7 @@ export default function HeroEditor({ open, onOpenChange, content }: HeroEditorPr
                       content={field.value}
                       onChange={field.onChange}
                       disabled={form.formState.isSubmitting}
+                      placeholder="Enter hero description..."
                     />
                   </FormControl>
                   <FormMessage />
@@ -145,7 +146,7 @@ export default function HeroEditor({ open, onOpenChange, content }: HeroEditorPr
               </Button>
               <Button
                 type="submit"
-                disabled={form.formState.isSubmitting}
+                disabled={form.formState.isSubmitting || !form.formState.isDirty}
                 data-testid="hero-submit-button"
               >
                 {form.formState.isSubmitting ? (

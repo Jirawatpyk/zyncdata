@@ -15,6 +15,7 @@ interface DynamicTipTapEditorProps {
   onChange?: (html: string) => void
   className?: string
   disabled?: boolean
+  placeholder?: string
 }
 
 export function DynamicTipTapEditor(props: DynamicTipTapEditorProps) {

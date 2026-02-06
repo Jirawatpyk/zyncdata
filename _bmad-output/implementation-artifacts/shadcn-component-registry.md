@@ -42,6 +42,7 @@ Components with project-specific modifications. If shadcn overwrites these, cust
 |-----------|------|---------------|-------|
 | **Button** | `src/components/ui/button.tsx` | `min-h-11` (44px WCAG touch target) | Epic 2 P2 |
 | **Input** | `src/components/ui/input.tsx` | `min-h-11` (44px WCAG touch target) | Epic 2 P2 |
+| **Select** | `src/components/ui/select.tsx` | `dark:` removed, `w-full`, `min-h-11`, removed `data-[size]` variants | Epic 4 L3 |
 
 ### How to add entries
 

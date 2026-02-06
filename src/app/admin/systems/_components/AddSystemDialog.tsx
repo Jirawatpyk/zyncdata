@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { Button } from '@/components/ui/button'
 import { Loader2, Plus } from 'lucide-react'
@@ -212,21 +213,24 @@ export default function AddSystemDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Category</FormLabel>
-                  <FormControl>
-                    <select
-                      className="flex min-h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                      value={field.value ?? ''}
-                      onChange={(e) => field.onChange(e.target.value || null)}
-                      data-testid="system-category-select"
-                    >
-                      <option value="">None (uncategorized)</option>
+                  <Select
+                    onValueChange={(value) => field.onChange(value === 'none' ? null : value)}
+                    value={field.value ?? 'none'}
+                  >
+                    <FormControl>
+                      <SelectTrigger data-testid="system-category-select">
+                        <SelectValue placeholder="None (uncategorized)" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="none">None (uncategorized)</SelectItem>
                       {SYSTEM_CATEGORIES.map((cat) => (
-                        <option key={cat} value={cat}>
+                        <SelectItem key={cat} value={cat}>
                           {CATEGORY_LABELS[cat]}
-                        </option>
+                        </SelectItem>
                       ))}
-                    </select>
-                  </FormControl>
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}

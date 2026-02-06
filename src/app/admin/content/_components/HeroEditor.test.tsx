@@ -50,16 +50,18 @@ describe('HeroEditor', () => {
 
   it('shows validation errors for empty required fields', async () => {
     const user = userEvent.setup()
-    renderEditor({ content: createMockHeroContent({ title: '', subtitle: '', description: '' }) })
+    const content = createMockHeroContent({ title: 'Has Title', subtitle: 'Has Sub', description: 'Has Desc' })
+    renderEditor({ content })
 
-    // Clear title and submit
+    // Clear title to make it empty and dirty
     const titleInput = screen.getByTestId('hero-title-input')
     await user.clear(titleInput)
     await user.click(screen.getByTestId('hero-submit-button'))
 
-    // Zod string() with no min() won't trigger validation error for empty string
-    // but the form should still attempt submission
-    expect(screen.getByTestId('hero-editor-form')).toBeInTheDocument()
+    // Now with .min(1) validation, empty title triggers error
+    await waitFor(() => {
+      expect(screen.getByText('Title is required')).toBeInTheDocument()
+    })
   })
 
   it('renders the WYSIWYG editor for description field', () => {
@@ -91,12 +93,17 @@ describe('HeroEditor', () => {
     const content = createMockHeroContent({ title: 'Original', subtitle: 'Sub', description: '<p>Desc</p>' })
     renderEditor({ content, onOpenChange })
 
+    // Modify title to make form dirty (isDirty check on submit button)
+    const titleInput = screen.getByTestId('hero-title-input')
+    await user.clear(titleInput)
+    await user.type(titleInput, 'Updated Title')
+
     await user.click(screen.getByTestId('hero-submit-button'))
 
     await waitFor(() => {
       expect(mockMutateAsync).toHaveBeenCalledWith({
         section: 'hero',
-        content: expect.objectContaining({ title: 'Original' }),
+        content: expect.objectContaining({ title: 'Updated Title' }),
       })
     })
   })

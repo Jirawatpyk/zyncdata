@@ -33,6 +33,18 @@ const ALLOWED_ATTRS: Record<string, Set<string>> = {
   a: new Set(['href', 'target', 'rel']),
 }
 
+/** Allowlist of safe URL protocols for href attributes */
+function isSafeHref(url: string): boolean {
+  const normalized = url.trim().toLowerCase()
+  return (
+    normalized.startsWith('http://') ||
+    normalized.startsWith('https://') ||
+    normalized.startsWith('mailto:') ||
+    normalized.startsWith('#') ||
+    normalized.startsWith('/')
+  )
+}
+
 export function sanitizeHtml(input: string): string {
   // Remove script tags and their content entirely
   let result = input.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
@@ -40,8 +52,6 @@ export function sanitizeHtml(input: string): string {
   result = result.replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, '')
   // Remove event handlers (on*)
   result = result.replace(/\s+on\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]*)/gi, '')
-  // Remove javascript: URLs
-  result = result.replace(/href\s*=\s*["']javascript:[^"']*["']/gi, '')
 
   // Filter tags: keep allowed, strip disallowed
   result = result.replace(/<\/?([a-zA-Z][a-zA-Z0-9]*)\b([^>]*)>/g, (match, tag: string, attrs: string) => {
@@ -62,9 +72,14 @@ export function sanitizeHtml(input: string): string {
     while ((attrMatch = attrRegex.exec(attrs)) !== null) {
       const attrName = attrMatch[1].toLowerCase()
       const attrValue = attrMatch[2] ?? attrMatch[3] ?? attrMatch[4]
-      if (allowedAttrs.has(attrName)) {
-        filteredAttrs.push(`${attrName}="${attrValue}"`)
-      }
+      if (!allowedAttrs.has(attrName)) continue
+
+      // Protocol whitelist for href — block javascript:, data:, vbscript: etc.
+      if (attrName === 'href' && !isSafeHref(attrValue)) continue
+
+      // Escape double quotes in attribute values to prevent breakout
+      const escapedValue = attrValue.replace(/"/g, '&quot;')
+      filteredAttrs.push(`${attrName}="${escapedValue}"`)
     }
 
     if (match.startsWith('</')) return `</${lowerTag}>`
