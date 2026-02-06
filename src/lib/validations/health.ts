@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+export const HEALTH_CHECK_SELECT = 'id, system_id, status, response_time, error_message, checked_at'
+
 export const HEALTH_CHECK_STATUSES = ['success', 'failure'] as const
 export type HealthCheckStatus = (typeof HEALTH_CHECK_STATUSES)[number]
 

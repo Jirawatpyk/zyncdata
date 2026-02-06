@@ -1,9 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
-import { healthCheckSchema, type HealthCheck } from '@/lib/validations/health'
+import { healthCheckSchema, HEALTH_CHECK_SELECT, type HealthCheck } from '@/lib/validations/health'
 import { toCamelCase } from '@/lib/utils/transform'
 import { z } from 'zod'
-
-const HEALTH_CHECK_SELECT = 'id, system_id, status, response_time, error_message, checked_at'
 
 export async function getRecentHealthChecks(
   systemId: string,

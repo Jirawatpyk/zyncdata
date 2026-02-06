@@ -267,6 +267,54 @@ describe('runAllHealthChecks', () => {
     expect(results[1].status).toBe('failure')
   })
 
+  it('should continue processing when recordHealthCheck throws for one system', async () => {
+    vi.mocked(checkSystemHealth)
+      .mockResolvedValueOnce({
+        systemId: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+        status: 'success',
+        responseTime: 100,
+        errorMessage: null,
+        checkedAt: '2026-01-01T00:00:00Z',
+      })
+      .mockResolvedValueOnce({
+        systemId: 'b58dc20c-69dd-5483-b678-1f13c3d4e590',
+        status: 'success',
+        responseTime: 200,
+        errorMessage: null,
+        checkedAt: '2026-01-01T00:00:00Z',
+      })
+
+    // First system's DB insert fails
+    mockInsertSingle
+      .mockResolvedValueOnce({ data: null, error: { message: 'DB error' } })
+      .mockResolvedValueOnce({
+        data: {
+          id: 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d',
+          system_id: 'b58dc20c-69dd-5483-b678-1f13c3d4e590',
+          status: 'success',
+          response_time: 200,
+          error_message: null,
+          checked_at: '2026-01-01T00:00:00Z',
+        },
+        error: null,
+      })
+
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    const results = await runAllHealthChecks()
+
+    // Both results returned despite DB error on first
+    expect(results).toHaveLength(2)
+    expect(consoleSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Failed to record result for system'),
+      expect.anything(),
+    )
+    // revalidatePath still called
+    expect(revalidatePath).toHaveBeenCalledWith('/')
+
+    consoleSpy.mockRestore()
+  })
+
   it('should throw when fetching systems fails', async () => {
     mockIs.mockResolvedValue({ data: null, error: { message: 'Connection failed' } })
 

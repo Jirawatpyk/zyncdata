@@ -1,13 +1,16 @@
 import { createServiceClient } from '@/lib/supabase/service'
-import { healthCheckSchema, type HealthCheck, type HealthCheckResult } from '@/lib/validations/health'
+import {
+  healthCheckSchema,
+  HEALTH_CHECK_SELECT,
+  type HealthCheck,
+  type HealthCheckResult,
+} from '@/lib/validations/health'
 import { toCamelCase } from '@/lib/utils/transform'
 import { checkSystemHealth } from '@/lib/health/check'
 import { revalidatePath } from 'next/cache'
 import type { Database } from '@/types/database'
 
 type HealthCheckInsert = Database['public']['Tables']['health_checks']['Insert']
-
-const HEALTH_CHECK_SELECT = 'id, system_id, status, response_time, error_message, checked_at'
 
 export async function recordHealthCheck(result: HealthCheckResult): Promise<HealthCheck> {
   const supabase = createServiceClient()
@@ -75,16 +78,25 @@ export async function runAllHealthChecks(): Promise<HealthCheckResult[]> {
     if (result.status === 'fulfilled') {
       const checkResult = result.value
 
-      await recordHealthCheck(checkResult)
+      try {
+        await recordHealthCheck(checkResult)
 
-      if (checkResult.status === 'success') {
-        await updateSystemHealthStatus(checkResult.systemId, 'online', checkResult.responseTime)
-      } else {
-        // On failure: update last_checked_at but do NOT change status (Story 5.2 handles offline)
-        await updateSystemHealthStatus(checkResult.systemId, null, null)
+        if (checkResult.status === 'success') {
+          await updateSystemHealthStatus(checkResult.systemId, 'online', checkResult.responseTime)
+        } else {
+          // On failure: update last_checked_at but do NOT change status (Story 5.2 handles offline)
+          await updateSystemHealthStatus(checkResult.systemId, null, null)
+        }
+      } catch (dbError) {
+        console.error(
+          `[health-check] Failed to record result for system ${checkResult.systemId}:`,
+          dbError,
+        )
       }
 
       healthResults.push(checkResult)
+    } else {
+      console.warn('[health-check] Unexpected rejection:', result.reason)
     }
   }
 

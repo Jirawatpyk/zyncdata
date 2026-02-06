@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { checkSystemHealth } from '@/lib/health/check'
 
 describe('checkSystemHealth', () => {
-  const system = { id: 'sys-1', url: 'https://example.com' }
+  const system = { id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', url: 'https://example.com' }
 
   beforeEach(() => {
     vi.useFakeTimers()
@@ -21,7 +21,7 @@ describe('checkSystemHealth', () => {
 
     const result = await checkSystemHealth(system)
 
-    expect(result.systemId).toBe('sys-1')
+    expect(result.systemId).toBe('f47ac10b-58cc-4372-a567-0e02b2c3d479')
     expect(result.status).toBe('success')
     expect(result.responseTime).toBeTypeOf('number')
     expect(result.responseTime).toBeGreaterThanOrEqual(0)
@@ -130,7 +130,7 @@ describe('checkSystemHealth', () => {
 
     expect(result.status).toBe('failure')
     expect(result.errorMessage).toContain('Unknown error')
-    expect(result.systemId).toBe('sys-1')
+    expect(result.systemId).toBe('f47ac10b-58cc-4372-a567-0e02b2c3d479')
   })
 
   it('should include checkedAt timestamp in ISO format', async () => {

@@ -29,6 +29,8 @@ export async function checkSystemHealth(
 
     const responseTime = Date.now() - start
 
+    // 3xx check is a safety net — redirect: 'follow' resolves most 3xx,
+    // but some edge cases (e.g., 304 Not Modified) don't redirect and aren't covered by response.ok
     if (response.ok || (response.status >= 300 && response.status < 400)) {
       return {
         systemId: system.id,

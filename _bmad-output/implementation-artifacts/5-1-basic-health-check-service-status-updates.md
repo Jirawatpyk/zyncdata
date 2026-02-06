@@ -1,6 +1,6 @@
 # Story 5.1: Basic Health Check Service & Status Updates
 
-Status: dev-complete
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -433,13 +433,24 @@ Claude Opus 4.6
 ### Completion Notes List
 
 - All 14 tasks complete
-- 39 new tests across 4 test files (check: 11, mutations: 12, queries: 10, route: 6)
-- Full suite: 1144 tests across 99 files — all passing
+- 40 new tests across 4 test files (check: 11, mutations: 13, queries: 10, route: 6)
+- Full suite: 1145 tests across 99 files — all passing
 - type-check: 0 errors
 - lint: 0 errors
 - Bundle budget: all routes within limits
 - 4th Supabase client factory added: `service.ts` (synchronous, bypasses RLS)
 - `updateSystemHealthStatus` uses `status: string | null` — null means don't update (failure path per AC #3)
+
+### Code Review Fixes (2026-02-06)
+
+- **M1**: Added `console.warn` for rejected `Promise.allSettled` results in `runAllHealthChecks`
+- **M2**: Extracted `HEALTH_CHECK_SELECT` to shared constant in `validations/health.ts`, removed duplication from `mutations.ts` and `queries.ts`
+- **M3**: Accepted as-is — Supabase clients are lightweight HTTP wrappers; multiple instances per cron run (1+2N) is acceptable for 5-min interval with <20 systems
+- **M4**: Added comment explaining 3xx safety net in `check.ts` (304 Not Modified edge case)
+- **M5**: Wrapped `recordHealthCheck`/`updateSystemHealthStatus` calls in try/catch inside `runAllHealthChecks` loop — one DB error no longer blocks remaining systems; `revalidatePath` always runs; added test
+- **L1**: Deleted leftover `.gitkeep` from `src/lib/health/`
+- **L2**: Fixed non-UUID `sys-1` test ID in `check.test.ts` — now uses proper UUID consistent with all other test files
+- **L3**: Added `import 'server-only'` to `service.ts` — build-time guard against client-side imports
 
 ### File List
 
@@ -462,3 +473,4 @@ Claude Opus 4.6
 | `.env.local.example` | EDIT |
 | `src/lib/test-utils/mock-factories.ts` | EDIT |
 | `src/types/database.ts` | REGEN |
+| `src/lib/health/.gitkeep` | DELETE (CR) |
