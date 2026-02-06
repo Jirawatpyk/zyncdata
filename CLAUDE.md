@@ -149,9 +149,11 @@ npm run test         # Vitest (unit + integration)
 npm run test:e2e     # Playwright
 npm run test:coverage # Vitest with coverage
 npm run test:a11y    # Playwright accessibility
-npm run db:types     # Regenerate Supabase types
+npm run db:types     # Regenerate Supabase types (safe wrapper with corruption guard)
 npm run type-check   # TypeScript check
 npm run lint         # ESLint
+npm run size         # Per-route bundle budget check
+npm run shadcn:verify # Post-install shadcn component verification
 npm run story-metrics # File list + test counts for story docs
 ```
 

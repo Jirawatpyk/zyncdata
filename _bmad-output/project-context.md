@@ -368,7 +368,9 @@ _This file contains critical rules and patterns that AI agents must follow when 
 - ARIA labels on all icon-only buttons
 
 #### Performance Budgets (Enforced in CI)
-- JavaScript bundle: < 350KB (gzipped) — size-limit enforced in CI
+- Per-route First Load JS (gzip) — `scripts/check-bundle-budget.ts` enforced via `npm run size`
+  - Public routes (landing, auth): ≤ 250 KB
+  - Admin routes (/admin/*): ≤ 350 KB
 - CSS bundle: < 50KB (gzipped)
 - LCP: < 2.5s, FID: < 100ms, CLS: < 0.1
 - System logos: < 10KB each
