@@ -23,7 +23,8 @@ vi.mock('@/lib/systems/queries', () => ({
   }),
 }))
 
-const { requireApiAuth, isAuthError } = await import('@/lib/auth/guard')
+import { requireApiAuth, isAuthError } from '@/lib/auth/guard'
+import { POST } from './route'
 
 describe('POST /api/preview', () => {
   beforeEach(() => {
@@ -38,7 +39,6 @@ describe('POST /api/preview', () => {
     vi.mocked(requireApiAuth).mockResolvedValue(unauthorizedResponse as never)
     vi.mocked(isAuthError).mockReturnValue(true)
 
-    const { POST } = await import('./route')
     const request = new Request('http://localhost/api/preview', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -53,7 +53,6 @@ describe('POST /api/preview', () => {
     vi.mocked(requireApiAuth).mockResolvedValue(createMockAuth())
     vi.mocked(isAuthError).mockReturnValue(false)
 
-    const { POST } = await import('./route')
     const request = new Request('http://localhost/api/preview', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -71,7 +70,6 @@ describe('POST /api/preview', () => {
     vi.mocked(requireApiAuth).mockResolvedValue(createMockAuth())
     vi.mocked(isAuthError).mockReturnValue(false)
 
-    const { POST } = await import('./route')
     const mockContent = createMockLandingPageContent()
     const request = new Request('http://localhost/api/preview', {
       method: 'POST',
@@ -91,7 +89,6 @@ describe('POST /api/preview', () => {
     vi.mocked(requireApiAuth).mockResolvedValue(createMockAuth())
     vi.mocked(isAuthError).mockReturnValue(false)
 
-    const { POST } = await import('./route')
     const mockContent = createMockLandingPageContent({
       hero: { title: 'Custom Title', subtitle: 'Custom Subtitle', description: 'Custom Desc' },
     })
@@ -112,7 +109,6 @@ describe('POST /api/preview', () => {
     vi.mocked(requireApiAuth).mockResolvedValue(createMockAuth())
     vi.mocked(isAuthError).mockReturnValue(false)
 
-    const { POST } = await import('./route')
     const mockContent = createMockLandingPageContent({
       theme: { colorScheme: 'ocean-blue', font: 'inter', logoUrl: null, faviconUrl: null },
     })
@@ -132,7 +128,6 @@ describe('POST /api/preview', () => {
     vi.mocked(requireApiAuth).mockResolvedValue(createMockAuth())
     vi.mocked(isAuthError).mockReturnValue(false)
 
-    const { POST } = await import('./route')
     const mockContent = createMockLandingPageContent({
       footer: { copyright: '2026 Test Corp', contactEmail: 'test@corp.com', links: [] },
     })
@@ -152,7 +147,6 @@ describe('POST /api/preview', () => {
     vi.mocked(requireApiAuth).mockResolvedValue(createMockAuth())
     vi.mocked(isAuthError).mockReturnValue(false)
 
-    const { POST } = await import('./route')
     const request = new Request('http://localhost/api/preview', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -169,7 +163,6 @@ describe('POST /api/preview', () => {
     vi.mocked(requireApiAuth).mockResolvedValue(createMockAuth())
     vi.mocked(isAuthError).mockReturnValue(false)
 
-    const { POST } = await import('./route')
     const request = new Request('http://localhost/api/preview', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -183,11 +176,40 @@ describe('POST /api/preview', () => {
     expect(body.data).toBeNull()
   })
 
+  it('should include Google Fonts link for the selected font', async () => {
+    vi.mocked(requireApiAuth).mockResolvedValue(createMockAuth())
+    vi.mocked(isAuthError).mockReturnValue(false)
+
+    // Default font is 'nunito'
+    const request = new Request('http://localhost/api/preview', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(createMockLandingPageContent()),
+    })
+
+    const response = await POST(request)
+    const body = await response.json()
+    expect(body.data).toContain('fonts.googleapis.com')
+    expect(body.data).toContain('family=Nunito')
+
+    // Test with inter font
+    const interRequest = new Request('http://localhost/api/preview', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(createMockLandingPageContent({
+        theme: { colorScheme: 'dxt-default', font: 'inter', logoUrl: null, faviconUrl: null },
+      })),
+    })
+
+    const interResponse = await POST(interRequest)
+    const interBody = await interResponse.json()
+    expect(interBody.data).toContain('family=Inter')
+  })
+
   it('should escape HTML in content to prevent XSS', async () => {
     vi.mocked(requireApiAuth).mockResolvedValue(createMockAuth())
     vi.mocked(isAuthError).mockReturnValue(false)
 
-    const { POST } = await import('./route')
     const xssPayload = createMockLandingPageContent({
       hero: {
         title: '<script>alert("xss")</script>',

@@ -21,6 +21,25 @@ export async function getRecentHealthChecks(
   return z.array(healthCheckSchema).parse(data.map((row) => toCamelCase<HealthCheck>(row)))
 }
 
+/**
+ * Get the total health check record count for a specific system.
+ * Utility for admin dashboard — verifies pruning is keeping records within bounds.
+ * @param systemId UUID of the system
+ * @returns Number of health check records for this system
+ */
+export async function getHealthCheckCount(systemId: string): Promise<number> {
+  const supabase = await createClient()
+
+  const { count, error } = await supabase
+    .from('health_checks')
+    .select('*', { count: 'exact', head: true })
+    .eq('system_id', systemId)
+
+  if (error) throw error
+
+  return count ?? 0
+}
+
 export async function getLatestHealthCheck(systemId: string): Promise<HealthCheck | null> {
   const supabase = await createClient()
 

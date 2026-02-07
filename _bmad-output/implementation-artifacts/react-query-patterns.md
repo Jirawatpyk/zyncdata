@@ -194,6 +194,63 @@ src/
 
 ---
 
+## Mutation Invocation — `mutateAsync` + try/catch (MANDATORY)
+
+**Origin:** Epic 4 Retrospective Action Item P2 — Story 4-2 found 4 components calling `mutateAsync` without try/catch, causing unhandled promise rejections with no user feedback.
+
+### Rule: Always wrap `mutateAsync` in try/catch
+
+`mutateAsync` returns a promise that **rejects on error**. Unlike `mutate` (fire-and-forget with `onError` callback), `mutateAsync` requires explicit error handling at the call site.
+
+### Correct Pattern
+
+```tsx
+async function handleSave() {
+  try {
+    await updateMutation.mutateAsync(formData)
+    toast.success('Saved successfully')
+    onClose()
+  } catch {
+    // onError callback in mutation definition handles rollback + toast
+    // try/catch prevents unhandled promise rejection
+    // Add call-site-specific recovery here if needed (e.g., keep dialog open)
+  }
+}
+```
+
+### Anti-Pattern (NEVER do this)
+
+```tsx
+// BAD: unhandled promise rejection if mutation fails
+async function handleSave() {
+  await updateMutation.mutateAsync(formData) // 💥 rejects with no catch
+  toast.success('Saved successfully')
+  onClose()
+}
+```
+
+### When to use `mutateAsync` vs `mutate`
+
+| Use case | Method | Why |
+|---|---|---|
+| Need to await completion (sequential logic, close dialog after success) | `mutateAsync` + try/catch | Must handle rejection |
+| Fire-and-forget (button click, toggle) | `mutate` | `onError` callback handles errors |
+| Need return value from mutation | `mutateAsync` + try/catch | Only `mutateAsync` returns data |
+
+### Toast on Validation Failure
+
+When mutation `onError` shows a generic toast, the call-site catch block can add specific recovery:
+
+```tsx
+catch {
+  // Mutation onError already shows toast — no duplicate needed
+  // But keep dialog open so user can fix and retry:
+  setIsSubmitting(false)
+}
+```
+
+---
+
 ## Rules
 
 1. **NEVER import React Query outside `/admin/` routes** — project-context.md rule
@@ -202,3 +259,4 @@ src/
 4. **Mutations always use optimistic update pattern** — cancel → snapshot → update → rollback on error
 5. **Bridge ApiResponse with `unwrapResponse()`** — React Query needs throws for error handling
 6. **No `useState` for QueryClient** — use `isServer` singleton pattern
+7. **`mutateAsync` MUST be wrapped in try/catch** — prevents unhandled promise rejections (Epic 4 P2)

@@ -21,7 +21,10 @@ import {
   incrementConsecutiveFailures,
   resetConsecutiveFailures,
   runAllHealthChecks,
+  withConcurrencyLimit,
   DEFAULT_FAILURE_THRESHOLD,
+  DEFAULT_CONCURRENCY_LIMIT,
+  MAX_JITTER_MS,
 } from '@/lib/health/mutations'
 import type { HealthCheckResult } from '@/lib/validations/health'
 
@@ -258,6 +261,155 @@ describe('DEFAULT_FAILURE_THRESHOLD', () => {
   })
 })
 
+describe('DEFAULT_CONCURRENCY_LIMIT', () => {
+  it('should be 5', () => {
+    expect(DEFAULT_CONCURRENCY_LIMIT).toBe(5)
+  })
+})
+
+describe('MAX_JITTER_MS', () => {
+  it('should be 500', () => {
+    expect(MAX_JITTER_MS).toBe(500)
+  })
+})
+
+describe('withConcurrencyLimit', () => {
+  it('should execute all tasks and return results', async () => {
+    const tasks = [
+      () => Promise.resolve('a'),
+      () => Promise.resolve('b'),
+      () => Promise.resolve('c'),
+    ]
+
+    const results = await withConcurrencyLimit(tasks, 5)
+
+    expect(results).toHaveLength(3)
+    expect(results[0]).toEqual({ status: 'fulfilled', value: 'a' })
+    expect(results[1]).toEqual({ status: 'fulfilled', value: 'b' })
+    expect(results[2]).toEqual({ status: 'fulfilled', value: 'c' })
+  })
+
+  it('should preserve result order matching input task order', async () => {
+    // Task 0 is slow, task 1 is fast — results should still be in [0, 1] order
+    const tasks = [
+      () => new Promise<string>((resolve) => setTimeout(() => resolve('slow'), 50)),
+      () => Promise.resolve('fast'),
+    ]
+
+    const results = await withConcurrencyLimit(tasks, 5)
+
+    expect(results[0]).toEqual({ status: 'fulfilled', value: 'slow' })
+    expect(results[1]).toEqual({ status: 'fulfilled', value: 'fast' })
+  })
+
+  it('should limit concurrent requests to the specified limit', async () => {
+    let activeConcurrent = 0
+    let maxConcurrent = 0
+
+    const createTask = (delay: number) => async () => {
+      activeConcurrent++
+      maxConcurrent = Math.max(maxConcurrent, activeConcurrent)
+      await new Promise((resolve) => setTimeout(resolve, delay))
+      activeConcurrent--
+      return delay
+    }
+
+    // 10 tasks with limit of 5
+    const tasks = Array.from({ length: 10 }, (_, i) => createTask(10 + i))
+    await withConcurrencyLimit(tasks, 5)
+
+    expect(maxConcurrent).toBeLessThanOrEqual(5)
+    expect(maxConcurrent).toBeGreaterThan(1) // Verify parallelism happened
+  })
+
+  it('should handle all tasks completing with limit of 5 and 1 system', async () => {
+    const tasks = [() => Promise.resolve('only-one')]
+
+    const results = await withConcurrencyLimit(tasks, 5)
+
+    expect(results).toHaveLength(1)
+    expect(results[0]).toEqual({ status: 'fulfilled', value: 'only-one' })
+  })
+
+  it('should handle exactly 5 systems (single batch)', async () => {
+    const tasks = Array.from({ length: 5 }, (_, i) => () => Promise.resolve(i))
+
+    const results = await withConcurrencyLimit(tasks, 5)
+
+    expect(results).toHaveLength(5)
+    for (let i = 0; i < 5; i++) {
+      expect(results[i]).toEqual({ status: 'fulfilled', value: i })
+    }
+  })
+
+  it('should handle 10 systems (two batches) correctly', async () => {
+    const tasks = Array.from({ length: 10 }, (_, i) => () => Promise.resolve(i))
+
+    const results = await withConcurrencyLimit(tasks, 5)
+
+    expect(results).toHaveLength(10)
+    for (let i = 0; i < 10; i++) {
+      expect(results[i]).toEqual({ status: 'fulfilled', value: i })
+    }
+  })
+
+  it('should handle 15 systems (three batches) correctly', async () => {
+    const tasks = Array.from({ length: 15 }, (_, i) => () => Promise.resolve(i))
+
+    const results = await withConcurrencyLimit(tasks, 5)
+
+    expect(results).toHaveLength(15)
+    for (let i = 0; i < 15; i++) {
+      expect(results[i]).toEqual({ status: 'fulfilled', value: i })
+    }
+  })
+
+  it('should capture rejected tasks without blocking subsequent batches', async () => {
+    const tasks = [
+      () => Promise.resolve('ok-1'),
+      () => Promise.reject(new Error('fail-batch-1')),
+      () => Promise.resolve('ok-2'),
+      () => Promise.reject(new Error('fail-batch-2')),
+      () => Promise.resolve('ok-3'),
+      // Second batch (limit=5, these are 6+)
+      () => Promise.resolve('ok-4'),
+      () => Promise.resolve('ok-5'),
+    ]
+
+    const results = await withConcurrencyLimit(tasks, 5)
+
+    expect(results).toHaveLength(7)
+    expect(results[0]).toEqual({ status: 'fulfilled', value: 'ok-1' })
+    expect(results[1].status).toBe('rejected')
+    expect(results[2]).toEqual({ status: 'fulfilled', value: 'ok-2' })
+    expect(results[3].status).toBe('rejected')
+    expect(results[4]).toEqual({ status: 'fulfilled', value: 'ok-3' })
+    expect(results[5]).toEqual({ status: 'fulfilled', value: 'ok-4' })
+    expect(results[6]).toEqual({ status: 'fulfilled', value: 'ok-5' })
+  })
+
+  it('should handle empty task array', async () => {
+    const results = await withConcurrencyLimit([], 5)
+
+    expect(results).toEqual([])
+  })
+
+  it('should not drop any tasks', async () => {
+    let completedCount = 0
+    const tasks = Array.from({ length: 12 }, () => async () => {
+      completedCount++
+      return completedCount
+    })
+
+    const results = await withConcurrencyLimit(tasks, 5)
+
+    expect(results).toHaveLength(12)
+    // All results should be fulfilled
+    const fulfilled = results.filter((r) => r.status === 'fulfilled')
+    expect(fulfilled).toHaveLength(12)
+  })
+})
+
 describe('runAllHealthChecks', () => {
   // Complex mock setup: the service client is called multiple times for different tables/operations.
   // We use a stateful factory to dispatch correct mocks based on table + operation sequence.
@@ -297,6 +449,8 @@ describe('runAllHealthChecks', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    // Eliminate jitter randomness in tests — all jitter delays become 0ms
+    vi.spyOn(Math, 'random').mockReturnValue(0)
 
     // Default: two enabled systems with status 'online'
     mockIs.mockResolvedValue({
@@ -534,21 +688,28 @@ describe('runAllHealthChecks', () => {
   })
 
   it('should handle partial failures — one failure does not block others', async () => {
-    vi.mocked(checkSystemHealthWithRetry)
-      .mockResolvedValueOnce({
-        systemId: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
-        status: 'success',
-        responseTime: 100,
-        errorMessage: null,
-        checkedAt: '2026-01-01T00:00:00Z',
-      })
-      .mockResolvedValueOnce({
-        systemId: 'b58dc20c-69dd-5483-b678-1f13c3d4e590',
-        status: 'failure',
-        responseTime: null,
-        errorMessage: 'Request timed out',
-        checkedAt: '2026-01-01T00:00:00Z',
-      })
+    // Use mockImplementation to return results based on system ID (not call order)
+    // because concurrency limiter with jitter may invoke tasks out of order
+    vi.mocked(checkSystemHealthWithRetry).mockImplementation(
+      (system: { id: string; url: string }) => {
+        if (system.id === 'f47ac10b-58cc-4372-a567-0e02b2c3d479') {
+          return Promise.resolve({
+            systemId: system.id,
+            status: 'success',
+            responseTime: 100,
+            errorMessage: null,
+            checkedAt: '2026-01-01T00:00:00Z',
+          })
+        }
+        return Promise.resolve({
+          systemId: system.id,
+          status: 'failure',
+          responseTime: null,
+          errorMessage: 'Request timed out',
+          checkedAt: '2026-01-01T00:00:00Z',
+        })
+      },
+    )
 
     const results = await runAllHealthChecks()
 
@@ -558,26 +719,26 @@ describe('runAllHealthChecks', () => {
   })
 
   it('should continue processing when recordHealthCheck throws for one system', async () => {
-    vi.mocked(checkSystemHealthWithRetry)
-      .mockResolvedValueOnce({
-        systemId: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
-        status: 'success',
-        responseTime: 100,
-        errorMessage: null,
-        checkedAt: '2026-01-01T00:00:00Z',
-      })
-      .mockResolvedValueOnce({
-        systemId: 'b58dc20c-69dd-5483-b678-1f13c3d4e590',
-        status: 'success',
-        responseTime: 200,
-        errorMessage: null,
-        checkedAt: '2026-01-01T00:00:00Z',
-      })
+    // Use mockImplementation for deterministic results regardless of call order
+    vi.mocked(checkSystemHealthWithRetry).mockImplementation(
+      (system: { id: string; url: string }) =>
+        Promise.resolve({
+          systemId: system.id,
+          status: 'success' as const,
+          responseTime: system.id === 'f47ac10b-58cc-4372-a567-0e02b2c3d479' ? 100 : 200,
+          errorMessage: null,
+          checkedAt: '2026-01-01T00:00:00Z',
+        }),
+    )
 
-    // First system's DB insert fails
-    mockInsertSingle
-      .mockResolvedValueOnce({ data: null, error: { message: 'DB error' } })
-      .mockResolvedValueOnce({
+    // First system's DB insert fails, second succeeds
+    let insertCallCount = 0
+    mockInsertSingle.mockImplementation(() => {
+      insertCallCount++
+      if (insertCallCount === 1) {
+        return Promise.resolve({ data: null, error: { message: 'DB error' } })
+      }
+      return Promise.resolve({
         data: {
           id: 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d',
           system_id: 'b58dc20c-69dd-5483-b678-1f13c3d4e590',
@@ -588,6 +749,7 @@ describe('runAllHealthChecks', () => {
         },
         error: null,
       })
+    })
 
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 

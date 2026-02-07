@@ -25,14 +25,11 @@ export default function BrandingManager() {
 
   return (
     <div data-testid="branding-manager">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-foreground">Theme &amp; Branding</h1>
-        <div className="flex items-center gap-2">
-          <Suspense fallback={null}>
-            <PublishButton />
-          </Suspense>
-          <PreviewButton />
-        </div>
+      <div className="mb-4 flex justify-end gap-2">
+        <Suspense fallback={null}>
+          <PublishButton />
+        </Suspense>
+        <PreviewButton />
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">

@@ -14,6 +14,45 @@ type HealthCheckInsert = Database['public']['Tables']['health_checks']['Insert']
 type ServiceClient = ReturnType<typeof createServiceClient>
 
 export const DEFAULT_FAILURE_THRESHOLD = 3
+export const DEFAULT_CONCURRENCY_LIMIT = 5
+export const MAX_JITTER_MS = 500
+
+/**
+ * Execute async tasks with a concurrency limit, preserving result order.
+ * Inline pLimit-style semaphore — avoids external dependency for ~20 lines of code.
+ * @param tasks Array of task factories (thunks)
+ * @param limit Max concurrent tasks
+ * @returns Settled results in same order as input tasks
+ */
+export async function withConcurrencyLimit<T>(
+  tasks: (() => Promise<T>)[],
+  limit: number,
+): Promise<PromiseSettledResult<T>[]> {
+  const results: PromiseSettledResult<T>[] = new Array(tasks.length)
+  const executing = new Set<Promise<void>>()
+
+  for (let i = 0; i < tasks.length; i++) {
+    const index = i
+    const p = tasks[index]()
+      .then((value) => {
+        results[index] = { status: 'fulfilled', value }
+      })
+      .catch((reason: unknown) => {
+        results[index] = { status: 'rejected', reason }
+      })
+      .then(() => {
+        executing.delete(p)
+      })
+    executing.add(p)
+
+    if (executing.size >= limit) {
+      await Promise.race(executing)
+    }
+  }
+
+  await Promise.all(executing)
+  return results
+}
 
 export async function recordHealthCheck(
   result: HealthCheckResult,
@@ -120,8 +159,17 @@ export async function runAllHealthChecks(): Promise<HealthCheckResult[]> {
   if (error) throw error
   if (!systems || systems.length === 0) return []
 
-  const results = await Promise.allSettled(
-    systems.map((system) => checkSystemHealthWithRetry({ id: system.id, url: system.url })),
+  const results = await withConcurrencyLimit(
+    systems.map((system) => () => {
+      // Staggered start: random jitter 0-500ms to prevent thundering herd
+      const jitter = Math.random() * MAX_JITTER_MS
+      return new Promise<HealthCheckResult>((resolve, reject) => {
+        setTimeout(() => {
+          checkSystemHealthWithRetry({ id: system.id, url: system.url }).then(resolve, reject)
+        }, jitter)
+      })
+    }),
+    DEFAULT_CONCURRENCY_LIMIT,
   )
 
   const healthResults: HealthCheckResult[] = []

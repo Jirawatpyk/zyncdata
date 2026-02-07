@@ -16,10 +16,16 @@ so that {{benefit}}.
 
 ## Tasks / Subtasks
 
+<!-- P1 (Epic 4 Retro): SPLITTING THRESHOLD — If this story has 12+ tasks OR touches 4+ architectural layers (e.g., migration + API + UI + tests), it MUST be split into smaller stories before dev begins. Stories exceeding this threshold produce exponentially more defects (ref: Story 4-2 had 16 tasks → 20 issues, 5 HIGH). -->
+
 - [ ] Task 1 (AC: #)
   - [ ] Subtask 1.1
 - [ ] Task 2 (AC: #)
   - [ ] Subtask 2.1
+
+<!-- P3 (Epic 4 Retro): INTEGRATION CONTRACT VERIFICATION — If this story spans migration files + application validation (e.g., MIME types, RLS policies, enum values), add an explicit task:
+- [ ] Verify integration contracts: confirm migration constraints match app-level validation (types, enums, MIME types, RLS patterns)
+-->
 
 ## Dev Notes
 

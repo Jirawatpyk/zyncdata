@@ -117,6 +117,8 @@ export function useUpdateSystem() {
                 description: updates.description ?? null,
                 enabled: updates.enabled,
                 category: updates.category !== undefined ? (updates.category ?? null) : s.category,
+                // Clear soft-delete on restore (matches backend behavior)
+                ...(updates.enabled ? { deletedAt: null } : {}),
               }
             : s,
         ) ?? [],

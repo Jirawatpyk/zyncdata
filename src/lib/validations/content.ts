@@ -61,6 +61,13 @@ export const FONT_FAMILY_MAP: Record<FontOption, string> = {
   'open-sans': "'Open Sans', sans-serif",
 }
 
+/** Google Fonts CSS URLs for iframe/preview contexts where next/font is unavailable */
+export const GOOGLE_FONTS_URL: Record<FontOption, string> = {
+  'nunito': 'https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap',
+  'inter': 'https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap',
+  'open-sans': 'https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap',
+}
+
 export type HeroContent = z.infer<typeof heroContentSchema>
 export type PillarItem = z.infer<typeof pillarItemSchema>
 export type PillarsContent = z.infer<typeof pillarsContentSchema>

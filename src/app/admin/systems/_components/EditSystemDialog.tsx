@@ -47,6 +47,7 @@ export default function EditSystemDialog({
 }: EditSystemDialogProps) {
   const [open, setOpen] = useState(false)
   const [serverError, setServerError] = useState<string | null>(null)
+  const [logoChanged, setLogoChanged] = useState(false)
   const updateSystem = useUpdateSystem()
   const uploadLogo = useUploadLogo()
   const deleteLogo = useDeleteLogo()
@@ -55,7 +56,10 @@ export default function EditSystemDialog({
     uploadLogo.mutate(
       { systemId: system.id, file },
       {
-        onSuccess: () => toast.success('Logo uploaded'),
+        onSuccess: () => {
+          setLogoChanged(true)
+          toast.success('Logo uploaded')
+        },
         onError: (err) => toast.error(`Upload failed: ${err.message}`),
       },
     )
@@ -63,7 +67,10 @@ export default function EditSystemDialog({
 
   const handleLogoRemove = () => {
     deleteLogo.mutate(system.id, {
-      onSuccess: () => toast.success('Logo removed'),
+      onSuccess: () => {
+        setLogoChanged(true)
+        toast.success('Logo removed')
+      },
       onError: () => toast.error('Failed to remove logo'),
     })
   }
@@ -98,6 +105,13 @@ export default function EditSystemDialog({
   }, [open, system, form])
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
+    // Logo-only change: logo already saved via separate mutation, just close dialog
+    if (!form.formState.isDirty && logoChanged) {
+      setOpen(false)
+      onSuccess?.()
+      return
+    }
+
     setServerError(null)
     try {
       await updateSystem.mutateAsync(data)
@@ -123,6 +137,7 @@ export default function EditSystemDialog({
     setOpen(isOpen)
     if (!isOpen) {
       setServerError(null)
+      setLogoChanged(false)
       // Reset form to original system values when dialog closes (AC #5)
       form.reset({
         id: system.id,
@@ -302,7 +317,7 @@ export default function EditSystemDialog({
               </Button>
               <Button
                 type="submit"
-                disabled={form.formState.isSubmitting || !form.formState.isDirty}
+                disabled={form.formState.isSubmitting || (!form.formState.isDirty && !logoChanged)}
                 data-testid="submit-button"
               >
                 {form.formState.isSubmitting ? (

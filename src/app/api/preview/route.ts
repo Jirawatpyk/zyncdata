@@ -8,6 +8,7 @@ import {
   systemsContentSchema,
   themeContentSchema,
   FONT_FAMILY_MAP,
+  GOOGLE_FONTS_URL,
 } from '@/lib/validations/content'
 import { SYSTEM_CATEGORIES, CATEGORY_LABELS } from '@/lib/validations/system'
 import { ErrorCode } from '@/lib/errors/codes'
@@ -115,16 +116,21 @@ function buildPreviewHtml(
       </nav>`
     : ''
 
+  const googleFontsUrl = GOOGLE_FONTS_URL[payload.theme.font]
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Preview - DxT Smart Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="${googleFontsUrl}" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root { ${cssVarStyle}; --font-sans: ${fontVar}; }
-    body { font-family: ${fontFamily}, sans-serif; padding-top: 40px; color: #1f2937; }
+    body { font-family: ${fontFamily}; padding-top: 40px; color: #1f2937; }
   </style>
 </head>
 <body>

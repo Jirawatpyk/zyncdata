@@ -362,6 +362,113 @@ describe('SystemsList', () => {
   })
 
   // =======================
+  // Restore button (BF2)
+  // =======================
+
+  it('should show Restore button for deleted systems', async () => {
+    vi.useRealTimers()
+    const systems = [
+      createMockSystem({
+        id: 'deleted-id',
+        name: 'Deleted System',
+        enabled: false,
+        deletedAt: '2026-02-05T12:00:00Z',
+      }),
+    ]
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ data: systems, error: null }),
+    })
+
+    render(<SystemsList />, { wrapper: createQueryWrapper() })
+
+    await waitFor(() => {
+      expect(screen.getByTestId('restore-system-deleted-id')).toBeInTheDocument()
+    })
+
+    expect(screen.getByTestId('restore-system-deleted-id')).toHaveTextContent('Restore')
+    expect(screen.getByTestId('restore-system-deleted-id')).toHaveAttribute('aria-label', 'Restore Deleted System')
+  })
+
+  it('should NOT show Restore button for active systems', async () => {
+    vi.useRealTimers()
+    const systems = [
+      createMockSystem({ id: 'active-id', name: 'Active System', deletedAt: null }),
+    ]
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ data: systems, error: null }),
+    })
+
+    render(<SystemsList />, { wrapper: createQueryWrapper() })
+
+    await waitFor(() => {
+      expect(screen.getByTestId('system-row-active-id')).toBeInTheDocument()
+    })
+
+    expect(screen.queryByTestId('restore-system-active-id')).not.toBeInTheDocument()
+  })
+
+  it('should call updateSystem with enabled:true on Restore click', async () => {
+    vi.useRealTimers()
+    const deletedSystem = createMockSystem({
+      id: 'deleted-id',
+      name: 'Deleted System',
+      url: 'https://deleted.example.com',
+      description: 'A deleted system',
+      enabled: false,
+      deletedAt: '2026-02-05T12:00:00Z',
+      category: 'dxt_smart_platform',
+    })
+
+    // Initial list fetch
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ data: [deletedSystem], error: null }),
+    })
+
+    render(<SystemsList />, { wrapper: createQueryWrapper() })
+
+    await waitFor(() => {
+      expect(screen.getByTestId('restore-system-deleted-id')).toBeInTheDocument()
+    })
+
+    // Mock the PATCH restore call + subsequent refetch
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () =>
+        Promise.resolve({
+          data: { ...deletedSystem, enabled: true, deletedAt: null },
+          error: null,
+        }),
+    })
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () =>
+        Promise.resolve({
+          data: [{ ...deletedSystem, enabled: true, deletedAt: null }],
+          error: null,
+        }),
+    })
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('restore-system-deleted-id'))
+    })
+
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalledWith(
+        `/api/systems/${deletedSystem.id}`,
+        expect.objectContaining({
+          method: 'PATCH',
+          body: expect.stringContaining('"enabled":true'),
+        }),
+      )
+    })
+  })
+
+  // =======================
   // Reorder buttons (Story 3.5, AC #1, #4)
   // =======================
 

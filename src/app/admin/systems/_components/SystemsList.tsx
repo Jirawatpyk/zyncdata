@@ -2,7 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query'
 import { systemsQueryOptions } from '@/lib/admin/queries/systems'
-import { useReorderSystems, useToggleSystem } from '@/lib/admin/mutations/systems'
+import { useReorderSystems, useToggleSystem, useUpdateSystem } from '@/lib/admin/mutations/systems'
 import LoadingSpinner from '@/components/patterns/LoadingSpinner'
 import SystemsEmptyState from './SystemsEmptyState'
 import AddSystemDialog from './AddSystemDialog'
@@ -10,10 +10,10 @@ import EditSystemDialog from './EditSystemDialog'
 import DeleteSystemDialog from './DeleteSystemDialog'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
-import { ChevronUp, ChevronDown } from 'lucide-react'
+import { ChevronUp, ChevronDown, RotateCcw } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
-import { CATEGORY_LABELS, type SystemCategory } from '@/lib/validations/system'
+import { CATEGORY_LABELS, type System, type SystemCategory } from '@/lib/validations/system'
 
 const CATEGORY_BADGE_COLORS: Record<string, string> = {
   dxt_smart_platform: 'bg-cyan-100 text-cyan-800',
@@ -25,6 +25,7 @@ export default function SystemsList() {
   const { data: systems, isPending, isError } = useQuery(systemsQueryOptions)
   const reorder = useReorderSystems()
   const toggle = useToggleSystem()
+  const updateSystem = useUpdateSystem()
 
   const handleMove = (index: number, direction: 'up' | 'down') => {
     if (!systems) return
@@ -50,6 +51,23 @@ export default function SystemsList() {
       {
         onSuccess: () => toast.success(enabled ? 'System enabled' : 'System disabled'),
         onError: () => toast.error('Failed to toggle system visibility'),
+      },
+    )
+  }
+
+  const handleRestore = (system: System) => {
+    updateSystem.mutate(
+      {
+        id: system.id,
+        name: system.name,
+        url: system.url,
+        description: system.description ?? '',
+        enabled: true,
+        category: system.category as Parameters<typeof updateSystem.mutate>[0]['category'],
+      },
+      {
+        onSuccess: () => toast.success(`${system.name} restored`),
+        onError: () => toast.error('Failed to restore system'),
       },
     )
   }
@@ -155,14 +173,27 @@ export default function SystemsList() {
                   {system.status}
                 </span>
               )}
-              {/* Deleted badge — shown when deletedAt is set */}
+              {/* Restore button + Deleted badge — shown when deletedAt is set */}
               {system.deletedAt != null && (
-                <span
-                  className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700"
-                  data-testid={`deleted-badge-${system.id}`}
-                >
-                  Deleted
-                </span>
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleRestore(system)}
+                    disabled={updateSystem.isPending && updateSystem.variables?.id === system.id}
+                    aria-label={`Restore ${system.name}`}
+                    data-testid={`restore-system-${system.id}`}
+                  >
+                    <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
+                    Restore
+                  </Button>
+                  <span
+                    className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700"
+                    data-testid={`deleted-badge-${system.id}`}
+                  >
+                    Deleted
+                  </span>
+                </>
               )}
               <div className="flex items-center gap-2">
                 <Switch

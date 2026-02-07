@@ -72,7 +72,7 @@ development_status:
   epic-3-retrospective: done
 
   # Epic 4: Content & Branding Management (2 landing page + 4 CMS + 1 deferred)
-  epic-4: in-progress
+  epic-4: done
   4-A-landing-page-pillars-section: done                    # Replace About/Intro with 4 Pillars
   4-B-system-category-layers: done                     # Group systems into 3 category layers + CMS update
   4-1-content-section-editor-with-wysiwyg: done
@@ -80,13 +80,13 @@ development_status:
   4-3-preview-mode-client-side: done
   4-4-publish-changes: done
   4-5-content-version-history-restore: deferred  # DEFERRED TO PHASE 2 — FR74 excluded from MVP per PRD
-  epic-4-retrospective: optional
+  epic-4-retrospective: done
 
   # Epic 5: Health Monitoring & Analytics Dashboard (8 stories)
   epic-5: in-progress
   5-1-basic-health-check-service-status-updates: done
   5-2-failure-detection-retry-logic-recovery: done
-  5-3-health-check-data-pruning-scalability: ready-for-dev
+  5-3-health-check-data-pruning-scalability: in-progress
   5-4-health-monitoring-dashboard: backlog
   5-5-real-time-dashboard-updates: backlog
   5-6-health-check-failure-notifications: backlog

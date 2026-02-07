@@ -492,6 +492,135 @@ describe('EditSystemDialog', () => {
   })
 
   // =======================
+  // Logo-only save (BF1)
+  // =======================
+
+  it('should enable submit button after successful logo upload', async () => {
+    const user = userEvent.setup()
+
+    // Mock logo upload success
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () =>
+        Promise.resolve({
+          data: createMockSystem({ logoUrl: 'https://storage.test/logo.png' }),
+          error: null,
+        }),
+    })
+
+    render(<EditSystemDialog system={defaultSystem} />, {
+      wrapper: createQueryWrapper(),
+    })
+
+    await user.click(screen.getByTestId(`edit-system-${defaultSystem.id}`))
+
+    await waitFor(() => {
+      expect(screen.getByTestId('submit-button')).toBeDisabled()
+    })
+
+    // Simulate logo upload via file input
+    const file = new File(['logo'], 'logo.png', { type: 'image/png' })
+    const fileInput = screen.getByTestId('logo-file-input')
+    await user.upload(fileInput, file)
+
+    // Wait for upload mutation to complete → logoChanged = true → button enabled
+    await waitFor(() => {
+      expect(screen.getByTestId('submit-button')).not.toBeDisabled()
+    })
+  })
+
+  it('should close dialog without calling updateSystem on logo-only save', async () => {
+    const user = userEvent.setup()
+    const onSuccess = vi.fn()
+
+    // Mock logo upload success
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () =>
+        Promise.resolve({
+          data: createMockSystem({ logoUrl: 'https://storage.test/logo.png' }),
+          error: null,
+        }),
+    })
+
+    render(<EditSystemDialog system={defaultSystem} onSuccess={onSuccess} />, {
+      wrapper: createQueryWrapper(),
+    })
+
+    await user.click(screen.getByTestId(`edit-system-${defaultSystem.id}`))
+
+    await waitFor(() => {
+      expect(screen.getByTestId('edit-system-form')).toBeInTheDocument()
+    })
+
+    // Upload logo (no form field changes)
+    const file = new File(['logo'], 'logo.png', { type: 'image/png' })
+    await user.upload(screen.getByTestId('logo-file-input'), file)
+
+    await waitFor(() => {
+      expect(screen.getByTestId('submit-button')).not.toBeDisabled()
+    })
+
+    // Click Save — should close without calling PATCH /api/systems/:id
+    await user.click(screen.getByTestId('submit-button'))
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('edit-system-dialog')).not.toBeInTheDocument()
+    })
+
+    expect(onSuccess).toHaveBeenCalled()
+    // Only the logo POST was called, NOT a PATCH for updateSystem
+    expect(mockFetch).toHaveBeenCalledTimes(1)
+    expect(mockFetch).toHaveBeenCalledWith(
+      expect.stringContaining('/logo'),
+      expect.objectContaining({ method: 'POST' }),
+    )
+  })
+
+  it('should reset logoChanged state when dialog closes', async () => {
+    const user = userEvent.setup()
+
+    // Mock logo upload success
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () =>
+        Promise.resolve({
+          data: createMockSystem({ logoUrl: 'https://storage.test/logo.png' }),
+          error: null,
+        }),
+    })
+
+    render(<EditSystemDialog system={defaultSystem} />, {
+      wrapper: createQueryWrapper(),
+    })
+
+    // Open, upload logo, close via cancel
+    await user.click(screen.getByTestId(`edit-system-${defaultSystem.id}`))
+    await waitFor(() => {
+      expect(screen.getByTestId('edit-system-form')).toBeInTheDocument()
+    })
+
+    const file = new File(['logo'], 'logo.png', { type: 'image/png' })
+    await user.upload(screen.getByTestId('logo-file-input'), file)
+
+    await waitFor(() => {
+      expect(screen.getByTestId('submit-button')).not.toBeDisabled()
+    })
+
+    // Close dialog
+    await user.click(screen.getByTestId('cancel-button'))
+    await waitFor(() => {
+      expect(screen.queryByTestId('edit-system-dialog')).not.toBeInTheDocument()
+    })
+
+    // Reopen — button should be disabled again (logoChanged reset)
+    await user.click(screen.getByTestId(`edit-system-${defaultSystem.id}`))
+    await waitFor(() => {
+      expect(screen.getByTestId('submit-button')).toBeDisabled()
+    })
+  })
+
+  // =======================
   // Accessibility
   // =======================
 
