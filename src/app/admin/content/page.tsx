@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import ContentManager from './_components/ContentManager'
-import ContentLoadingSkeleton from './loading'
+import ContentSkeleton from './_components/ContentSkeleton'
 
 export const metadata = {
   title: 'Content | Admin | zyncdata',
@@ -16,7 +16,7 @@ export default function ContentPage() {
         </p>
       </div>
 
-      <Suspense fallback={<ContentLoadingSkeleton />}>
+      <Suspense fallback={<ContentSkeleton />}>
         <ContentManager />
       </Suspense>
     </div>

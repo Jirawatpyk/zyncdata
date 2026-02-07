@@ -1,12 +1,13 @@
-export default function PreviewLoadingSkeleton() {
+import PreviewSkeleton from './_components/PreviewSkeleton'
+
+export default function PreviewLoading() {
   return (
-    <div className="space-y-4" data-testid="preview-loading-skeleton">
-      <div className="h-11 w-36 animate-pulse rounded bg-slate-200" />
-      <div className="animate-pulse rounded-lg border border-border p-4">
-        <div className="mb-3 h-10 w-full rounded bg-slate-200" />
-        <div className="h-10 w-48 rounded bg-slate-100" />
+    <div className="p-6">
+      <div className="mb-6">
+        <div className="h-8 w-36 animate-pulse rounded bg-muted" />
+        <div className="mt-2 h-4 w-64 animate-pulse rounded bg-muted" />
       </div>
-      <div className="h-[60vh] animate-pulse rounded-lg border border-border bg-slate-100" />
+      <PreviewSkeleton />
     </div>
   )
 }

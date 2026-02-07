@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import PreviewManager from './_components/PreviewManager'
-import PreviewLoadingSkeleton from './loading'
+import PreviewSkeleton from './_components/PreviewSkeleton'
 
 export const metadata = {
   title: 'Preview | Admin | zyncdata',
@@ -16,7 +16,7 @@ export default function PreviewPage() {
         </p>
       </div>
 
-      <Suspense fallback={<PreviewLoadingSkeleton />}>
+      <Suspense fallback={<PreviewSkeleton />}>
         <PreviewManager />
       </Suspense>
     </div>

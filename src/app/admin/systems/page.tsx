@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import { getSystems } from '@/lib/systems/queries'
-import LoadingSpinner from '@/components/patterns/LoadingSpinner'
+import SystemsSkeleton from './_components/SystemsSkeleton'
 import SystemsList from './_components/SystemsList'
 import SystemsEmptyState from './_components/SystemsEmptyState'
 
@@ -30,7 +30,7 @@ export default function SystemsPage() {
       </div>
 
       <div className="rounded-lg border border-border bg-card">
-        <Suspense fallback={<LoadingSpinner />}>
+        <Suspense fallback={<SystemsSkeleton />}>
           <SystemsContent />
         </Suspense>
       </div>
