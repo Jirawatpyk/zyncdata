@@ -12,7 +12,10 @@ export async function publishAllContent(userId: string): Promise<{ publishedAt: 
 
   if (fetchError) throw fetchError
 
-  // Copy draft_content → content for each draft row
+  // Copy draft_content → content for each draft row.
+  // Note: Sequential per-row updates (not a single transaction). Acceptable because:
+  // - Typically 1-4 content sections, so partial publish is recoverable via retry.
+  // - Each section is independent — partial publish doesn't corrupt data.
   for (const row of draftRows ?? []) {
     const { error: updateError } = await supabase
       .from('landing_page_content')
@@ -26,8 +29,10 @@ export async function publishAllContent(userId: string): Promise<{ publishedAt: 
     if (updateError) throw updateError
   }
 
-  // Bust ISR cache — public page re-renders with new content
-  revalidatePath('/')
+  // Bust ISR cache only when content actually changed
+  if ((draftRows ?? []).length > 0) {
+    revalidatePath('/')
+  }
 
   return { publishedAt: new Date().toISOString() }
 }

@@ -165,6 +165,47 @@ describe('PublishButton', () => {
     expect(screen.queryByTestId('draft-badge')).not.toBeInTheDocument()
   })
 
+  it('should keep dialog open on error for retry', async () => {
+    mockMutateAsync.mockRejectedValueOnce(new Error('Publish failed'))
+    const queryClient = createTestQueryClient({ hasDrafts: true, draftSections: ['hero'] })
+
+    render(createElement(PublishButton), { wrapper: createWrapper(queryClient) })
+
+    fireEvent.click(screen.getByTestId('publish-button'))
+
+    await waitFor(() => {
+      expect(screen.getByTestId('publish-confirm')).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByTestId('publish-confirm'))
+
+    await waitFor(() => {
+      expect(mockMutateAsync).toHaveBeenCalledTimes(1)
+    })
+
+    // Dialog stays open on error for retry
+    expect(screen.getByTestId('publish-confirm')).toBeInTheDocument()
+  })
+
+  it('should close dialog on successful publish', async () => {
+    mockMutateAsync.mockResolvedValueOnce({ publishedAt: '2026-02-07T10:00:00Z' })
+    const queryClient = createTestQueryClient({ hasDrafts: true, draftSections: ['hero'] })
+
+    render(createElement(PublishButton), { wrapper: createWrapper(queryClient) })
+
+    fireEvent.click(screen.getByTestId('publish-button'))
+
+    await waitFor(() => {
+      expect(screen.getByTestId('publish-confirm')).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByTestId('publish-confirm'))
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('publish-confirm')).not.toBeInTheDocument()
+    })
+  })
+
   it('should have min-h-11 for touch target', () => {
     const queryClient = createTestQueryClient({ hasDrafts: true, draftSections: ['hero'] })
 

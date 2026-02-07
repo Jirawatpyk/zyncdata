@@ -67,7 +67,7 @@ describe('publishAllContent', () => {
     expect(revalidatePath).toHaveBeenCalledWith('/')
   })
 
-  it('should skip update when no draft rows exist (idempotent)', async () => {
+  it('should skip update and revalidatePath when no draft rows exist (idempotent)', async () => {
     const mockUpdate = vi.fn()
     const mockNot = vi.fn().mockResolvedValue({ data: [], error: null })
     const mockSelect = vi.fn().mockReturnValue({ not: mockNot })
@@ -79,7 +79,7 @@ describe('publishAllContent', () => {
 
     expect(result).toHaveProperty('publishedAt')
     expect(mockUpdate).not.toHaveBeenCalled()
-    expect(revalidatePath).toHaveBeenCalledWith('/')
+    expect(revalidatePath).not.toHaveBeenCalled()
   })
 
   it('should throw on fetch error', async () => {

@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { Upload, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -20,6 +21,7 @@ import { Badge } from '@/components/ui/badge'
 export default function PublishButton() {
   const { data: status } = useSuspenseQuery(publishStatusQueryOptions)
   const publishMutation = usePublishChanges()
+  const [open, setOpen] = useState(false)
 
   const hasDrafts = status.hasDrafts
 
@@ -31,7 +33,7 @@ export default function PublishButton() {
         </Badge>
       )}
 
-      <AlertDialog>
+      <AlertDialog open={open} onOpenChange={setOpen}>
         <AlertDialogTrigger asChild>
           <Button
             variant="default"
@@ -58,8 +60,9 @@ export default function PublishButton() {
                 e.preventDefault()
                 try {
                   await publishMutation.mutateAsync()
+                  setOpen(false)
                 } catch {
-                  // Error toast shown by mutation's onError
+                  // Error toast shown by mutation's onError — dialog stays open for retry
                 }
               }}
               disabled={publishMutation.isPending}

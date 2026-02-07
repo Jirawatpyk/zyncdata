@@ -78,7 +78,7 @@ development_status:
   4-1-content-section-editor-with-wysiwyg: done
   4-2-theme-branding-customization: done
   4-3-preview-mode-client-side: done
-  4-4-publish-changes: review
+  4-4-publish-changes: done
   4-5-content-version-history-restore: deferred  # DEFERRED TO PHASE 2 — FR74 excluded from MVP per PRD
   epic-4-retrospective: optional
 

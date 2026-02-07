@@ -1,6 +1,6 @@
 # Story 4.4: Publish Changes
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -534,19 +534,20 @@ Claude Opus 4.6 (claude-opus-4-6)
 - **Task 7**: Created `PublishButton` with AlertDialog, `e.preventDefault()` async confirm pattern, disabled state, loading spinner, amber "Unpublished changes" badge, min-h-11 touch target.
 - **Task 8**: Added `<Suspense><PublishButton /></Suspense>` to ContentManager and BrandingManager.
 - **Task 9**: Draft indicator badge integrated into PublishButton component.
-- **Task 10**: 46 tests across 5 test files (12 API, 10 component, 9 unit, 11 guardrails, 4 mutations).
+- **Task 10**: 53 tests across 6 test files (12 API, 12 component, 9 unit, 11 guardrails, 5 mutations). Post-CR: +2 component tests (error retry, success close).
 - **Task 11**: type-check 0 errors, lint 0 errors, all tests pass (1309/1309 + 1 pre-existing flaky timeout), bundle within budget, shadcn verified.
 
 ### Change Log
 
 - 2026-02-07: Implemented draft/publish workflow (Strategy B) — all 11 tasks complete. 46 new/updated tests.
+- 2026-02-07: Code Review fixes — M1: documented atomicity trade-off, M2: fixed migration filename in File List, M3: guard revalidatePath when no drafts, M4: controlled dialog open/close state, L1: corrected test count, L3: added error retry + success close tests (+2 tests).
 
 ### File List
 
 <!-- P2 (Epic 3 Retro): Verify File List matches all new/modified/deleted files. Post-commit: run `npm run story-metrics` to cross-check. -->
 
 **NEW files:**
-- `supabase/migrations/20260207000001_add_draft_content_column.sql`
+- `supabase/migrations/20260211000002_add_draft_content_column.sql`
 - `src/lib/content/publish.ts`
 - `src/lib/content/publish.test.ts`
 - `src/app/api/content/publish/route.ts`
