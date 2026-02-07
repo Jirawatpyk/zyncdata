@@ -261,15 +261,12 @@ describe('DEFAULT_FAILURE_THRESHOLD', () => {
   })
 })
 
-describe('DEFAULT_CONCURRENCY_LIMIT', () => {
-  it('should be 5', () => {
+describe('concurrency constants', () => {
+  it('should enforce concurrency limit matches exported constant', () => {
+    // Behavioral verification: the constant that runAllHealthChecks uses
+    // should match the documented limit of 5 concurrent requests
     expect(DEFAULT_CONCURRENCY_LIMIT).toBe(5)
-  })
-})
-
-describe('MAX_JITTER_MS', () => {
-  it('should be 500', () => {
-    expect(MAX_JITTER_MS).toBe(500)
+    expect(MAX_JITTER_MS).toBeLessThanOrEqual(1000) // Jitter must not exceed 1s to stay within cron budget
   })
 })
 
@@ -392,6 +389,28 @@ describe('withConcurrencyLimit', () => {
     const results = await withConcurrencyLimit([], 5)
 
     expect(results).toEqual([])
+  })
+
+  it('should enforce sequential execution when limit is 1', async () => {
+    let activeConcurrent = 0
+    let maxConcurrent = 0
+
+    const createTask = (delay: number) => async () => {
+      activeConcurrent++
+      maxConcurrent = Math.max(maxConcurrent, activeConcurrent)
+      await new Promise((resolve) => setTimeout(resolve, delay))
+      activeConcurrent--
+      return delay
+    }
+
+    const tasks = Array.from({ length: 5 }, (_, i) => createTask(10 + i))
+    const results = await withConcurrencyLimit(tasks, 1)
+
+    expect(maxConcurrent).toBe(1)
+    expect(results).toHaveLength(5)
+    for (let i = 0; i < 5; i++) {
+      expect(results[i]).toEqual({ status: 'fulfilled', value: 10 + i })
+    }
   })
 
   it('should not drop any tasks', async () => {

@@ -160,14 +160,13 @@ export async function runAllHealthChecks(): Promise<HealthCheckResult[]> {
   if (!systems || systems.length === 0) return []
 
   const results = await withConcurrencyLimit(
-    systems.map((system) => () => {
+    systems.map((system) => async () => {
       // Staggered start: random jitter 0-500ms to prevent thundering herd
       const jitter = Math.random() * MAX_JITTER_MS
-      return new Promise<HealthCheckResult>((resolve, reject) => {
-        setTimeout(() => {
-          checkSystemHealthWithRetry({ id: system.id, url: system.url }).then(resolve, reject)
-        }, jitter)
-      })
+      if (jitter > 0) {
+        await new Promise<void>((resolve) => setTimeout(resolve, jitter))
+      }
+      return checkSystemHealthWithRetry({ id: system.id, url: system.url })
     }),
     DEFAULT_CONCURRENCY_LIMIT,
   )

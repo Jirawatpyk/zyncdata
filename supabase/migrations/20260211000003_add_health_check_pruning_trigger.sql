@@ -4,27 +4,17 @@
 
 -- Task 1: Pruning function (AC #1)
 -- Fires AFTER INSERT on health_checks.
--- Counts rows for the inserted system_id and deletes oldest rows exceeding 1000.
+-- Deletes oldest rows exceeding 1000 per system using OFFSET (avoids COUNT(*) scan).
 CREATE OR REPLACE FUNCTION prune_old_health_checks()
 RETURNS TRIGGER AS $$
-DECLARE
-  row_count INTEGER;
-  excess INTEGER;
 BEGIN
-  SELECT COUNT(*) INTO row_count
-  FROM health_checks
-  WHERE system_id = NEW.system_id;
-
-  IF row_count > 1000 THEN
-    excess := row_count - 1000;
-    DELETE FROM health_checks
-    WHERE id IN (
-      SELECT id FROM health_checks
-      WHERE system_id = NEW.system_id
-      ORDER BY checked_at ASC
-      LIMIT excess
-    );
-  END IF;
+  DELETE FROM health_checks
+  WHERE id IN (
+    SELECT id FROM health_checks
+    WHERE system_id = NEW.system_id
+    ORDER BY checked_at DESC
+    OFFSET 1000
+  );
 
   RETURN NULL; -- AFTER trigger, return value is ignored
 END;
