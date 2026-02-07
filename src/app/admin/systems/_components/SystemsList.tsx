@@ -3,7 +3,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { systemsQueryOptions } from '@/lib/admin/queries/systems'
 import { useReorderSystems, useToggleSystem, useUpdateSystem } from '@/lib/admin/mutations/systems'
-import LoadingSpinner from '@/components/patterns/LoadingSpinner'
+import SystemsSkeleton from './SystemsSkeleton'
 import SystemsEmptyState from './SystemsEmptyState'
 import AddSystemDialog from './AddSystemDialog'
 import EditSystemDialog from './EditSystemDialog'
@@ -73,7 +73,7 @@ export default function SystemsList() {
   }
 
   if (isPending) {
-    return <LoadingSpinner />
+    return <SystemsSkeleton />
   }
 
   if (isError) {

@@ -9,23 +9,24 @@ import { MAX_LOGO_SIZE, ALLOWED_LOGO_TYPES } from '@/lib/validations/system'
 
 interface LogoUploadProps {
   currentLogoUrl: string | null
+  pendingPreview: string | null
   systemName: string
   isUploading: boolean
-  onUpload: (file: File) => void
+  onFileSelect: (file: File) => void
   onRemove: () => void
   error?: string | null
 }
 
 export default function LogoUpload({
   currentLogoUrl,
+  pendingPreview,
   systemName,
   isUploading,
-  onUpload,
+  onFileSelect,
   onRemove,
   error,
 }: LogoUploadProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const [preview, setPreview] = useState<string | null>(null)
   const [validationError, setValidationError] = useState<string | null>(null)
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -44,22 +45,17 @@ export default function LogoUpload({
       return
     }
 
-    // Show preview
-    const reader = new FileReader()
-    reader.onload = (event) => setPreview(event.target?.result as string)
-    reader.readAsDataURL(file)
-
-    onUpload(file)
+    // Pass file to parent — parent creates preview + stores file for deferred upload
+    onFileSelect(file)
   }
 
   const handleRemove = () => {
-    setPreview(null)
     setValidationError(null)
     if (fileInputRef.current) fileInputRef.current.value = ''
     onRemove()
   }
 
-  const displayUrl = preview ?? currentLogoUrl
+  const displayUrl = pendingPreview ?? currentLogoUrl
   const displayError = validationError ?? error
 
   return (
@@ -101,9 +97,9 @@ export default function LogoUpload({
               data-testid="upload-logo-button"
             >
               <Upload className="mr-1.5 h-3.5 w-3.5" />
-              {currentLogoUrl ? 'Replace' : 'Upload'}
+              {currentLogoUrl || pendingPreview ? 'Replace' : 'Upload'}
             </Button>
-            {(currentLogoUrl || preview) && (
+            {(currentLogoUrl || pendingPreview) && (
               <Button
                 type="button"
                 variant="ghost"

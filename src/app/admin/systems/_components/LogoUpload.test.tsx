@@ -6,9 +6,10 @@ import LogoUpload from './LogoUpload'
 describe('LogoUpload', () => {
   const defaultProps = {
     currentLogoUrl: null,
+    pendingPreview: null,
     systemName: 'Test System',
     isUploading: false,
-    onUpload: vi.fn(),
+    onFileSelect: vi.fn(),
     onRemove: vi.fn(),
   }
 
@@ -123,8 +124,8 @@ describe('LogoUpload', () => {
       )
     })
 
-    // Should NOT call onUpload
-    expect(defaultProps.onUpload).not.toHaveBeenCalled()
+    // Should NOT call onFileSelect
+    expect(defaultProps.onFileSelect).not.toHaveBeenCalled()
   })
 
   it('should show validation error for file too large', async () => {
@@ -145,10 +146,10 @@ describe('LogoUpload', () => {
       )
     })
 
-    expect(defaultProps.onUpload).not.toHaveBeenCalled()
+    expect(defaultProps.onFileSelect).not.toHaveBeenCalled()
   })
 
-  it('should call onUpload with valid file', async () => {
+  it('should call onFileSelect with valid file', async () => {
     const user = userEvent.setup()
     render(<LogoUpload {...defaultProps} />)
 
@@ -159,7 +160,7 @@ describe('LogoUpload', () => {
 
     await user.upload(fileInput, validFile)
 
-    expect(defaultProps.onUpload).toHaveBeenCalledWith(validFile)
+    expect(defaultProps.onFileSelect).toHaveBeenCalledWith(validFile)
   })
 
   it('should call onRemove when Remove button clicked', async () => {

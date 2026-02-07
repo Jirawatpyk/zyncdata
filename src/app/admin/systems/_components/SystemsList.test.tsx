@@ -18,16 +18,11 @@ describe('SystemsList', () => {
     vi.useRealTimers()
   })
 
-  it('should render loading spinner initially after delay', async () => {
+  it('should render skeleton loading state initially', async () => {
     mockFetch.mockImplementation(() => new Promise(() => {}))
     render(<SystemsList />, { wrapper: createQueryWrapper() })
 
-    // LoadingSpinner has 200ms delay
-    await act(async () => {
-      vi.advanceTimersByTime(200)
-    })
-
-    expect(screen.getByTestId('loading-spinner')).toBeInTheDocument()
+    expect(screen.getByTestId('systems-skeleton')).toBeInTheDocument()
   })
 
   it('should render systems list when data loaded', async () => {

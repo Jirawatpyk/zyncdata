@@ -46,15 +46,20 @@ export default function AddSystemDialog({
   const [open, setOpen] = useState(false)
   const [serverError, setServerError] = useState<string | null>(null)
   const [pendingLogoFile, setPendingLogoFile] = useState<File | null>(null)
+  const [pendingLogoPreview, setPendingLogoPreview] = useState<string | null>(null)
   const createSystem = useCreateSystem()
   const uploadLogo = useUploadLogo()
 
   const handlePendingLogoSelect = (file: File) => {
     setPendingLogoFile(file)
+    const reader = new FileReader()
+    reader.onload = (event) => setPendingLogoPreview(event.target?.result as string)
+    reader.readAsDataURL(file)
   }
 
   const handlePendingLogoRemove = () => {
     setPendingLogoFile(null)
+    setPendingLogoPreview(null)
   }
 
   const form = useForm<FormValues>({
@@ -91,6 +96,7 @@ export default function AddSystemDialog({
       })
       form.reset()
       setPendingLogoFile(null)
+      setPendingLogoPreview(null)
       setOpen(false)
       onSuccess?.()
     } catch (error) {
@@ -111,6 +117,7 @@ export default function AddSystemDialog({
     if (!isOpen) {
       setServerError(null)
       setPendingLogoFile(null)
+      setPendingLogoPreview(null)
       form.reset()
     }
   }
@@ -239,9 +246,10 @@ export default function AddSystemDialog({
             {/* Logo upload */}
             <LogoUpload
               currentLogoUrl={null}
+              pendingPreview={pendingLogoPreview}
               systemName={watchedName || 'New System'}
               isUploading={uploadLogo.isPending}
-              onUpload={handlePendingLogoSelect}
+              onFileSelect={handlePendingLogoSelect}
               onRemove={handlePendingLogoRemove}
             />
 

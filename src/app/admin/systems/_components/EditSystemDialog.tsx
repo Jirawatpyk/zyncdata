@@ -48,31 +48,28 @@ export default function EditSystemDialog({
   const [open, setOpen] = useState(false)
   const [serverError, setServerError] = useState<string | null>(null)
   const [logoChanged, setLogoChanged] = useState(false)
+  const [pendingLogoFile, setPendingLogoFile] = useState<File | null>(null)
+  const [pendingLogoPreview, setPendingLogoPreview] = useState<string | null>(null)
+  const [pendingLogoRemove, setPendingLogoRemove] = useState(false)
   const updateSystem = useUpdateSystem()
   const uploadLogo = useUploadLogo()
   const deleteLogo = useDeleteLogo()
 
-  const handleLogoUpload = (file: File) => {
-    uploadLogo.mutate(
-      { systemId: system.id, file },
-      {
-        onSuccess: () => {
-          setLogoChanged(true)
-          toast.success('Logo uploaded')
-        },
-        onError: (err) => toast.error(`Upload failed: ${err.message}`),
-      },
-    )
+  const handleLogoFileSelect = (file: File) => {
+    setPendingLogoFile(file)
+    setPendingLogoRemove(false)
+    setLogoChanged(true)
+    // Create local preview
+    const reader = new FileReader()
+    reader.onload = (event) => setPendingLogoPreview(event.target?.result as string)
+    reader.readAsDataURL(file)
   }
 
   const handleLogoRemove = () => {
-    deleteLogo.mutate(system.id, {
-      onSuccess: () => {
-        setLogoChanged(true)
-        toast.success('Logo removed')
-      },
-      onError: () => toast.error('Failed to remove logo'),
-    })
+    setPendingLogoFile(null)
+    setPendingLogoPreview(null)
+    setPendingLogoRemove(true)
+    setLogoChanged(true)
   }
 
   const form = useForm<FormValues>({
@@ -105,16 +102,20 @@ export default function EditSystemDialog({
   }, [open, system, form])
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
-    // Logo-only change: logo already saved via separate mutation, just close dialog
-    if (!form.formState.isDirty && logoChanged) {
-      setOpen(false)
-      onSuccess?.()
-      return
-    }
-
     setServerError(null)
     try {
-      await updateSystem.mutateAsync(data)
+      // Upload or remove logo (deferred until Save)
+      if (pendingLogoFile) {
+        await uploadLogo.mutateAsync({ systemId: system.id, file: pendingLogoFile })
+      } else if (pendingLogoRemove) {
+        await deleteLogo.mutateAsync(system.id)
+      }
+
+      // Save form data if any field changed
+      if (form.formState.isDirty) {
+        await updateSystem.mutateAsync(data)
+      }
+
       toast.success('System updated', {
         description: `${data.name} has been updated.`,
       })
@@ -138,6 +139,9 @@ export default function EditSystemDialog({
     if (!isOpen) {
       setServerError(null)
       setLogoChanged(false)
+      setPendingLogoFile(null)
+      setPendingLogoPreview(null)
+      setPendingLogoRemove(false)
       // Reset form to original system values when dialog closes (AC #5)
       form.reset({
         id: system.id,
@@ -277,10 +281,11 @@ export default function EditSystemDialog({
 
             {/* Logo upload */}
             <LogoUpload
-              currentLogoUrl={system.logoUrl}
+              currentLogoUrl={pendingLogoRemove ? null : system.logoUrl}
+              pendingPreview={pendingLogoPreview}
               systemName={watchedName || system.name}
-              isUploading={uploadLogo.isPending}
-              onUpload={handleLogoUpload}
+              isUploading={uploadLogo.isPending || deleteLogo.isPending}
+              onFileSelect={handleLogoFileSelect}
               onRemove={handleLogoRemove}
               error={uploadLogo.isError ? uploadLogo.error.message : null}
             />
