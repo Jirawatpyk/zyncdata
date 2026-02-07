@@ -6,7 +6,7 @@
  */
 
 import type { System } from '@/lib/validations/system'
-import type { HealthCheck } from '@/lib/validations/health'
+import type { HealthCheck, HealthDashboardData, SystemHealthSummary } from '@/lib/validations/health'
 import type { User } from '@supabase/supabase-js'
 import type { AuthResult } from '@/lib/auth/guard'
 import type { HeroContent, PillarsContent, FooterContent, ThemeContent } from '@/lib/validations/content'
@@ -71,6 +71,60 @@ export function createMockHealthCheckList(count: number, overrides?: Partial<Hea
       ...overrides,
     }),
   )
+}
+
+// ── Health Dashboard ──────────────────────────────────────────────
+
+const SYSTEM_HEALTH_DEFAULTS: SystemHealthSummary = {
+  id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+  name: 'Test System',
+  url: 'https://example.com',
+  status: 'online',
+  responseTime: 150,
+  lastCheckedAt: '2026-01-01T00:00:00Z',
+  consecutiveFailures: 0,
+  category: null,
+  enabled: true,
+}
+
+export function createMockSystemHealth(overrides?: Partial<SystemHealthSummary>): SystemHealthSummary {
+  return { ...SYSTEM_HEALTH_DEFAULTS, ...overrides }
+}
+
+export function createMockSystemHealthList(count: number, overrides?: Partial<SystemHealthSummary>): SystemHealthSummary[] {
+  return Array.from({ length: count }, (_, i) =>
+    createMockSystemHealth({
+      id: `00000000-0000-4000-c000-${String(i + 1).padStart(12, '0')}`,
+      name: `System ${i + 1}`,
+      url: `https://system-${i + 1}.example.com`,
+      responseTime: 100 + i * 50,
+      ...overrides,
+    }),
+  )
+}
+
+export function createMockHealthDashboard(overrides?: Partial<HealthDashboardData>): HealthDashboardData {
+  const systems = overrides?.systems ?? createMockSystemHealthList(3)
+  const onlineCount = systems.filter((s) => s.status === 'online').length
+  const offlineCount = systems.filter((s) => s.status === 'offline').length
+  const responseTimes = systems.map((s) => s.responseTime).filter((rt): rt is number => rt !== null)
+  const avgResponseTime =
+    responseTimes.length > 0
+      ? Math.round(responseTimes.reduce((sum, rt) => sum + rt, 0) / responseTimes.length)
+      : null
+
+  return {
+    systems,
+    summary: {
+      total: systems.length,
+      online: onlineCount,
+      offline: offlineCount,
+      unknown: systems.length - onlineCount - offlineCount,
+      avgResponseTime,
+    },
+    lastUpdated: '2026-01-01T00:00:00Z',
+    ...overrides,
+  }
 }
 
 // ── Auth ────────────────────────────────────────────────────────────

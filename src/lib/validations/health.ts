@@ -25,3 +25,31 @@ export const healthCheckResultSchema = z.object({
 })
 
 export type HealthCheckResult = z.infer<typeof healthCheckResultSchema>
+
+// ── Dashboard Types ────────────────────────────────────────────────
+
+export interface SystemHealthSummary {
+  id: string
+  name: string
+  url: string
+  status: string | null
+  responseTime: number | null
+  lastCheckedAt: string | null
+  consecutiveFailures: number
+  category: string | null
+  enabled: boolean
+}
+
+export interface HealthDashboardSummary {
+  total: number
+  online: number
+  offline: number
+  unknown: number
+  avgResponseTime: number | null
+}
+
+export interface HealthDashboardData {
+  systems: SystemHealthSummary[]
+  summary: HealthDashboardSummary
+  lastUpdated: string
+}
