@@ -1,5 +1,4 @@
 import { createClient } from '@/lib/supabase/server'
-import { revalidatePath } from 'next/cache'
 
 export interface ContentRow {
   id: string
@@ -12,8 +11,8 @@ export interface ContentRow {
 }
 
 /**
- * Update a content section's JSONB content in landing_page_content.
- * Calls revalidatePath('/') to bust ISR cache — changes go live immediately.
+ * Update a content section's draft in landing_page_content.
+ * Saves to draft_content column — does NOT go live until explicit publish.
  */
 export async function updateSectionContent(
   sectionName: string,
@@ -24,7 +23,7 @@ export async function updateSectionContent(
 
   const { data, error } = await supabase
     .from('landing_page_content')
-    .update({ content, updated_by: userId })
+    .update({ draft_content: content, updated_by: userId })
     .eq('section_name', sectionName)
     .select('*')
     .single()
@@ -36,8 +35,6 @@ export async function updateSectionContent(
     throw error
   }
 
-  // Bust ISR cache — changes go live immediately
-  revalidatePath('/')
-
+  // NO revalidatePath — edits stay as drafts until explicit publish
   return data as ContentRow
 }

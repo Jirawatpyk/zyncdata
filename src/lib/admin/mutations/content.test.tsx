@@ -94,7 +94,7 @@ describe('useUpdateSection', () => {
       expect(result.current.isSuccess).toBe(true)
     })
 
-    expect(toast.success).toHaveBeenCalledWith('Content updated')
+    expect(toast.success).toHaveBeenCalledWith('Draft saved')
   })
 
   it('should optimistically update query cache on mutate', async () => {

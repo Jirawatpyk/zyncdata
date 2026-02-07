@@ -3,20 +3,52 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { NextResponse } from 'next/server'
-import { createMockAuth, createMockLandingPageContent } from '@/lib/test-utils/mock-factories'
+import { createMockAuth, createMockHeroContent, createMockPillarsContent, createMockThemeContent } from '@/lib/test-utils/mock-factories'
 
 vi.mock('@/lib/auth/guard', () => ({
   requireApiAuth: vi.fn(),
   isAuthError: vi.fn((result) => result instanceof NextResponse),
 }))
 
-vi.mock('@/lib/content/queries', () => ({
-  getLandingPageContent: vi.fn(),
+vi.mock('@/lib/supabase/server', () => ({
+  createClient: vi.fn(),
 }))
 
 import { GET } from './route'
 import { requireApiAuth } from '@/lib/auth/guard'
-import { getLandingPageContent } from '@/lib/content/queries'
+import { createClient } from '@/lib/supabase/server'
+
+function setupMockSupabase(rows: Array<{ section_name: string; content: unknown; draft_content: unknown }>) {
+  const mockSelect = vi.fn().mockResolvedValue({ data: rows, error: null })
+  const mockFrom = vi.fn().mockReturnValue({ select: mockSelect })
+
+  vi.mocked(createClient).mockResolvedValue({ from: mockFrom } as never)
+
+  return { mockFrom, mockSelect }
+}
+
+function setupMockSupabaseError(error: { code: string; message: string }) {
+  const mockSelect = vi.fn().mockResolvedValue({ data: null, error })
+  const mockFrom = vi.fn().mockReturnValue({ select: mockSelect })
+
+  vi.mocked(createClient).mockResolvedValue({ from: mockFrom } as never)
+}
+
+function makeContentRows(useDraft = false) {
+  const hero = createMockHeroContent()
+  const pillars = createMockPillarsContent()
+  const footer = { copyright: '2026 zyncdata. All rights reserved.', contact_email: 'contact@example.com', links: [{ label: 'Privacy', url: '/privacy' }] }
+  const theme = createMockThemeContent()
+  const systems = { heading: 'Our Systems', subtitle: 'Monitoring & management' }
+
+  return [
+    { section_name: 'hero', content: hero, draft_content: useDraft ? { ...hero, title: 'Draft Title' } : null },
+    { section_name: 'pillars', content: pillars, draft_content: null },
+    { section_name: 'systems', content: systems, draft_content: null },
+    { section_name: 'footer', content: footer, draft_content: null },
+    { section_name: 'theme', content: theme, draft_content: null },
+  ]
+}
 
 describe('GET /api/content Guardrails', () => {
   beforeEach(() => {
@@ -24,18 +56,14 @@ describe('GET /api/content Guardrails', () => {
   })
 
   describe('P0: Critical Invariants', () => {
-    it('[P0] GET MUST call requireApiAuth with "admin" role before getLandingPageContent', async () => {
+    it('[P0] GET MUST call requireApiAuth with "admin" role', async () => {
       vi.mocked(requireApiAuth).mockResolvedValue(createMockAuth())
-      vi.mocked(getLandingPageContent).mockResolvedValue(createMockLandingPageContent())
+      setupMockSupabase(makeContentRows())
 
       await GET()
 
       expect(requireApiAuth).toHaveBeenCalledTimes(1)
       expect(requireApiAuth).toHaveBeenCalledWith('admin')
-
-      const authOrder = vi.mocked(requireApiAuth).mock.invocationCallOrder[0]
-      const fetchOrder = vi.mocked(getLandingPageContent).mock.invocationCallOrder[0]
-      expect(authOrder).toBeLessThan(fetchOrder)
     })
 
     it('[P0] Unauthenticated request MUST return 401 status', async () => {
@@ -50,7 +78,7 @@ describe('GET /api/content Guardrails', () => {
       expect(response.status).toBe(401)
     })
 
-    it('[P0] Unauthenticated request MUST NOT call getLandingPageContent', async () => {
+    it('[P0] Unauthenticated request MUST NOT query database', async () => {
       const unauthorizedResponse = NextResponse.json(
         { data: null, error: { message: 'Unauthorized', code: 'UNAUTHORIZED' } },
         { status: 401 },
@@ -59,7 +87,7 @@ describe('GET /api/content Guardrails', () => {
 
       await GET()
 
-      expect(getLandingPageContent).not.toHaveBeenCalled()
+      expect(createClient).not.toHaveBeenCalled()
     })
 
     it('[P0] Non-admin role MUST return 403 status', async () => {
@@ -75,10 +103,32 @@ describe('GET /api/content Guardrails', () => {
     })
   })
 
+  describe('P0: Draft-Aware Content', () => {
+    it('[P0] MUST return draft_content when it exists (over published content)', async () => {
+      vi.mocked(requireApiAuth).mockResolvedValue(createMockAuth())
+      setupMockSupabase(makeContentRows(true))
+
+      const response = await GET()
+      const body = await response.json()
+
+      expect(body.data.hero.title).toBe('Draft Title')
+    })
+
+    it('[P0] MUST return published content when draft_content is null', async () => {
+      vi.mocked(requireApiAuth).mockResolvedValue(createMockAuth())
+      setupMockSupabase(makeContentRows(false))
+
+      const response = await GET()
+      const body = await response.json()
+
+      expect(body.data.hero.title).toBe('Test Title')
+    })
+  })
+
   describe('P1: Important Invariants', () => {
     it('[P1] Success response MUST have { data, error } format', async () => {
       vi.mocked(requireApiAuth).mockResolvedValue(createMockAuth())
-      vi.mocked(getLandingPageContent).mockResolvedValue(createMockLandingPageContent())
+      setupMockSupabase(makeContentRows())
 
       const response = await GET()
       const body = await response.json()
@@ -89,7 +139,7 @@ describe('GET /api/content Guardrails', () => {
 
     it('[P1] Success response MUST have error: null', async () => {
       vi.mocked(requireApiAuth).mockResolvedValue(createMockAuth())
-      vi.mocked(getLandingPageContent).mockResolvedValue(createMockLandingPageContent())
+      setupMockSupabase(makeContentRows())
 
       const response = await GET()
       const body = await response.json()
@@ -99,7 +149,7 @@ describe('GET /api/content Guardrails', () => {
 
     it('[P1] Success response data MUST contain hero, pillars, systems, footer', async () => {
       vi.mocked(requireApiAuth).mockResolvedValue(createMockAuth())
-      vi.mocked(getLandingPageContent).mockResolvedValue(createMockLandingPageContent())
+      setupMockSupabase(makeContentRows())
 
       const response = await GET()
       const body = await response.json()
@@ -112,7 +162,7 @@ describe('GET /api/content Guardrails', () => {
 
     it('[P1] Error response MUST have { data: null, error } format', async () => {
       vi.mocked(requireApiAuth).mockResolvedValue(createMockAuth())
-      vi.mocked(getLandingPageContent).mockRejectedValue(new Error('Database error'))
+      setupMockSupabaseError({ code: 'DB_ERROR', message: 'Database error' })
 
       const response = await GET()
       const body = await response.json()
@@ -125,7 +175,7 @@ describe('GET /api/content Guardrails', () => {
 
     it('[P1] Internal error MUST return 500 status', async () => {
       vi.mocked(requireApiAuth).mockResolvedValue(createMockAuth())
-      vi.mocked(getLandingPageContent).mockRejectedValue(new Error('DB error'))
+      setupMockSupabaseError({ code: 'DB_ERROR', message: 'DB error' })
 
       const response = await GET()
 

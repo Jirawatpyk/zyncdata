@@ -78,7 +78,7 @@ development_status:
   4-1-content-section-editor-with-wysiwyg: done
   4-2-theme-branding-customization: done
   4-3-preview-mode-client-side: done
-  4-4-publish-changes: backlog
+  4-4-publish-changes: review
   4-5-content-version-history-restore: deferred  # DEFERRED TO PHASE 2 — FR74 excluded from MVP per PRD
   epic-4-retrospective: optional
 
@@ -86,7 +86,7 @@ development_status:
   epic-5: in-progress
   5-1-basic-health-check-service-status-updates: done
   5-2-failure-detection-retry-logic-recovery: done
-  5-3-health-check-data-pruning-scalability: backlog
+  5-3-health-check-data-pruning-scalability: ready-for-dev
   5-4-health-monitoring-dashboard: backlog
   5-5-real-time-dashboard-updates: backlog
   5-6-health-check-failure-notifications: backlog

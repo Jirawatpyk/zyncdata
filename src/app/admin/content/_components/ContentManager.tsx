@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { contentQueryOptions } from '@/lib/admin/queries/content'
 import SectionCard from './SectionCard'
@@ -8,6 +8,7 @@ import HeroEditor from './HeroEditor'
 import PillarsEditor from './PillarsEditor'
 import FooterEditor from './FooterEditor'
 import PreviewButton from '@/app/admin/_components/PreviewButton'
+import PublishButton from '@/app/admin/_components/PublishButton'
 
 type EditingSection = 'hero' | 'pillars' | 'footer' | null
 
@@ -29,7 +30,10 @@ export default function ContentManager() {
 
   return (
     <div data-testid="content-manager">
-      <div className="mb-4 flex justify-end">
+      <div className="mb-4 flex items-center gap-2 justify-end">
+        <Suspense fallback={null}>
+          <PublishButton />
+        </Suspense>
         <PreviewButton />
       </div>
       <div className="space-y-4">

@@ -35,7 +35,7 @@ describe('updateSectionContent', () => {
     vi.clearAllMocks()
   })
 
-  it('should update section content and return the row', async () => {
+  it('should save to draft_content column and return the row', async () => {
     const mockRow = {
       id: '1',
       section_name: 'hero',
@@ -50,11 +50,11 @@ describe('updateSectionContent', () => {
     const result = await updateSectionContent('hero', { title: 'New' }, 'user-123')
 
     expect(result).toEqual(mockRow)
-    expect(mockUpdate).toHaveBeenCalledWith({ content: { title: 'New' }, updated_by: 'user-123' })
+    expect(mockUpdate).toHaveBeenCalledWith({ draft_content: { title: 'New' }, updated_by: 'user-123' })
     expect(mockEq).toHaveBeenCalledWith('section_name', 'hero')
   })
 
-  it('should call revalidatePath after successful update', async () => {
+  it('should NOT call revalidatePath after save (drafts stay unpublished)', async () => {
     setupMockSupabase({
       data: { id: '1', section_name: 'hero', content: {}, metadata: null, updated_by: 'user-123', created_at: '', updated_at: '' },
       error: null,
@@ -62,7 +62,7 @@ describe('updateSectionContent', () => {
 
     await updateSectionContent('hero', { title: 'New' }, 'user-123')
 
-    expect(revalidatePath).toHaveBeenCalledWith('/')
+    expect(revalidatePath).not.toHaveBeenCalled()
   })
 
   it('should throw "Section not found" for PGRST116 error', async () => {

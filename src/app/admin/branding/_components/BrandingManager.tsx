@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import Image from 'next/image'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { contentQueryOptions } from '@/lib/admin/queries/content'
@@ -8,6 +8,7 @@ import { COLOR_SCHEME_PALETTES, FONT_FAMILY_MAP } from '@/lib/validations/conten
 import { Button } from '@/components/ui/button'
 import { Pencil } from 'lucide-react'
 import PreviewButton from '@/app/admin/_components/PreviewButton'
+import PublishButton from '@/app/admin/_components/PublishButton'
 import ColorSchemeEditor from './ColorSchemeEditor'
 import FontSelector from './FontSelector'
 import LogoUploader from './LogoUploader'
@@ -26,7 +27,12 @@ export default function BrandingManager() {
     <div data-testid="branding-manager">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold text-foreground">Theme &amp; Branding</h1>
-        <PreviewButton />
+        <div className="flex items-center gap-2">
+          <Suspense fallback={null}>
+            <PublishButton />
+          </Suspense>
+          <PreviewButton />
+        </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">

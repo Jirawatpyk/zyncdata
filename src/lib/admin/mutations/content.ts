@@ -44,7 +44,7 @@ export function useUpdateSection() {
     },
 
     onSuccess: () => {
-      toast.success('Content updated')
+      toast.success('Draft saved')
     },
 
     onError: (_error, _variables, context) => {
@@ -56,6 +56,7 @@ export function useUpdateSection() {
 
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'content'] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'publish-status'] })
     },
   })
 }
