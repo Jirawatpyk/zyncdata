@@ -45,6 +45,11 @@ export async function checkSystemHealthWithRetry(
   return lastResult
 }
 
+const HEALTH_CHECK_HEADERS = {
+  'User-Agent': 'ZyncData-HealthCheck/1.0',
+  'Accept': '*/*',
+}
+
 /** Fetch a URL with a dedicated AbortController and timeout */
 async function fetchWithTimeout(
   url: string,
@@ -54,7 +59,12 @@ async function fetchWithTimeout(
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), timeoutMs)
   try {
-    return await fetch(url, { method, signal: controller.signal, redirect: 'manual' })
+    return await fetch(url, {
+      method,
+      headers: HEALTH_CHECK_HEADERS,
+      signal: controller.signal,
+      redirect: 'manual',
+    })
   } finally {
     clearTimeout(timer)
   }
