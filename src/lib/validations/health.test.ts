@@ -1,5 +1,87 @@
 import { describe, it, expect } from 'vitest'
-import { updateHealthConfigSchema } from './health'
+import { updateHealthConfigSchema, healthHistoryQuerySchema } from './health'
+
+describe('healthHistoryQuerySchema', () => {
+  it('should apply defaults when no params provided', () => {
+    const result = healthHistoryQuerySchema.safeParse({})
+
+    expect(result.success).toBe(true)
+    expect(result.data).toEqual({ limit: 20, offset: 0 })
+  })
+
+  it('should accept valid params with all fields', () => {
+    const result = healthHistoryQuerySchema.safeParse({
+      limit: 50,
+      offset: 20,
+      status: 'success',
+    })
+
+    expect(result.success).toBe(true)
+    expect(result.data).toEqual({ limit: 50, offset: 20, status: 'success' })
+  })
+
+  it('should coerce string numbers from query params', () => {
+    const result = healthHistoryQuerySchema.safeParse({
+      limit: '10',
+      offset: '30',
+    })
+
+    expect(result.success).toBe(true)
+    expect(result.data).toEqual({ limit: 10, offset: 30 })
+  })
+
+  it('should accept boundary minimum limit (1)', () => {
+    const result = healthHistoryQuerySchema.safeParse({ limit: 1 })
+    expect(result.success).toBe(true)
+  })
+
+  it('should accept boundary maximum limit (100)', () => {
+    const result = healthHistoryQuerySchema.safeParse({ limit: 100 })
+    expect(result.success).toBe(true)
+  })
+
+  it('should reject limit below minimum (0)', () => {
+    const result = healthHistoryQuerySchema.safeParse({ limit: 0 })
+    expect(result.success).toBe(false)
+  })
+
+  it('should reject limit above maximum (101)', () => {
+    const result = healthHistoryQuerySchema.safeParse({ limit: 101 })
+    expect(result.success).toBe(false)
+  })
+
+  it('should reject negative offset', () => {
+    const result = healthHistoryQuerySchema.safeParse({ offset: -1 })
+    expect(result.success).toBe(false)
+  })
+
+  it('should accept offset of 0', () => {
+    const result = healthHistoryQuerySchema.safeParse({ offset: 0 })
+    expect(result.success).toBe(true)
+  })
+
+  it('should accept status "failure"', () => {
+    const result = healthHistoryQuerySchema.safeParse({ status: 'failure' })
+    expect(result.success).toBe(true)
+    expect(result.data?.status).toBe('failure')
+  })
+
+  it('should reject invalid status value', () => {
+    const result = healthHistoryQuerySchema.safeParse({ status: 'invalid' })
+    expect(result.success).toBe(false)
+  })
+
+  it('should accept omitted status (optional)', () => {
+    const result = healthHistoryQuerySchema.safeParse({ limit: 20, offset: 0 })
+    expect(result.success).toBe(true)
+    expect(result.data?.status).toBeUndefined()
+  })
+
+  it('should reject non-integer limit', () => {
+    const result = healthHistoryQuerySchema.safeParse({ limit: 10.5 })
+    expect(result.success).toBe(false)
+  })
+})
 
 describe('updateHealthConfigSchema', () => {
   it('should accept valid values within range', () => {

@@ -40,6 +40,34 @@ export async function getHealthCheckCount(systemId: string): Promise<number> {
   return count ?? 0
 }
 
+export async function getHealthCheckHistory(
+  systemId: string,
+  options: { limit?: number; offset?: number; status?: string } = {},
+): Promise<{ checks: HealthCheck[]; total: number }> {
+  const supabase = await createClient()
+  const { limit = 20, offset = 0, status } = options
+
+  let query = supabase
+    .from('health_checks')
+    .select(HEALTH_CHECK_SELECT, { count: 'exact' })
+    .eq('system_id', systemId)
+    .order('checked_at', { ascending: false })
+    .range(offset, offset + limit - 1)
+
+  if (status) {
+    query = query.eq('status', status)
+  }
+
+  const { data, error, count } = await query
+
+  if (error) throw error
+
+  return {
+    checks: z.array(healthCheckSchema).parse((data ?? []).map((row) => toCamelCase<HealthCheck>(row))),
+    total: count ?? 0,
+  }
+}
+
 export async function getLatestHealthCheck(systemId: string): Promise<HealthCheck | null> {
   const supabase = await createClient()
 

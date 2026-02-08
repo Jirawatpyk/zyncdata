@@ -9,6 +9,7 @@ import {
   getRecentHealthChecks,
   getLatestHealthCheck,
   getHealthCheckCount,
+  getHealthCheckHistory,
 } from '@/lib/health/queries'
 
 const DB_ROW = {
@@ -233,6 +234,88 @@ describe('getRecentHealthChecks — performance guardrails', () => {
 
     expect(mockLimit).toHaveBeenCalledWith(50)
     expect(results).toHaveLength(50)
+  })
+})
+
+describe('getHealthCheckHistory', () => {
+  const mockStatusEq = vi.fn()
+  const mockRange = vi.fn()
+  const mockOrder = vi.fn()
+  const mockSystemEq = vi.fn()
+  const mockSelect = vi.fn()
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    const resolvedValue = { data: [DB_ROW], error: null, count: 1 }
+    // .range() is the terminal in the no-filter path, and returns an object with .eq for status filter
+    mockStatusEq.mockResolvedValue(resolvedValue)
+    mockRange.mockReturnValue({ eq: mockStatusEq, then: (resolve: (v: unknown) => void) => resolve(resolvedValue) })
+    // Make mockRange also act as a thenable for await (no status filter path)
+    mockRange.mockResolvedValue(resolvedValue)
+    mockOrder.mockReturnValue({ range: mockRange })
+    mockSystemEq.mockReturnValue({ order: mockOrder })
+    mockSelect.mockReturnValue({ eq: mockSystemEq })
+    vi.mocked(createClient).mockResolvedValue({
+      from: vi.fn().mockReturnValue({ select: mockSelect }),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase client mock
+    } as any)
+  })
+
+  it('should return checks with camelCase keys and total count', async () => {
+    const result = await getHealthCheckHistory('f47ac10b-58cc-4372-a567-0e02b2c3d479')
+
+    expect(result.checks).toEqual([EXPECTED_CAMEL])
+    expect(result.total).toBe(1)
+  })
+
+  it('should use default limit=20 and offset=0', async () => {
+    await getHealthCheckHistory('f47ac10b-58cc-4372-a567-0e02b2c3d479')
+
+    expect(mockSelect).toHaveBeenCalledWith(expect.any(String), { count: 'exact' })
+    expect(mockSystemEq).toHaveBeenCalledWith('system_id', 'f47ac10b-58cc-4372-a567-0e02b2c3d479')
+    expect(mockOrder).toHaveBeenCalledWith('checked_at', { ascending: false })
+    expect(mockRange).toHaveBeenCalledWith(0, 19) // offset=0, limit=20 → range(0, 19)
+  })
+
+  it('should apply custom limit and offset', async () => {
+    await getHealthCheckHistory('f47ac10b-58cc-4372-a567-0e02b2c3d479', { limit: 10, offset: 30 })
+
+    expect(mockRange).toHaveBeenCalledWith(30, 39) // offset=30, limit=10 → range(30, 39)
+  })
+
+  it('should apply status filter when provided', async () => {
+    // .range() returns object with .eq() for the status filter
+    const resolvedValue = { data: [DB_ROW], error: null, count: 1 }
+    mockRange.mockReturnValue({ eq: mockStatusEq })
+    mockStatusEq.mockResolvedValue(resolvedValue)
+
+    await getHealthCheckHistory('f47ac10b-58cc-4372-a567-0e02b2c3d479', { status: 'failure' })
+
+    expect(mockSystemEq).toHaveBeenCalledWith('system_id', 'f47ac10b-58cc-4372-a567-0e02b2c3d479')
+    expect(mockStatusEq).toHaveBeenCalledWith('status', 'failure')
+  })
+
+  it('should return empty checks array and total 0 when no data', async () => {
+    mockRange.mockResolvedValue({ data: [], error: null, count: 0 })
+
+    const result = await getHealthCheckHistory('f47ac10b-58cc-4372-a567-0e02b2c3d479')
+
+    expect(result.checks).toEqual([])
+    expect(result.total).toBe(0)
+  })
+
+  it('should throw on Supabase error', async () => {
+    mockRange.mockResolvedValue({ data: null, error: { message: 'Query failed' }, count: null })
+
+    await expect(getHealthCheckHistory('f47ac10b-58cc-4372-a567-0e02b2c3d479')).rejects.toThrow()
+  })
+
+  it('should handle null count gracefully', async () => {
+    mockRange.mockResolvedValue({ data: [DB_ROW], error: null, count: null })
+
+    const result = await getHealthCheckHistory('f47ac10b-58cc-4372-a567-0e02b2c3d479')
+
+    expect(result.total).toBe(0)
   })
 })
 

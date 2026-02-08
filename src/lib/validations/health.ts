@@ -66,6 +66,23 @@ export interface HealthConfig {
   failureThreshold: number | null
 }
 
+// ── Health History Types ──────────────────────────────────────────────
+
+export const healthHistoryQuerySchema = z.object({
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+  offset: z.coerce.number().int().min(0).default(0),
+  status: z.enum(HEALTH_CHECK_STATUSES).optional(),
+})
+
+export type HealthHistoryFilters = z.infer<typeof healthHistoryQuerySchema>
+
+export interface HealthHistoryResponse {
+  checks: HealthCheck[]
+  total: number
+  hasMore: boolean
+  systemName: string
+}
+
 // ── Dashboard Types ────────────────────────────────────────────────
 
 export interface SystemHealthSummary {

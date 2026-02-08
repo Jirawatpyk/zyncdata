@@ -1,5 +1,6 @@
 import StatusBadge from '@/components/patterns/StatusBadge'
 import HealthConfigDialog from './HealthConfigDialog'
+import HealthHistoryPanel from './HealthHistoryPanel'
 import { cn } from '@/lib/utils'
 import { formatDistanceToNow } from 'date-fns'
 import type { SystemHealthSummary } from '@/lib/validations/health'
@@ -31,6 +32,7 @@ export default function SystemsHealthTable({ systems }: SystemsHealthTableProps)
             <th className="px-4 py-3 text-left font-medium text-muted-foreground">Status</th>
             <th className="px-4 py-3 text-right font-medium text-muted-foreground">Response Time</th>
             <th className="px-4 py-3 text-right font-medium text-muted-foreground">Last Checked</th>
+            <th className="px-4 py-3 text-center font-medium text-muted-foreground">History</th>
             <th className="px-4 py-3 text-center font-medium text-muted-foreground">Config</th>
           </tr>
         </thead>
@@ -64,6 +66,14 @@ export default function SystemsHealthTable({ systems }: SystemsHealthTableProps)
                 {system.lastCheckedAt
                   ? formatDistanceToNow(new Date(system.lastCheckedAt), { addSuffix: true })
                   : 'Never'}
+              </td>
+              <td className="px-4 py-3 text-center">
+                <HealthHistoryPanel
+                  systemId={system.id}
+                  systemName={system.name}
+                  systemStatus={system.status}
+                  timeoutThreshold={system.timeoutThreshold}
+                />
               </td>
               <td className="px-4 py-3 text-center">
                 <HealthConfigDialog systemId={system.id} systemName={system.name} />

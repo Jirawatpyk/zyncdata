@@ -10,6 +10,11 @@ vi.mock('@/lib/admin/queries/health', () => ({
     queryFn: vi.fn(),
     enabled: false,
   })),
+  healthHistoryQueryOptions: vi.fn((systemId: string, filters: Record<string, unknown>) => ({
+    queryKey: ['admin', 'health', 'history', systemId, filters],
+    queryFn: vi.fn(),
+    enabled: false,
+  })),
 }))
 
 vi.mock('@/lib/admin/mutations/health', () => ({
@@ -83,7 +88,7 @@ describe('SystemsHealthTable', () => {
     expect(screen.getByText('Never')).toBeInTheDocument()
   })
 
-  it('renders table with correct structure including Config column', () => {
+  it('renders table with correct structure including History and Config columns', () => {
     const systems = createMockSystemHealthList(3)
 
     render(<SystemsHealthTable systems={systems} />, { wrapper: createWrapper() })
@@ -94,6 +99,7 @@ describe('SystemsHealthTable', () => {
     expect(screen.getByText('Status')).toBeInTheDocument()
     expect(screen.getByText('Response Time')).toBeInTheDocument()
     expect(screen.getByText('Last Checked')).toBeInTheDocument()
+    expect(screen.getByText('History')).toBeInTheDocument()
     expect(screen.getByText('Config')).toBeInTheDocument()
   })
 
@@ -119,6 +125,18 @@ describe('SystemsHealthTable', () => {
     expect(screen.getByText(/120s/)).toBeInTheDocument()
     expect(screen.getByText(/5000ms/)).toBeInTheDocument()
     expect(screen.getByText(/5 failures/)).toBeInTheDocument()
+  })
+
+  it('renders history icon button for each system', () => {
+    const systems = [
+      createMockSystemHealth({ id: '1', name: 'System A' }),
+      createMockSystemHealth({ id: '2', name: 'System B' }),
+    ]
+
+    render(<SystemsHealthTable systems={systems} />, { wrapper: createWrapper() })
+
+    expect(screen.getByTestId('health-history-trigger-1')).toBeInTheDocument()
+    expect(screen.getByTestId('health-history-trigger-2')).toBeInTheDocument()
   })
 
   it('renders settings gear icon for each system', () => {

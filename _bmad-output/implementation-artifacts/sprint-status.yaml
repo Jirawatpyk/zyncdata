@@ -83,7 +83,7 @@ development_status:
   epic-4-retrospective: done
 
   # Epic 5: Health Monitoring & Analytics Dashboard (8 stories)
-  epic-5: in-progress
+  epic-5: done
   5-1-basic-health-check-service-status-updates: done
   5-2-failure-detection-retry-logic-recovery: done
   5-3-health-check-data-pruning-scalability: done
@@ -91,7 +91,7 @@ development_status:
   5-5-real-time-dashboard-updates: done
   5-6-health-check-failure-notifications: done
   5-7-configurable-health-check-settings: done
-  5-8-historical-health-check-data: backlog
+  5-8-historical-health-check-data: done
   epic-5-retrospective: optional
 
   # Epic 6: User Management & Administration (5 stories)
