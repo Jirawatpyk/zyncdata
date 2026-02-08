@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**zyncdata** is a BMAD Framework (v6.0.0-Beta.5) workspace — an AI-powered multi-agent orchestration system for collaborative software development. The target application being planned/built is a **Next.js 16.x + React 19.x + TypeScript + Supabase + Vercel** health monitoring platform.
+**zyncdata** is a BMAD Framework (v6.0.0-Beta.7) workspace — an AI-powered multi-agent orchestration system for collaborative software development. The target application being planned/built is a **Next.js 16.x + React 19.x + TypeScript + Supabase + Vercel** health monitoring platform.
 
 This repo contains two layers:
 1. **BMAD Framework** (`_bmad/`) — agent definitions, workflows, and configs that orchestrate the development process
