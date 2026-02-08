@@ -141,7 +141,7 @@ describe('HealthDashboard', () => {
     })
 
     const offlineRow = screen.getByTestId('health-row-off-1')
-    expect(offlineRow.className).toContain('bg-red-50')
+    expect(offlineRow.className).toContain('bg-destructive/10')
   })
 
   // Task 7 tests: useHealthMonitor integration

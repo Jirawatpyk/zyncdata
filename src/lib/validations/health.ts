@@ -50,6 +50,22 @@ export const updateNotificationSettingsSchema = z.object({
 
 export type UpdateNotificationSettings = z.infer<typeof updateNotificationSettingsSchema>
 
+// ── Health Config Types ──────────────────────────────────────────────
+
+export const updateHealthConfigSchema = z.object({
+  checkInterval: z.number().int().min(30).max(86400).nullable(),
+  timeoutThreshold: z.number().int().min(1000).max(60000).nullable(),
+  failureThreshold: z.number().int().min(1).max(10).nullable(),
+})
+
+export type UpdateHealthConfig = z.infer<typeof updateHealthConfigSchema>
+
+export interface HealthConfig {
+  checkInterval: number | null
+  timeoutThreshold: number | null
+  failureThreshold: number | null
+}
+
 // ── Dashboard Types ────────────────────────────────────────────────
 
 export interface SystemHealthSummary {
@@ -62,6 +78,9 @@ export interface SystemHealthSummary {
   consecutiveFailures: number
   category: string | null
   enabled: boolean
+  checkInterval: number | null
+  timeoutThreshold: number | null
+  failureThreshold: number | null
 }
 
 export interface HealthDashboardSummary {

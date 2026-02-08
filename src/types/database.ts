@@ -197,52 +197,61 @@ export type Database = {
       systems: {
         Row: {
           category: string | null
+          check_interval: number | null
           consecutive_failures: number
           created_at: string
           deleted_at: string | null
           description: string | null
           display_order: number
           enabled: boolean
+          failure_threshold: number | null
           id: string
           last_checked_at: string | null
           logo_url: string | null
           name: string
           response_time: number | null
           status: string | null
+          timeout_threshold: number | null
           updated_at: string
           url: string
         }
         Insert: {
           category?: string | null
+          check_interval?: number | null
           consecutive_failures?: number
           created_at?: string
           deleted_at?: string | null
           description?: string | null
           display_order?: number
           enabled?: boolean
+          failure_threshold?: number | null
           id?: string
           last_checked_at?: string | null
           logo_url?: string | null
           name: string
           response_time?: number | null
           status?: string | null
+          timeout_threshold?: number | null
           updated_at?: string
           url: string
         }
         Update: {
           category?: string | null
+          check_interval?: number | null
           consecutive_failures?: number
           created_at?: string
           deleted_at?: string | null
           description?: string | null
           display_order?: number
           enabled?: boolean
+          failure_threshold?: number | null
           id?: string
           last_checked_at?: string | null
           logo_url?: string | null
           name?: string
           response_time?: number | null
           status?: string | null
+          timeout_threshold?: number | null
           updated_at?: string
           url?: string
         }

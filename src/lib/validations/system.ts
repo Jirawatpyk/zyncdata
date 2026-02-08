@@ -58,6 +58,9 @@ export const systemSchema = z.object({
   lastCheckedAt: z.string().nullable(),
   category: z.string().nullable(),
   consecutiveFailures: z.number().int(),
+  checkInterval: z.number().int().nullable(),
+  timeoutThreshold: z.number().int().nullable(),
+  failureThreshold: z.number().int().nullable(),
 })
 
 export type System = z.infer<typeof systemSchema>

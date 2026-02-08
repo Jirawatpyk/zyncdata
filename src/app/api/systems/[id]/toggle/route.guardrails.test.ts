@@ -65,6 +65,9 @@ describe('PATCH /api/systems/[id]/toggle Guardrails', () => {
         deletedAt: null,
         lastCheckedAt: null,
         consecutiveFailures: 0,
+        checkInterval: null,
+        timeoutThreshold: null,
+        failureThreshold: null,
       })
 
       await PATCH(createRequest({ enabled: false }), createParams())
@@ -166,6 +169,9 @@ describe('PATCH /api/systems/[id]/toggle Guardrails', () => {
         deletedAt: null,
         lastCheckedAt: null,
         consecutiveFailures: 0,
+        checkInterval: null,
+        timeoutThreshold: null,
+        failureThreshold: null,
       })
 
       const response = await PATCH(createRequest({ enabled: true }), createParams())

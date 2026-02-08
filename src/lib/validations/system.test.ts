@@ -20,6 +20,9 @@ describe('systemSchema', () => {
     lastCheckedAt: null,
     category: null,
     consecutiveFailures: 0,
+    checkInterval: null,
+    timeoutThreshold: null,
+    failureThreshold: null,
   }
 
   it('should accept valid system with null lastCheckedAt', () => {

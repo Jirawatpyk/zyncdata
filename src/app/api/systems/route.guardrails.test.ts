@@ -99,6 +99,9 @@ describe('GET /api/systems Guardrails', () => {
           deletedAt: null,
           lastCheckedAt: null,
           consecutiveFailures: 0,
+          checkInterval: null,
+          timeoutThreshold: null,
+          failureThreshold: null,
         },
       ])
 

@@ -30,6 +30,9 @@ const SYSTEM_DEFAULTS: System = {
   lastCheckedAt: null,
   category: null,
   consecutiveFailures: 0,
+  checkInterval: null,
+  timeoutThreshold: null,
+  failureThreshold: null,
 }
 
 export function createMockSystem(overrides?: Partial<System>): System {
@@ -85,6 +88,9 @@ const SYSTEM_HEALTH_DEFAULTS: SystemHealthSummary = {
   consecutiveFailures: 0,
   category: null,
   enabled: true,
+  checkInterval: null,
+  timeoutThreshold: null,
+  failureThreshold: null,
 }
 
 export function createMockSystemHealth(overrides?: Partial<SystemHealthSummary>): SystemHealthSummary {

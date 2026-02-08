@@ -153,7 +153,7 @@ export async function runAllHealthChecks(): Promise<HealthCheckResult[]> {
 
   const { data: systems, error } = await supabase
     .from('systems')
-    .select('id, name, url, status')
+    .select('id, name, url, status, timeout_threshold, failure_threshold')
     .eq('enabled', true)
     .is('deleted_at', null)
 
@@ -167,7 +167,10 @@ export async function runAllHealthChecks(): Promise<HealthCheckResult[]> {
       if (jitter > 0) {
         await new Promise<void>((resolve) => setTimeout(resolve, jitter))
       }
-      return checkSystemHealthWithRetry({ id: system.id, url: system.url })
+      return checkSystemHealthWithRetry(
+        { id: system.id, url: system.url },
+        system.timeout_threshold != null ? { timeoutMs: system.timeout_threshold } : undefined,
+      )
     }),
     DEFAULT_CONCURRENCY_LIMIT,
   )
@@ -209,7 +212,8 @@ export async function runAllHealthChecks(): Promise<HealthCheckResult[]> {
           // Failure path (AC #1): increment counter, check threshold
           const failureCount = await incrementConsecutiveFailures(checkResult.systemId, supabase)
 
-          if (failureCount >= DEFAULT_FAILURE_THRESHOLD) {
+          const threshold = system.failure_threshold ?? DEFAULT_FAILURE_THRESHOLD
+          if (failureCount >= threshold) {
             await updateSystemHealthStatus(checkResult.systemId, 'offline', null, supabase)
 
             if (system.status !== 'offline') {

@@ -57,6 +57,9 @@ const MOCK_SYSTEM_DB = {
   last_checked_at: null,
   category: null,
   consecutive_failures: 0,
+  check_interval: null,
+  timeout_threshold: null,
+  failure_threshold: null,
 }
 
 describe('createSystem', () => {
@@ -432,6 +435,9 @@ describe('reorderSystems', () => {
       lastCheckedAt: null,
       category: null,
       consecutiveFailures: 0,
+      checkInterval: null,
+      timeoutThreshold: null,
+      failureThreshold: null,
     },
     {
       id: TEST_UUID,
@@ -449,6 +455,9 @@ describe('reorderSystems', () => {
       lastCheckedAt: null,
       category: null,
       consecutiveFailures: 0,
+      checkInterval: null,
+      timeoutThreshold: null,
+      failureThreshold: null,
     },
   ]
 

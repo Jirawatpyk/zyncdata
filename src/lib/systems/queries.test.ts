@@ -8,7 +8,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getEnabledSystems, getEnabledSystemsByCategory, getSystemByName, getSystems } from '@/lib/systems/queries'
 
 const EXPECTED_SELECT =
-  'id, name, url, logo_url, description, status, response_time, display_order, enabled, created_at, updated_at, deleted_at, last_checked_at, category, consecutive_failures'
+  'id, name, url, logo_url, description, status, response_time, display_order, enabled, created_at, updated_at, deleted_at, last_checked_at, category, consecutive_failures, check_interval, timeout_threshold, failure_threshold'
 
 describe('getEnabledSystems', () => {
   const mockSelect = vi.fn()
@@ -36,6 +36,9 @@ describe('getEnabledSystems', () => {
           last_checked_at: null,
           category: 'dxt_smart_platform',
           consecutive_failures: 0,
+          check_interval: null,
+          timeout_threshold: null,
+          failure_threshold: null,
         },
         {
           id: 'a23bc45d-67ef-8901-b234-5c6d7e8f9012',
@@ -53,6 +56,9 @@ describe('getEnabledSystems', () => {
           last_checked_at: null,
           category: 'dxt_solutions',
           consecutive_failures: 0,
+          check_interval: null,
+          timeout_threshold: null,
+          failure_threshold: null,
         },
       ],
       error: null,
@@ -95,6 +101,9 @@ describe('getEnabledSystems', () => {
       lastCheckedAt: null,
       category: 'dxt_smart_platform',
       consecutiveFailures: 0,
+      checkInterval: null,
+      timeoutThreshold: null,
+      failureThreshold: null,
     })
     expect(result[1].logoUrl).toBeNull()
     expect(result[1].status).toBe('coming_soon')
@@ -144,6 +153,9 @@ describe('getSystemByName', () => {
         last_checked_at: null,
         category: 'dxt_solutions',
         consecutive_failures: 0,
+        check_interval: null,
+        timeout_threshold: null,
+        failure_threshold: null,
       },
       error: null,
     })
@@ -185,6 +197,9 @@ describe('getSystemByName', () => {
       lastCheckedAt: null,
       category: 'dxt_solutions',
       consecutiveFailures: 0,
+      checkInterval: null,
+      timeoutThreshold: null,
+      failureThreshold: null,
     })
   })
 
@@ -229,6 +244,9 @@ describe('getSystems', () => {
           last_checked_at: null,
           category: 'dxt_smart_platform',
           consecutive_failures: 0,
+          check_interval: null,
+          timeout_threshold: null,
+          failure_threshold: null,
         },
         {
           id: 'a23bc45d-67ef-8901-b234-5c6d7e8f9012',
@@ -246,6 +264,9 @@ describe('getSystems', () => {
           last_checked_at: null,
           category: null,
           consecutive_failures: 0,
+          check_interval: null,
+          timeout_threshold: null,
+          failure_threshold: null,
         },
       ],
       error: null,
@@ -291,6 +312,9 @@ describe('getSystems', () => {
       lastCheckedAt: null,
       category: 'dxt_smart_platform',
       consecutiveFailures: 0,
+      checkInterval: null,
+      timeoutThreshold: null,
+      failureThreshold: null,
     })
     expect(result[1]).toEqual({
       id: 'a23bc45d-67ef-8901-b234-5c6d7e8f9012',
@@ -308,6 +332,9 @@ describe('getSystems', () => {
       lastCheckedAt: null,
       category: null,
       consecutiveFailures: 0,
+      checkInterval: null,
+      timeoutThreshold: null,
+      failureThreshold: null,
     })
   })
 
@@ -348,9 +375,9 @@ describe('getEnabledSystemsByCategory', () => {
   it('should group systems by category', async () => {
     mockOrder.mockResolvedValue({
       data: [
-        { id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', name: 'S1', url: 'https://s1.com', logo_url: null, description: null, status: null, response_time: null, display_order: 0, enabled: true, created_at: '2026-01-01T00:00:00Z', updated_at: '2026-01-01T00:00:00Z', deleted_at: null, last_checked_at: null, category: 'dxt_smart_platform', consecutive_failures: 0 },
-        { id: 'a23bc45d-67ef-8901-b234-5c6d7e8f9012', name: 'S2', url: 'https://s2.com', logo_url: null, description: null, status: null, response_time: null, display_order: 1, enabled: true, created_at: '2026-01-01T00:00:00Z', updated_at: '2026-01-01T00:00:00Z', deleted_at: null, last_checked_at: null, category: 'dxt_smart_platform', consecutive_failures: 0 },
-        { id: 'b34cd56e-78ef-4012-a345-6d7e8f901234', name: 'S3', url: 'https://s3.com', logo_url: null, description: null, status: null, response_time: null, display_order: 2, enabled: true, created_at: '2026-01-01T00:00:00Z', updated_at: '2026-01-01T00:00:00Z', deleted_at: null, last_checked_at: null, category: 'dxt_solutions', consecutive_failures: 0 },
+        { id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', name: 'S1', url: 'https://s1.com', logo_url: null, description: null, status: null, response_time: null, display_order: 0, enabled: true, created_at: '2026-01-01T00:00:00Z', updated_at: '2026-01-01T00:00:00Z', deleted_at: null, last_checked_at: null, category: 'dxt_smart_platform', consecutive_failures: 0, check_interval: null, timeout_threshold: null, failure_threshold: null },
+        { id: 'a23bc45d-67ef-8901-b234-5c6d7e8f9012', name: 'S2', url: 'https://s2.com', logo_url: null, description: null, status: null, response_time: null, display_order: 1, enabled: true, created_at: '2026-01-01T00:00:00Z', updated_at: '2026-01-01T00:00:00Z', deleted_at: null, last_checked_at: null, category: 'dxt_smart_platform', consecutive_failures: 0, check_interval: null, timeout_threshold: null, failure_threshold: null },
+        { id: 'b34cd56e-78ef-4012-a345-6d7e8f901234', name: 'S3', url: 'https://s3.com', logo_url: null, description: null, status: null, response_time: null, display_order: 2, enabled: true, created_at: '2026-01-01T00:00:00Z', updated_at: '2026-01-01T00:00:00Z', deleted_at: null, last_checked_at: null, category: 'dxt_solutions', consecutive_failures: 0, check_interval: null, timeout_threshold: null, failure_threshold: null },
       ],
       error: null,
     })
@@ -365,7 +392,7 @@ describe('getEnabledSystemsByCategory', () => {
   it('should put null-category systems in other bucket', async () => {
     mockOrder.mockResolvedValue({
       data: [
-        { id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', name: 'S1', url: 'https://s1.com', logo_url: null, description: null, status: null, response_time: null, display_order: 0, enabled: true, created_at: '2026-01-01T00:00:00Z', updated_at: '2026-01-01T00:00:00Z', deleted_at: null, last_checked_at: null, category: null, consecutive_failures: 0 },
+        { id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', name: 'S1', url: 'https://s1.com', logo_url: null, description: null, status: null, response_time: null, display_order: 0, enabled: true, created_at: '2026-01-01T00:00:00Z', updated_at: '2026-01-01T00:00:00Z', deleted_at: null, last_checked_at: null, category: null, consecutive_failures: 0, check_interval: null, timeout_threshold: null, failure_threshold: null },
       ],
       error: null,
     })

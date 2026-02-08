@@ -5,7 +5,7 @@ import { toCamelCase } from '@/lib/utils/transform'
 import type { HealthDashboardData, SystemHealthSummary } from '@/lib/validations/health'
 
 const DASHBOARD_SELECT =
-  'id, name, url, status, response_time, last_checked_at, consecutive_failures, category, enabled'
+  'id, name, url, status, response_time, last_checked_at, consecutive_failures, category, enabled, check_interval, timeout_threshold, failure_threshold'
 
 export async function GET() {
   const auth = await requireApiAuth('admin')

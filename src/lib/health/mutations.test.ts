@@ -481,11 +481,11 @@ describe('runAllHealthChecks', () => {
     mockSendFailureNotification.mockResolvedValue(undefined)
     mockSendRecoveryNotification.mockResolvedValue(undefined)
 
-    // Default: two enabled systems with status 'online'
+    // Default: two enabled systems with status 'online' and null config (use defaults)
     mockIs.mockResolvedValue({
       data: [
-        { id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', name: 'System 1', url: 'https://system1.com', status: 'online' },
-        { id: 'b58dc20c-69dd-5483-b678-1f13c3d4e590', name: 'System 2', url: 'https://system2.com', status: 'online' },
+        { id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', name: 'System 1', url: 'https://system1.com', status: 'online', timeout_threshold: null, failure_threshold: null },
+        { id: 'b58dc20c-69dd-5483-b678-1f13c3d4e590', name: 'System 2', url: 'https://system2.com', status: 'online', timeout_threshold: null, failure_threshold: null },
       ],
       error: null,
     })
@@ -531,26 +531,27 @@ describe('runAllHealthChecks', () => {
     })
   })
 
-  it('should fetch enabled, non-deleted systems with status column', async () => {
+  it('should fetch enabled, non-deleted systems with status and config columns', async () => {
     await runAllHealthChecks()
 
-    expect(mockSelectSystems).toHaveBeenCalledWith('id, name, url, status')
+    expect(mockSelectSystems).toHaveBeenCalledWith('id, name, url, status, timeout_threshold, failure_threshold')
     expect(mockEqForSelect).toHaveBeenCalledWith('enabled', true)
     expect(mockIs).toHaveBeenCalledWith('deleted_at', null)
   })
 
-  it('should run checks concurrently using checkSystemHealthWithRetry', async () => {
+  it('should run checks concurrently using checkSystemHealthWithRetry with default options', async () => {
     await runAllHealthChecks()
 
     expect(checkSystemHealthWithRetry).toHaveBeenCalledTimes(2)
-    expect(checkSystemHealthWithRetry).toHaveBeenCalledWith({
-      id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
-      url: 'https://system1.com',
-    })
-    expect(checkSystemHealthWithRetry).toHaveBeenCalledWith({
-      id: 'b58dc20c-69dd-5483-b678-1f13c3d4e590',
-      url: 'https://system2.com',
-    })
+    // With null timeout_threshold, no options passed (undefined)
+    expect(checkSystemHealthWithRetry).toHaveBeenCalledWith(
+      { id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', url: 'https://system1.com' },
+      undefined,
+    )
+    expect(checkSystemHealthWithRetry).toHaveBeenCalledWith(
+      { id: 'b58dc20c-69dd-5483-b678-1f13c3d4e590', url: 'https://system2.com' },
+      undefined,
+    )
   })
 
   it('should return empty array when no systems exist', async () => {
@@ -579,7 +580,7 @@ describe('runAllHealthChecks', () => {
 
     // Single system for clarity
     mockIs.mockResolvedValue({
-      data: [{ id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', name: 'System 1', url: 'https://system1.com', status: 'online' }],
+      data: [{ id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', name: 'System 1', url: 'https://system1.com', status: 'online', timeout_threshold: null, failure_threshold: null }],
       error: null,
     })
 
@@ -609,7 +610,7 @@ describe('runAllHealthChecks', () => {
     })
 
     mockIs.mockResolvedValue({
-      data: [{ id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', name: 'System 1', url: 'https://system1.com', status: 'online' }],
+      data: [{ id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', name: 'System 1', url: 'https://system1.com', status: 'online', timeout_threshold: null, failure_threshold: null }],
       error: null,
     })
 
@@ -643,7 +644,7 @@ describe('runAllHealthChecks', () => {
     })
 
     mockIs.mockResolvedValue({
-      data: [{ id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', name: 'System 1', url: 'https://system1.com', status: 'online' }],
+      data: [{ id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', name: 'System 1', url: 'https://system1.com', status: 'online', timeout_threshold: null, failure_threshold: null }],
       error: null,
     })
 
@@ -670,7 +671,7 @@ describe('runAllHealthChecks', () => {
 
     // System is currently offline
     mockIs.mockResolvedValue({
-      data: [{ id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', name: 'System 1', url: 'https://system1.com', status: 'offline' }],
+      data: [{ id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', name: 'System 1', url: 'https://system1.com', status: 'offline', timeout_threshold: null, failure_threshold: null }],
       error: null,
     })
 
@@ -701,7 +702,7 @@ describe('runAllHealthChecks', () => {
     })
 
     mockIs.mockResolvedValue({
-      data: [{ id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', name: 'System 1', url: 'https://system1.com', status: 'online' }],
+      data: [{ id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', name: 'System 1', url: 'https://system1.com', status: 'online', timeout_threshold: null, failure_threshold: null }],
       error: null,
     })
 
@@ -819,7 +820,7 @@ describe('runAllHealthChecks', () => {
     })
 
     mockIs.mockResolvedValue({
-      data: [{ id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', name: 'System 1', url: 'https://system1.com', status: 'online' }],
+      data: [{ id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', name: 'System 1', url: 'https://system1.com', status: 'online', timeout_threshold: null, failure_threshold: null }],
       error: null,
     })
 
@@ -857,7 +858,7 @@ describe('runAllHealthChecks', () => {
     })
 
     mockIs.mockResolvedValue({
-      data: [{ id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', name: 'System 1', url: 'https://system1.com', status: 'offline' }],
+      data: [{ id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', name: 'System 1', url: 'https://system1.com', status: 'offline', timeout_threshold: null, failure_threshold: null }],
       error: null,
     })
 
@@ -876,7 +877,7 @@ describe('runAllHealthChecks', () => {
     })
 
     mockIs.mockResolvedValue({
-      data: [{ id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', name: 'System 1', url: 'https://system1.com', status: 'offline' }],
+      data: [{ id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', name: 'System 1', url: 'https://system1.com', status: 'offline', timeout_threshold: null, failure_threshold: null }],
       error: null,
     })
 
@@ -908,7 +909,7 @@ describe('runAllHealthChecks', () => {
     })
 
     mockIs.mockResolvedValue({
-      data: [{ id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', name: 'System 1', url: 'https://system1.com', status: 'online' }],
+      data: [{ id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', name: 'System 1', url: 'https://system1.com', status: 'online', timeout_threshold: null, failure_threshold: null }],
       error: null,
     })
 
@@ -932,7 +933,7 @@ describe('runAllHealthChecks', () => {
     })
 
     mockIs.mockResolvedValue({
-      data: [{ id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', name: 'System 1', url: 'https://system1.com', status: 'online' }],
+      data: [{ id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', name: 'System 1', url: 'https://system1.com', status: 'online', timeout_threshold: null, failure_threshold: null }],
       error: null,
     })
 
@@ -946,6 +947,143 @@ describe('runAllHealthChecks', () => {
 
     expect(results).toHaveLength(1)
     expect(revalidatePath).toHaveBeenCalledWith('/')
+
+    vi.restoreAllMocks()
+  })
+
+  // ── Per-system config tests (Story 5-7) ──────────────────────────
+
+  it('should pass custom timeout to checkSystemHealthWithRetry when system has timeout_threshold', async () => {
+    mockIs.mockResolvedValue({
+      data: [
+        { id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', name: 'System 1', url: 'https://system1.com', status: 'online', timeout_threshold: 5000, failure_threshold: null },
+      ],
+      error: null,
+    })
+
+    await runAllHealthChecks()
+
+    expect(checkSystemHealthWithRetry).toHaveBeenCalledWith(
+      { id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', url: 'https://system1.com' },
+      { timeoutMs: 5000 },
+    )
+  })
+
+  it('should pass undefined options when system has null timeout_threshold', async () => {
+    mockIs.mockResolvedValue({
+      data: [
+        { id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', name: 'System 1', url: 'https://system1.com', status: 'online', timeout_threshold: null, failure_threshold: null },
+      ],
+      error: null,
+    })
+
+    await runAllHealthChecks()
+
+    expect(checkSystemHealthWithRetry).toHaveBeenCalledWith(
+      { id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', url: 'https://system1.com' },
+      undefined,
+    )
+  })
+
+  it('should use per-system failure threshold — system with threshold 5 stays online at 3 failures', async () => {
+    // System with custom failure_threshold: 5
+    mockIs.mockResolvedValue({
+      data: [
+        { id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', name: 'System A', url: 'https://a.com', status: 'online', timeout_threshold: null, failure_threshold: 5 },
+      ],
+      error: null,
+    })
+
+    // System currently has 2 consecutive failures → will become 3 after increment
+    mockCounterSingle.mockResolvedValue({
+      data: { consecutive_failures: 2 },
+      error: null,
+    })
+
+    vi.mocked(checkSystemHealthWithRetry).mockResolvedValue({
+      systemId: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+      status: 'failure',
+      responseTime: null,
+      errorMessage: 'Timeout',
+      checkedAt: '2026-01-01T00:00:00Z',
+    })
+
+    await runAllHealthChecks()
+
+    // 3 < 5 threshold → should NOT set status to offline
+    // Should call updateSystemHealthStatus with null status (below threshold path)
+    const updateCalls = mockUpdate.mock.calls
+    const offlineCall = updateCalls.find(
+      (call) => call[0]?.status === 'offline',
+    )
+    expect(offlineCall).toBeUndefined()
+  })
+
+  it('should use per-system failure threshold — system with threshold 5 goes offline at 5 failures', async () => {
+    // System with custom failure_threshold: 5
+    mockIs.mockResolvedValue({
+      data: [
+        { id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', name: 'System A', url: 'https://a.com', status: 'online', timeout_threshold: null, failure_threshold: 5 },
+      ],
+      error: null,
+    })
+
+    // System currently has 4 consecutive failures → will become 5 after increment
+    mockCounterSingle.mockResolvedValue({
+      data: { consecutive_failures: 4 },
+      error: null,
+    })
+
+    vi.mocked(checkSystemHealthWithRetry).mockResolvedValue({
+      systemId: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+      status: 'failure',
+      responseTime: null,
+      errorMessage: 'Timeout',
+      checkedAt: '2026-01-01T00:00:00Z',
+    })
+
+    vi.spyOn(console, 'info').mockImplementation(() => {})
+
+    await runAllHealthChecks()
+
+    // 5 >= 5 threshold → should set status to offline
+    expect(mockUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({ status: 'offline' }),
+    )
+
+    vi.restoreAllMocks()
+  })
+
+  it('should use default failure threshold (3) when system has null failure_threshold', async () => {
+    mockIs.mockResolvedValue({
+      data: [
+        { id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', name: 'System B', url: 'https://b.com', status: 'online', timeout_threshold: null, failure_threshold: null },
+      ],
+      error: null,
+    })
+
+    // 2 consecutive failures → will become 3 = DEFAULT_FAILURE_THRESHOLD
+    mockCounterSingle.mockResolvedValue({
+      data: { consecutive_failures: 2 },
+      error: null,
+    })
+
+    vi.mocked(checkSystemHealthWithRetry).mockResolvedValue({
+      systemId: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+      status: 'failure',
+      responseTime: null,
+      errorMessage: 'Timeout',
+      checkedAt: '2026-01-01T00:00:00Z',
+    })
+
+    vi.spyOn(console, 'info').mockImplementation(() => {})
+
+    await runAllHealthChecks()
+
+    // 3 >= 3 (default threshold) → should set status to offline
+    expect(mockUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({ status: 'offline' }),
+    )
 
     vi.restoreAllMocks()
   })

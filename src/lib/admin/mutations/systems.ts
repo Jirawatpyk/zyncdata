@@ -52,6 +52,9 @@ export function useCreateSystem() {
         lastCheckedAt: null,
         category: newSystem.category ?? null,
         consecutiveFailures: 0,
+        checkInterval: null,
+        timeoutThreshold: null,
+        failureThreshold: null,
       }
 
       queryClient.setQueryData<System[]>(['admin', 'systems'], (old) => [

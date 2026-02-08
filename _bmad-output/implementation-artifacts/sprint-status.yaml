@@ -90,7 +90,7 @@ development_status:
   5-4-health-monitoring-dashboard: done
   5-5-real-time-dashboard-updates: done
   5-6-health-check-failure-notifications: done
-  5-7-configurable-health-check-settings: backlog
+  5-7-configurable-health-check-settings: done
   5-8-historical-health-check-data: backlog
   epic-5-retrospective: optional
 

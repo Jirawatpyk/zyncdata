@@ -1,10 +1,16 @@
 import StatusBadge from '@/components/patterns/StatusBadge'
+import HealthConfigDialog from './HealthConfigDialog'
 import { cn } from '@/lib/utils'
 import { formatDistanceToNow } from 'date-fns'
 import type { SystemHealthSummary } from '@/lib/validations/health'
 
 interface SystemsHealthTableProps {
   systems: SystemHealthSummary[]
+}
+
+function formatConfigValue(value: number | null, unit: string, defaultLabel: string): string {
+  if (value === null) return `${defaultLabel} (default)`
+  return `${value}${unit}`
 }
 
 export default function SystemsHealthTable({ systems }: SystemsHealthTableProps) {
@@ -25,6 +31,7 @@ export default function SystemsHealthTable({ systems }: SystemsHealthTableProps)
             <th className="px-4 py-3 text-left font-medium text-muted-foreground">Status</th>
             <th className="px-4 py-3 text-right font-medium text-muted-foreground">Response Time</th>
             <th className="px-4 py-3 text-right font-medium text-muted-foreground">Last Checked</th>
+            <th className="px-4 py-3 text-center font-medium text-muted-foreground">Config</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-border">
@@ -33,11 +40,20 @@ export default function SystemsHealthTable({ systems }: SystemsHealthTableProps)
               key={system.id}
               className={cn(
                 'transition-colors',
-                system.status === 'offline' && 'bg-red-50',
+                system.status === 'offline' && 'bg-destructive/10',
               )}
               data-testid={`health-row-${system.id}`}
             >
-              <td className="px-4 py-3 font-medium">{system.name}</td>
+              <td className="px-4 py-3">
+                <div className="font-medium">{system.name}</div>
+                <div className="text-xs text-muted-foreground">
+                  {formatConfigValue(system.checkInterval, 's', '60s')}
+                  {' / '}
+                  {formatConfigValue(system.timeoutThreshold, 'ms', '10000ms')}
+                  {' / '}
+                  {formatConfigValue(system.failureThreshold, ' failures', '3 failures')}
+                </div>
+              </td>
               <td className="px-4 py-3">
                 <StatusBadge status={system.status} />
               </td>
@@ -48,6 +64,9 @@ export default function SystemsHealthTable({ systems }: SystemsHealthTableProps)
                 {system.lastCheckedAt
                   ? formatDistanceToNow(new Date(system.lastCheckedAt), { addSuffix: true })
                   : 'Never'}
+              </td>
+              <td className="px-4 py-3 text-center">
+                <HealthConfigDialog systemId={system.id} systemName={system.name} />
               </td>
             </tr>
           ))}
