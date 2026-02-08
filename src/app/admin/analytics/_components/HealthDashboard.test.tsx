@@ -30,6 +30,12 @@ vi.mock('recharts', () => ({
   ResponsiveContainer: ({ children }: { children: React.ReactNode }) => <div data-testid="responsive-container">{children}</div>,
 }))
 
+// Mock useHealthMonitor hook
+const mockConnectionState = vi.fn().mockReturnValue('disconnected')
+vi.mock('@/lib/hooks/useHealthMonitor', () => ({
+  useHealthMonitor: () => ({ connectionState: mockConnectionState() }),
+}))
+
 let mockFetch: ReturnType<typeof vi.fn>
 
 describe('HealthDashboard', () => {
@@ -37,6 +43,7 @@ describe('HealthDashboard', () => {
     mockFetch = vi.fn()
     vi.stubGlobal('fetch', mockFetch)
     vi.useFakeTimers()
+    mockConnectionState.mockReturnValue('disconnected')
   })
 
   afterEach(() => {
@@ -135,5 +142,79 @@ describe('HealthDashboard', () => {
 
     const offlineRow = screen.getByTestId('health-row-off-1')
     expect(offlineRow.className).toContain('bg-red-50')
+  })
+
+  // Task 7 tests: useHealthMonitor integration
+
+  it('calls useHealthMonitor hook on mount (7.1)', async () => {
+    vi.useRealTimers()
+    const data = createMockHealthDashboard()
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ data, error: null }),
+    })
+
+    render(<HealthDashboard />, { wrapper: createQueryWrapper() })
+
+    await waitFor(() => {
+      expect(screen.getByTestId('health-dashboard')).toBeInTheDocument()
+    })
+
+    // The mock was called — proves hook is invoked on mount
+    expect(mockConnectionState).toHaveBeenCalled()
+  })
+
+  it('passes connected state to ConnectionStatus (7.2)', async () => {
+    vi.useRealTimers()
+    mockConnectionState.mockReturnValue('connected')
+    const data = createMockHealthDashboard()
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ data, error: null }),
+    })
+
+    render(<HealthDashboard />, { wrapper: createQueryWrapper() })
+
+    await waitFor(() => {
+      expect(screen.getByTestId('health-dashboard')).toBeInTheDocument()
+    })
+
+    expect(screen.getByText('Real-time')).toBeInTheDocument()
+  })
+
+  it('passes reconnecting state to ConnectionStatus (7.2)', async () => {
+    vi.useRealTimers()
+    mockConnectionState.mockReturnValue('reconnecting')
+    const data = createMockHealthDashboard()
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ data, error: null }),
+    })
+
+    render(<HealthDashboard />, { wrapper: createQueryWrapper() })
+
+    await waitFor(() => {
+      expect(screen.getByTestId('health-dashboard')).toBeInTheDocument()
+    })
+
+    expect(screen.getByText('Reconnecting...')).toBeInTheDocument()
+  })
+
+  it('shows Polling badge when disconnected (default state) (7.2)', async () => {
+    vi.useRealTimers()
+    mockConnectionState.mockReturnValue('disconnected')
+    const data = createMockHealthDashboard()
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ data, error: null }),
+    })
+
+    render(<HealthDashboard />, { wrapper: createQueryWrapper() })
+
+    await waitFor(() => {
+      expect(screen.getByTestId('health-dashboard')).toBeInTheDocument()
+    })
+
+    expect(screen.getByText('Polling')).toBeInTheDocument()
   })
 })

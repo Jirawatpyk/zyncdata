@@ -2,6 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query'
 import { healthDashboardQueryOptions } from '@/lib/admin/queries/health'
+import { useHealthMonitor } from '@/lib/hooks/useHealthMonitor'
 import type { HealthDashboardData } from '@/lib/validations/health'
 import HealthSummaryCards from './HealthSummaryCards'
 import SystemsHealthTable from './SystemsHealthTable'
@@ -14,6 +15,7 @@ interface HealthDashboardProps {
 }
 
 export default function HealthDashboard({ initialData }: HealthDashboardProps) {
+  const { connectionState } = useHealthMonitor()
   const { data, isPending, isError } = useQuery({
     ...healthDashboardQueryOptions,
     initialData,
@@ -36,6 +38,7 @@ export default function HealthDashboard({ initialData }: HealthDashboardProps) {
       <ConnectionStatus
         lastUpdated={data.lastUpdated}
         refetchInterval={healthDashboardQueryOptions.refetchInterval as number}
+        connectionState={connectionState}
       />
       <HealthSummaryCards summary={data.summary} />
       <SystemsHealthTable systems={data.systems} />
