@@ -7,6 +7,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { NextResponse } from 'next/server'
 import type { User } from '@supabase/supabase-js'
+import { createMockSystem } from '@/lib/test-utils/mock-factories'
 
 // Mock dependencies before imports
 vi.mock('@/lib/auth/guard', () => ({
@@ -71,26 +72,9 @@ function createDeleteRequest(): Request {
   })
 }
 
-const MOCK_SYSTEM = {
-  id: TEST_UUID,
-  name: 'Test',
-  url: 'https://example.com',
+const MOCK_SYSTEM = createMockSystem({
   logoUrl: 'https://abc.supabase.co/storage/v1/object/public/system-logos/id/123.png',
-  description: null,
-  status: null,
-  responseTime: null,
-  displayOrder: 0,
-  enabled: true,
-  createdAt: '2026-01-01T00:00:00Z',
-  updatedAt: '2026-01-01T00:00:00Z',
-  category: null,
-  deletedAt: null,
-  lastCheckedAt: null,
-  consecutiveFailures: 0,
-  checkInterval: null,
-  timeoutThreshold: null,
-  failureThreshold: null,
-}
+})
 
 describe('POST /api/systems/[id]/logo Guardrails', () => {
   beforeEach(() => {

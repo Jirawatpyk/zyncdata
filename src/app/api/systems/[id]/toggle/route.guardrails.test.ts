@@ -7,6 +7,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { NextResponse } from 'next/server'
 import type { User } from '@supabase/supabase-js'
+import { createMockSystem } from '@/lib/test-utils/mock-factories'
 
 // Mock dependencies before imports
 vi.mock('@/lib/auth/guard', () => ({
@@ -49,26 +50,7 @@ describe('PATCH /api/systems/[id]/toggle Guardrails', () => {
         user: { id: 'user-1' } as User,
         role: 'admin',
       })
-      vi.mocked(toggleSystem).mockResolvedValue({
-        id: TEST_UUID,
-        name: 'Test',
-        url: 'https://example.com',
-        logoUrl: null,
-        description: null,
-        status: null,
-        responseTime: null,
-        displayOrder: 0,
-        enabled: false,
-        category: null,
-        createdAt: '2026-01-01T00:00:00Z',
-        updatedAt: '2026-01-01T00:00:00Z',
-        deletedAt: null,
-        lastCheckedAt: null,
-        consecutiveFailures: 0,
-        checkInterval: null,
-        timeoutThreshold: null,
-        failureThreshold: null,
-      })
+      vi.mocked(toggleSystem).mockResolvedValue(createMockSystem({ enabled: false }))
 
       await PATCH(createRequest({ enabled: false }), createParams())
 
@@ -153,26 +135,7 @@ describe('PATCH /api/systems/[id]/toggle Guardrails', () => {
         user: { id: 'user-1' } as User,
         role: 'admin',
       })
-      vi.mocked(toggleSystem).mockResolvedValue({
-        id: TEST_UUID,
-        name: 'Test',
-        url: 'https://example.com',
-        logoUrl: null,
-        description: null,
-        status: null,
-        responseTime: null,
-        displayOrder: 0,
-        enabled: true,
-        category: null,
-        createdAt: '2026-01-01T00:00:00Z',
-        updatedAt: '2026-01-01T00:00:00Z',
-        deletedAt: null,
-        lastCheckedAt: null,
-        consecutiveFailures: 0,
-        checkInterval: null,
-        timeoutThreshold: null,
-        failureThreshold: null,
-      })
+      vi.mocked(toggleSystem).mockResolvedValue(createMockSystem())
 
       const response = await PATCH(createRequest({ enabled: true }), createParams())
       const body = await response.json()

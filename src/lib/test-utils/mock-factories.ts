@@ -12,7 +12,7 @@ import type { AuthResult } from '@/lib/auth/guard'
 import type { HeroContent, PillarsContent, FooterContent, ThemeContent } from '@/lib/validations/content'
 import type { LandingPageContent } from '@/lib/content/queries'
 
-// ── System ──────────────────────────────────────────────────────────
+// ── System (camelCase — app shape) ──────────────────────────────────
 
 const SYSTEM_DEFAULTS: System = {
   id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
@@ -46,6 +46,67 @@ export function createMockSystemList(count: number, overrides?: Partial<System>)
       name: `System ${i + 1}`,
       url: `https://system-${i + 1}.example.com`,
       displayOrder: i,
+      ...overrides,
+    }),
+  )
+}
+
+// ── System DB (snake_case — Supabase row shape) ─────────────────────
+
+/** Snake_case shape matching raw Supabase `systems` table rows. */
+export type SystemDb = {
+  id: string
+  name: string
+  url: string
+  logo_url: string | null
+  description: string | null
+  status: string | null
+  response_time: number | null
+  display_order: number
+  enabled: boolean
+  created_at: string
+  updated_at: string
+  deleted_at: string | null
+  last_checked_at: string | null
+  category: string | null
+  consecutive_failures: number
+  check_interval: number | null
+  timeout_threshold: number | null
+  failure_threshold: number | null
+}
+
+const SYSTEM_DB_DEFAULTS: SystemDb = {
+  id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+  name: 'Test System',
+  url: 'https://example.com',
+  logo_url: null,
+  description: null,
+  status: null,
+  response_time: null,
+  display_order: 0,
+  enabled: true,
+  created_at: '2026-01-01T00:00:00Z',
+  updated_at: '2026-01-01T00:00:00Z',
+  deleted_at: null,
+  last_checked_at: null,
+  category: null,
+  consecutive_failures: 0,
+  check_interval: null,
+  timeout_threshold: null,
+  failure_threshold: null,
+}
+
+export function createMockSystemDb(overrides?: Partial<SystemDb>): SystemDb {
+  return { ...SYSTEM_DB_DEFAULTS, ...overrides }
+}
+
+export function createMockSystemDbList(count: number, overrides?: Partial<SystemDb>): SystemDb[] {
+  return Array.from({ length: count }, (_, i) =>
+    createMockSystemDb({
+      id: `00000000-0000-4000-a000-${String(i + 1).padStart(12, '0')}`,
+      name: `System ${i + 1}`,
+      url: `https://system-${i + 1}.example.com`,
+      display_order: i,
       ...overrides,
     }),
   )

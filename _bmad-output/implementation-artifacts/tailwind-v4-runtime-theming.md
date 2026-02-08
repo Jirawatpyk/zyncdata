@@ -192,6 +192,24 @@ The override happens via `style` attribute on a server component (`PublicLayout`
 
 In iframe-based previews (`srcDoc`), `next/font/google` `@font-face` rules don't propagate. The preview HTML must load Google Fonts via `<link>` tags directly, and CSP `style-src` must include `https://fonts.googleapis.com`.
 
+### 6. OKLCH + Recharts: Never Wrap `var()` in `hsl()`
+
+Our CSS variables use **OKLCH** color values (via Tailwind v4), not HSL. Recharts accepts color props (`fill`, `stroke`, `color`) as plain strings. If you wrap a CSS variable in `hsl()`, the OKLCH value gets misinterpreted and produces broken/wrong colors.
+
+```tsx
+/* BROKEN — hsl() wraps an OKLCH value */
+<Bar fill="hsl(var(--chart-1))" />
+<Line stroke="hsl(var(--chart-2))" />
+
+/* CORRECT — use var() directly */
+<Bar fill="var(--chart-1)" />
+<Line stroke="var(--chart-2)" />
+```
+
+**Rule:** For any Recharts component (or any non-Tailwind CSS context), always pass `var(--variable-name)` directly. Never wrap in `hsl()`, `rgb()`, or any color function.
+
+**Origin:** Epic 5 Stories 5-4 and 5-8 — OKLCH color mismatch caught in code review.
+
 ---
 
 ## When to Use This Pattern

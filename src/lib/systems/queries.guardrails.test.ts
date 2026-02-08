@@ -5,6 +5,7 @@
  * Breaking these tests indicates a contract violation that will break consumers.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { createMockSystemDb } from '@/lib/test-utils/mock-factories'
 
 vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(),
@@ -21,26 +22,15 @@ describe('getSystems Guardrails', () => {
     vi.clearAllMocks()
     mockOrder.mockResolvedValue({
       data: [
-        {
-          id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
-          name: 'Test System',
+        createMockSystemDb({
           url: 'https://test.com',
           logo_url: 'https://logo.com/img.png',
           description: 'Test description',
           status: 'operational',
           response_time: 150,
           display_order: 1,
-          enabled: true,
-          created_at: '2026-01-01T00:00:00Z',
           updated_at: '2026-01-02T00:00:00Z',
-          deleted_at: null,
-          last_checked_at: null,
-          category: null,
-          consecutive_failures: 0,
-          check_interval: null,
-          timeout_threshold: null,
-          failure_threshold: null,
-        },
+        }),
       ],
       error: null,
     })

@@ -92,7 +92,7 @@ development_status:
   5-6-health-check-failure-notifications: done
   5-7-configurable-health-check-settings: done
   5-8-historical-health-check-data: done
-  epic-5-retrospective: optional
+  epic-5-retrospective: done
 
   # Epic 6: User Management & Administration (5 stories)
   epic-6: backlog

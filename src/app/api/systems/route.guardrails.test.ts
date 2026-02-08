@@ -7,6 +7,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { NextResponse } from 'next/server'
 import type { User } from '@supabase/supabase-js'
+import { createMockSystem } from '@/lib/test-utils/mock-factories'
 
 // Mock dependencies before imports
 vi.mock('@/lib/auth/guard', () => ({
@@ -83,26 +84,7 @@ describe('GET /api/systems Guardrails', () => {
         role: 'admin',
       })
       vi.mocked(getSystems).mockResolvedValue([
-        {
-          id: 'sys-1',
-          name: 'Test',
-          url: 'https://test.com',
-          logoUrl: null,
-          description: null,
-          status: 'operational',
-          responseTime: 100,
-          displayOrder: 0,
-          enabled: true,
-          category: null,
-          createdAt: '2026-01-01T00:00:00Z',
-          updatedAt: '2026-01-01T00:00:00Z',
-          deletedAt: null,
-          lastCheckedAt: null,
-          consecutiveFailures: 0,
-          checkInterval: null,
-          timeoutThreshold: null,
-          failureThreshold: null,
-        },
+        createMockSystem({ id: 'sys-1', status: 'operational', responseTime: 100 }),
       ])
 
       const response = await GET()

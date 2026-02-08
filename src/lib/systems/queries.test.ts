@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { createMockSystemDb } from '@/lib/test-utils/mock-factories'
 
 vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(),
@@ -20,46 +21,25 @@ describe('getEnabledSystems', () => {
     vi.clearAllMocks()
     mockOrder.mockResolvedValue({
       data: [
-        {
-          id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+        createMockSystemDb({
           name: 'TINEDY',
           url: 'https://tinedy.dxt-ai.com',
-          logo_url: null,
           description: 'Task management',
-          status: null,
           response_time: 100,
           display_order: 1,
-          enabled: true,
-          created_at: '2026-01-01T00:00:00Z',
-          updated_at: '2026-01-01T00:00:00Z',
-          deleted_at: null,
-          last_checked_at: null,
           category: 'dxt_smart_platform',
-          consecutive_failures: 0,
-          check_interval: null,
-          timeout_threshold: null,
-          failure_threshold: null,
-        },
-        {
+        }),
+        createMockSystemDb({
           id: 'a23bc45d-67ef-8901-b234-5c6d7e8f9012',
           name: 'SCOPELABS',
           url: 'https://scopelabs.dxt-ai.com',
-          logo_url: null,
           description: 'Analytics platform',
           status: 'coming_soon',
-          response_time: null,
           display_order: 2,
-          enabled: true,
           created_at: '2026-01-02T00:00:00Z',
           updated_at: '2026-01-02T00:00:00Z',
-          deleted_at: null,
-          last_checked_at: null,
           category: 'dxt_solutions',
-          consecutive_failures: 0,
-          check_interval: null,
-          timeout_threshold: null,
-          failure_threshold: null,
-        },
+        }),
       ],
       error: null,
     })
@@ -137,26 +117,15 @@ describe('getSystemByName', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockMaybeSingle.mockResolvedValue({
-      data: {
-        id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+      data: createMockSystemDb({
         name: 'VOCA',
         url: 'https://voca.dxt-ai.com',
-        logo_url: null,
         description: 'AI-powered vocabulary learning',
         status: 'coming_soon',
         response_time: 150,
         display_order: 2,
-        enabled: true,
-        created_at: '2026-01-01T00:00:00Z',
-        updated_at: '2026-01-01T00:00:00Z',
-        deleted_at: null,
-        last_checked_at: null,
         category: 'dxt_solutions',
-        consecutive_failures: 0,
-        check_interval: null,
-        timeout_threshold: null,
-        failure_threshold: null,
-      },
+      }),
       error: null,
     })
     mockIs.mockReturnValue({ maybeSingle: mockMaybeSingle })
@@ -228,46 +197,24 @@ describe('getSystems', () => {
     vi.clearAllMocks()
     mockOrder.mockResolvedValue({
       data: [
-        {
-          id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+        createMockSystemDb({
           name: 'System 1',
           url: 'https://sys1.com',
-          logo_url: null,
           description: 'Desc 1',
           status: 'operational',
           response_time: 100,
-          display_order: 0,
-          enabled: true,
-          created_at: '2026-01-01T00:00:00Z',
-          updated_at: '2026-01-01T00:00:00Z',
-          deleted_at: null,
-          last_checked_at: null,
           category: 'dxt_smart_platform',
-          consecutive_failures: 0,
-          check_interval: null,
-          timeout_threshold: null,
-          failure_threshold: null,
-        },
-        {
+        }),
+        createMockSystemDb({
           id: 'a23bc45d-67ef-8901-b234-5c6d7e8f9012',
           name: 'System 2',
           url: 'https://sys2.com',
           logo_url: 'https://logo.com/img.png',
-          description: null,
-          status: null,
-          response_time: null,
           display_order: 1,
           enabled: false,
           created_at: '2026-01-02T00:00:00Z',
           updated_at: '2026-01-02T00:00:00Z',
-          deleted_at: null,
-          last_checked_at: null,
-          category: null,
-          consecutive_failures: 0,
-          check_interval: null,
-          timeout_threshold: null,
-          failure_threshold: null,
-        },
+        }),
       ],
       error: null,
     })
@@ -375,9 +322,9 @@ describe('getEnabledSystemsByCategory', () => {
   it('should group systems by category', async () => {
     mockOrder.mockResolvedValue({
       data: [
-        { id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', name: 'S1', url: 'https://s1.com', logo_url: null, description: null, status: null, response_time: null, display_order: 0, enabled: true, created_at: '2026-01-01T00:00:00Z', updated_at: '2026-01-01T00:00:00Z', deleted_at: null, last_checked_at: null, category: 'dxt_smart_platform', consecutive_failures: 0, check_interval: null, timeout_threshold: null, failure_threshold: null },
-        { id: 'a23bc45d-67ef-8901-b234-5c6d7e8f9012', name: 'S2', url: 'https://s2.com', logo_url: null, description: null, status: null, response_time: null, display_order: 1, enabled: true, created_at: '2026-01-01T00:00:00Z', updated_at: '2026-01-01T00:00:00Z', deleted_at: null, last_checked_at: null, category: 'dxt_smart_platform', consecutive_failures: 0, check_interval: null, timeout_threshold: null, failure_threshold: null },
-        { id: 'b34cd56e-78ef-4012-a345-6d7e8f901234', name: 'S3', url: 'https://s3.com', logo_url: null, description: null, status: null, response_time: null, display_order: 2, enabled: true, created_at: '2026-01-01T00:00:00Z', updated_at: '2026-01-01T00:00:00Z', deleted_at: null, last_checked_at: null, category: 'dxt_solutions', consecutive_failures: 0, check_interval: null, timeout_threshold: null, failure_threshold: null },
+        createMockSystemDb({ name: 'S1', url: 'https://s1.com', category: 'dxt_smart_platform' }),
+        createMockSystemDb({ id: 'a23bc45d-67ef-8901-b234-5c6d7e8f9012', name: 'S2', url: 'https://s2.com', display_order: 1, category: 'dxt_smart_platform' }),
+        createMockSystemDb({ id: 'b34cd56e-78ef-4012-a345-6d7e8f901234', name: 'S3', url: 'https://s3.com', display_order: 2, category: 'dxt_solutions' }),
       ],
       error: null,
     })
@@ -392,7 +339,7 @@ describe('getEnabledSystemsByCategory', () => {
   it('should put null-category systems in other bucket', async () => {
     mockOrder.mockResolvedValue({
       data: [
-        { id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', name: 'S1', url: 'https://s1.com', logo_url: null, description: null, status: null, response_time: null, display_order: 0, enabled: true, created_at: '2026-01-01T00:00:00Z', updated_at: '2026-01-01T00:00:00Z', deleted_at: null, last_checked_at: null, category: null, consecutive_failures: 0, check_interval: null, timeout_threshold: null, failure_threshold: null },
+        createMockSystemDb({ name: 'S1', url: 'https://s1.com' }),
       ],
       error: null,
     })

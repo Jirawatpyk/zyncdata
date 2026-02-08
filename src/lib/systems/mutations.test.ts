@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { createMockSystemDb, createMockSystem } from '@/lib/test-utils/mock-factories'
 import {
   createSystem,
   updateSystem,
@@ -41,26 +42,7 @@ vi.mock('@/lib/systems/queries', async (importOriginal) => {
 // Valid UUID for testing
 const TEST_UUID = 'f47ac10b-58cc-4372-a567-0e02b2c3d479'
 
-const MOCK_SYSTEM_DB = {
-  id: TEST_UUID,
-  name: 'Test System',
-  url: 'https://example.com',
-  logo_url: null,
-  description: null,
-  status: null,
-  response_time: null,
-  display_order: 0,
-  enabled: true,
-  created_at: '2026-01-01T00:00:00Z',
-  updated_at: '2026-01-01T00:00:00Z',
-  deleted_at: null,
-  last_checked_at: null,
-  category: null,
-  consecutive_failures: 0,
-  check_interval: null,
-  timeout_threshold: null,
-  failure_threshold: null,
-}
+const MOCK_SYSTEM_DB = createMockSystemDb()
 
 describe('createSystem', () => {
   beforeEach(() => {
@@ -419,46 +401,8 @@ describe('reorderSystems', () => {
   const TEST_UUID_2 = 'a47ac10b-58cc-4372-a567-0e02b2c3d480'
 
   const MOCK_REORDERED_LIST = [
-    {
-      id: TEST_UUID_2,
-      name: 'System B',
-      url: 'https://b.com',
-      logoUrl: null,
-      description: null,
-      status: null,
-      responseTime: null,
-      displayOrder: 0,
-      enabled: true,
-      createdAt: '2026-01-01T00:00:00Z',
-      updatedAt: '2026-01-01T00:00:00Z',
-      deletedAt: null,
-      lastCheckedAt: null,
-      category: null,
-      consecutiveFailures: 0,
-      checkInterval: null,
-      timeoutThreshold: null,
-      failureThreshold: null,
-    },
-    {
-      id: TEST_UUID,
-      name: 'System A',
-      url: 'https://a.com',
-      logoUrl: null,
-      description: null,
-      status: null,
-      responseTime: null,
-      displayOrder: 1,
-      enabled: true,
-      createdAt: '2026-01-01T00:00:00Z',
-      updatedAt: '2026-01-01T00:00:00Z',
-      deletedAt: null,
-      lastCheckedAt: null,
-      category: null,
-      consecutiveFailures: 0,
-      checkInterval: null,
-      timeoutThreshold: null,
-      failureThreshold: null,
-    },
+    createMockSystem({ id: TEST_UUID_2, name: 'System B', url: 'https://b.com', displayOrder: 0 }),
+    createMockSystem({ id: TEST_UUID, name: 'System A', url: 'https://a.com', displayOrder: 1 }),
   ]
 
   beforeEach(() => {

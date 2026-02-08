@@ -15,6 +15,7 @@
 - [ ] No raw user input in `dangerouslySetInnerHTML` or template strings rendered as HTML
 - [ ] Form actions validate FormData with Zod before processing
 - [ ] API route handlers validate request body/params with Zod before processing
+- [ ] Non-React HTML generation (email templates, PDF, server-rendered HTML) uses `escapeHtml()` for all dynamic values to prevent XSS
 
 ### 2. Authentication & Authorization
 
@@ -89,3 +90,4 @@
 | Missing error check | `.update()` result not checked | Always destructure `{ error }` and handle |
 | AAL enforcement gap | API guard didn't verify MFA level | Add `aal2` check in `requireApiAuth()` |
 | CSP missing source | Sentry endpoint not in `connect-src` | Add to CSP in `next.config.ts` |
+| XSS in non-React HTML | Email template with unescaped user data | Use `escapeHtml()` for all dynamic values in server-generated HTML |
