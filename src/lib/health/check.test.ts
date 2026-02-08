@@ -80,15 +80,16 @@ describe('checkSystemHealth', () => {
     expect(result.errorMessage).toBe('HTTP 503 Service Unavailable')
   })
 
-  it('should return failure for HTTP 4xx', async () => {
+  it('should return success for HTTP 4xx (server responded — WAF/auth block)', async () => {
     vi.mocked(fetch).mockResolvedValue(
-      new Response(null, { status: 404, statusText: 'Not Found' }),
+      new Response(null, { status: 403, statusText: 'Forbidden' }),
     )
 
     const result = await checkSystemHealth(system)
 
-    expect(result.status).toBe('failure')
-    expect(result.errorMessage).toBe('HTTP 404 Not Found')
+    expect(result.status).toBe('success')
+    expect(result.responseTime).toBeTypeOf('number')
+    expect(result.errorMessage).toBeNull()
   })
 
   it('should return failure with "Request timed out" on AbortError', async () => {
@@ -285,7 +286,7 @@ describe('checkSystemHealthWithRetry', () => {
     expect(fetch).toHaveBeenCalledTimes(3)
   })
 
-  it('should NOT retry HTTP 4xx/5xx errors', async () => {
+  it('should NOT retry HTTP 5xx errors', async () => {
     vi.mocked(fetch).mockResolvedValue(
       new Response(null, { status: 503, statusText: 'Service Unavailable' }),
     )
@@ -295,6 +296,18 @@ describe('checkSystemHealthWithRetry', () => {
     expect(result.status).toBe('failure')
     expect(result.errorMessage).toBe('HTTP 503 Service Unavailable')
     // Only 1 attempt — no retries for HTTP errors
+    expect(fetch).toHaveBeenCalledTimes(1)
+  })
+
+  it('should return success for 4xx without retrying (server is online)', async () => {
+    vi.mocked(fetch).mockResolvedValue(
+      new Response(null, { status: 403, statusText: 'Forbidden' }),
+    )
+
+    const result = await checkSystemHealthWithRetry(system, { baseDelayMs: 0 })
+
+    expect(result.status).toBe('success')
+    // Only 1 attempt — 4xx is success, no retry needed
     expect(fetch).toHaveBeenCalledTimes(1)
   })
 

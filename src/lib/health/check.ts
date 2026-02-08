@@ -87,9 +87,12 @@ export async function checkSystemHealth(
 
     const responseTime = Date.now() - start
 
-    // redirect: 'manual' returns 3xx directly without following — a 3xx response
-    // means the server IS running (e.g., auth redirect), so treat as success
-    if (response.ok || (response.status >= 300 && response.status < 400)) {
+    // Any non-5xx HTTP response means the server IS running and reachable:
+    // - 2xx: success
+    // - 3xx: redirect (auth wall, CDN) — server is running
+    // - 4xx: WAF/Cloudflare block, auth required, etc. — server is running
+    // Only 5xx indicates actual server-side issues.
+    if (response.status < 500) {
       return {
         systemId: system.id,
         status: 'success',
