@@ -84,7 +84,8 @@ export default function HealthCheckHistoryTable({
                   >
                     <td className="px-4 py-3">
                       <Badge
-                        variant={check.status === 'success' ? 'secondary' : 'destructive'}
+                        variant={check.status === 'success' ? 'outline' : 'destructive'}
+                        className={check.status === 'success' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : undefined}
                         data-testid={`status-badge-${check.id}`}
                       >
                         {check.status === 'success' ? 'Pass' : 'Fail'}

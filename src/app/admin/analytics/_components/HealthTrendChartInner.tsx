@@ -33,7 +33,7 @@ function CustomDot(props: {
   const { cx, cy, payload } = props
   if (cx == null || cy == null || !payload) return null
 
-  const color = payload.status === 'success' ? 'var(--primary)' : 'var(--destructive)'
+  const color = payload.status === 'success' ? '#10b981' : 'var(--destructive)'
   return <circle cx={cx} cy={cy} r={4} fill={color} stroke="none" />
 }
 
@@ -77,8 +77,8 @@ export default function HealthTrendChartInner({ checks, timeoutThreshold }: Heal
           <Area
             type="monotone"
             dataKey="responseTime"
-            stroke="var(--primary)"
-            fill="var(--primary)"
+            stroke="#10b981"
+            fill="#10b981"
             fillOpacity={0.1}
             dot={<CustomDot />}
             connectNulls={false}
