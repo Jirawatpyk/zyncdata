@@ -48,6 +48,12 @@ playwright/
 
 # Claude Code
 .claude/settings.local.json
+.claude/settings.json
+.claude/skills/
+.agents/
+
+# E2E test artifacts
+tests/e2e/test-logo-*
 
 # vercel
 .vercel
