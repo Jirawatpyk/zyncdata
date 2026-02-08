@@ -10,7 +10,7 @@ interface SystemsHealthTableProps {
 }
 
 function formatConfigValue(value: number | null, unit: string, defaultLabel: string): string {
-  if (value === null) return `${defaultLabel} (default)`
+  if (value == null) return `${defaultLabel} (default)`
   return `${value}${unit}`
 }
 
