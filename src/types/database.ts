@@ -93,6 +93,77 @@ export type Database = {
           },
         ]
       }
+      notification_log: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          notification_type: string
+          recipient_emails: string[]
+          sent_at: string
+          status: string
+          subject: string
+          system_id: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          notification_type: string
+          recipient_emails: string[]
+          sent_at: string
+          status: string
+          subject: string
+          system_id: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          notification_type?: string
+          recipient_emails?: string[]
+          sent_at?: string
+          status?: string
+          subject?: string
+          system_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_log_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "systems"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notification_settings: {
+        Row: {
+          created_at: string
+          id: string
+          notification_emails: string[]
+          notify_on_failure: boolean
+          notify_on_recovery: boolean
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notification_emails?: string[]
+          notify_on_failure?: boolean
+          notify_on_recovery?: boolean
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notification_emails?: string[]
+          notify_on_failure?: boolean
+          notify_on_recovery?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       landing_page_content: {
         Row: {
           content: Json

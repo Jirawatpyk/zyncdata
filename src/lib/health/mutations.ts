@@ -7,6 +7,7 @@ import {
 } from '@/lib/validations/health'
 import { toCamelCase } from '@/lib/utils/transform'
 import { checkSystemHealthWithRetry } from '@/lib/health/check'
+import { sendFailureNotification, sendRecoveryNotification } from '@/lib/health/notifications'
 import { revalidatePath } from 'next/cache'
 import type { Database } from '@/types/database'
 
@@ -152,7 +153,7 @@ export async function runAllHealthChecks(): Promise<HealthCheckResult[]> {
 
   const { data: systems, error } = await supabase
     .from('systems')
-    .select('id, url, status')
+    .select('id, name, url, status')
     .eq('enabled', true)
     .is('deleted_at', null)
 
@@ -192,6 +193,17 @@ export async function runAllHealthChecks(): Promise<HealthCheckResult[]> {
             console.info(
               `[health-check] System ${checkResult.systemId}: offline → online (recovered)`,
             )
+            // Non-blocking recovery notification (AC #3)
+            try {
+              await sendRecoveryNotification({
+                systemId: checkResult.systemId,
+                systemName: system.name,
+                systemUrl: system.url,
+                responseTime: checkResult.responseTime,
+              }, supabase)
+            } catch (notifError) {
+              console.error('[health-check] Recovery notification failed:', notifError)
+            }
           }
         } else {
           // Failure path (AC #1): increment counter, check threshold
@@ -204,6 +216,18 @@ export async function runAllHealthChecks(): Promise<HealthCheckResult[]> {
               console.info(
                 `[health-check] System ${checkResult.systemId}: ${system.status ?? 'unknown'} → offline (${failureCount} consecutive failures)`,
               )
+              // Non-blocking failure notification (AC #1) — first transition only
+              try {
+                await sendFailureNotification({
+                  systemId: checkResult.systemId,
+                  systemName: system.name,
+                  systemUrl: system.url,
+                  errorMessage: checkResult.errorMessage,
+                  failureCount,
+                }, supabase)
+              } catch (notifError) {
+                console.error('[health-check] Failure notification failed:', notifError)
+              }
             }
           } else {
             // Below threshold: update last_checked_at only, keep previous status

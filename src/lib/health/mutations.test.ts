@@ -12,6 +12,13 @@ vi.mock('next/cache', () => ({
   revalidatePath: vi.fn(),
 }))
 
+const mockSendFailureNotification = vi.fn()
+const mockSendRecoveryNotification = vi.fn()
+vi.mock('@/lib/health/notifications', () => ({
+  sendFailureNotification: (...args: unknown[]) => mockSendFailureNotification(...args),
+  sendRecoveryNotification: (...args: unknown[]) => mockSendRecoveryNotification(...args),
+}))
+
 import { createServiceClient } from '@/lib/supabase/service'
 import { checkSystemHealthWithRetry } from '@/lib/health/check'
 import { revalidatePath } from 'next/cache'
@@ -471,11 +478,14 @@ describe('runAllHealthChecks', () => {
     // Eliminate jitter randomness in tests — all jitter delays become 0ms
     vi.spyOn(Math, 'random').mockReturnValue(0)
 
+    mockSendFailureNotification.mockResolvedValue(undefined)
+    mockSendRecoveryNotification.mockResolvedValue(undefined)
+
     // Default: two enabled systems with status 'online'
     mockIs.mockResolvedValue({
       data: [
-        { id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', url: 'https://system1.com', status: 'online' },
-        { id: 'b58dc20c-69dd-5483-b678-1f13c3d4e590', url: 'https://system2.com', status: 'online' },
+        { id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', name: 'System 1', url: 'https://system1.com', status: 'online' },
+        { id: 'b58dc20c-69dd-5483-b678-1f13c3d4e590', name: 'System 2', url: 'https://system2.com', status: 'online' },
       ],
       error: null,
     })
@@ -524,7 +534,7 @@ describe('runAllHealthChecks', () => {
   it('should fetch enabled, non-deleted systems with status column', async () => {
     await runAllHealthChecks()
 
-    expect(mockSelectSystems).toHaveBeenCalledWith('id, url, status')
+    expect(mockSelectSystems).toHaveBeenCalledWith('id, name, url, status')
     expect(mockEqForSelect).toHaveBeenCalledWith('enabled', true)
     expect(mockIs).toHaveBeenCalledWith('deleted_at', null)
   })
@@ -569,7 +579,7 @@ describe('runAllHealthChecks', () => {
 
     // Single system for clarity
     mockIs.mockResolvedValue({
-      data: [{ id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', url: 'https://system1.com', status: 'online' }],
+      data: [{ id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', name: 'System 1', url: 'https://system1.com', status: 'online' }],
       error: null,
     })
 
@@ -599,7 +609,7 @@ describe('runAllHealthChecks', () => {
     })
 
     mockIs.mockResolvedValue({
-      data: [{ id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', url: 'https://system1.com', status: 'online' }],
+      data: [{ id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', name: 'System 1', url: 'https://system1.com', status: 'online' }],
       error: null,
     })
 
@@ -633,7 +643,7 @@ describe('runAllHealthChecks', () => {
     })
 
     mockIs.mockResolvedValue({
-      data: [{ id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', url: 'https://system1.com', status: 'online' }],
+      data: [{ id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', name: 'System 1', url: 'https://system1.com', status: 'online' }],
       error: null,
     })
 
@@ -660,7 +670,7 @@ describe('runAllHealthChecks', () => {
 
     // System is currently offline
     mockIs.mockResolvedValue({
-      data: [{ id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', url: 'https://system1.com', status: 'offline' }],
+      data: [{ id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', name: 'System 1', url: 'https://system1.com', status: 'offline' }],
       error: null,
     })
 
@@ -691,7 +701,7 @@ describe('runAllHealthChecks', () => {
     })
 
     mockIs.mockResolvedValue({
-      data: [{ id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', url: 'https://system1.com', status: 'online' }],
+      data: [{ id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', name: 'System 1', url: 'https://system1.com', status: 'online' }],
       error: null,
     })
 
@@ -790,5 +800,153 @@ describe('runAllHealthChecks', () => {
     mockIs.mockResolvedValue({ data: null, error: { message: 'Connection failed' } })
 
     await expect(runAllHealthChecks()).rejects.toThrow()
+  })
+
+  // ── Notification integration tests (Story 5-6) ──────────────────
+
+  it('should call sendFailureNotification on first offline transition (AC #1)', async () => {
+    mockCounterSingle.mockResolvedValue({
+      data: { consecutive_failures: 2 },
+      error: null,
+    })
+
+    vi.mocked(checkSystemHealthWithRetry).mockResolvedValue({
+      systemId: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+      status: 'failure',
+      responseTime: null,
+      errorMessage: 'Connection refused',
+      checkedAt: '2026-01-01T00:00:00Z',
+    })
+
+    mockIs.mockResolvedValue({
+      data: [{ id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', name: 'System 1', url: 'https://system1.com', status: 'online' }],
+      error: null,
+    })
+
+    vi.spyOn(console, 'info').mockImplementation(() => {})
+
+    await runAllHealthChecks()
+
+    expect(mockSendFailureNotification).toHaveBeenCalledTimes(1)
+    expect(mockSendFailureNotification).toHaveBeenCalledWith(
+      expect.objectContaining({
+        systemId: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+        systemName: 'System 1',
+        systemUrl: 'https://system1.com',
+        errorMessage: 'Connection refused',
+        failureCount: 3,
+      }),
+      expect.anything(),
+    )
+
+    vi.restoreAllMocks()
+  })
+
+  it('should NOT call sendFailureNotification when system is already offline', async () => {
+    mockCounterSingle.mockResolvedValue({
+      data: { consecutive_failures: 4 },
+      error: null,
+    })
+
+    vi.mocked(checkSystemHealthWithRetry).mockResolvedValue({
+      systemId: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+      status: 'failure',
+      responseTime: null,
+      errorMessage: 'Timeout',
+      checkedAt: '2026-01-01T00:00:00Z',
+    })
+
+    mockIs.mockResolvedValue({
+      data: [{ id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', name: 'System 1', url: 'https://system1.com', status: 'offline' }],
+      error: null,
+    })
+
+    await runAllHealthChecks()
+
+    expect(mockSendFailureNotification).not.toHaveBeenCalled()
+  })
+
+  it('should call sendRecoveryNotification when recovering from offline (AC #3)', async () => {
+    vi.mocked(checkSystemHealthWithRetry).mockResolvedValue({
+      systemId: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+      status: 'success',
+      responseTime: 150,
+      errorMessage: null,
+      checkedAt: '2026-01-01T00:00:00Z',
+    })
+
+    mockIs.mockResolvedValue({
+      data: [{ id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', name: 'System 1', url: 'https://system1.com', status: 'offline' }],
+      error: null,
+    })
+
+    vi.spyOn(console, 'info').mockImplementation(() => {})
+
+    await runAllHealthChecks()
+
+    expect(mockSendRecoveryNotification).toHaveBeenCalledTimes(1)
+    expect(mockSendRecoveryNotification).toHaveBeenCalledWith(
+      expect.objectContaining({
+        systemId: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+        systemName: 'System 1',
+        systemUrl: 'https://system1.com',
+        responseTime: 150,
+      }),
+      expect.anything(),
+    )
+
+    vi.restoreAllMocks()
+  })
+
+  it('should NOT call sendRecoveryNotification when system was already online', async () => {
+    vi.mocked(checkSystemHealthWithRetry).mockResolvedValue({
+      systemId: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+      status: 'success',
+      responseTime: 100,
+      errorMessage: null,
+      checkedAt: '2026-01-01T00:00:00Z',
+    })
+
+    mockIs.mockResolvedValue({
+      data: [{ id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', name: 'System 1', url: 'https://system1.com', status: 'online' }],
+      error: null,
+    })
+
+    await runAllHealthChecks()
+
+    expect(mockSendRecoveryNotification).not.toHaveBeenCalled()
+  })
+
+  it('should not fail health check when notification throws (non-blocking)', async () => {
+    mockCounterSingle.mockResolvedValue({
+      data: { consecutive_failures: 2 },
+      error: null,
+    })
+
+    vi.mocked(checkSystemHealthWithRetry).mockResolvedValue({
+      systemId: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+      status: 'failure',
+      responseTime: null,
+      errorMessage: 'Timeout',
+      checkedAt: '2026-01-01T00:00:00Z',
+    })
+
+    mockIs.mockResolvedValue({
+      data: [{ id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479', name: 'System 1', url: 'https://system1.com', status: 'online' }],
+      error: null,
+    })
+
+    // Notification throws
+    mockSendFailureNotification.mockRejectedValue(new Error('Notification service down'))
+    vi.spyOn(console, 'info').mockImplementation(() => {})
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    // Should NOT throw
+    const results = await runAllHealthChecks()
+
+    expect(results).toHaveLength(1)
+    expect(revalidatePath).toHaveBeenCalledWith('/')
+
+    vi.restoreAllMocks()
   })
 })

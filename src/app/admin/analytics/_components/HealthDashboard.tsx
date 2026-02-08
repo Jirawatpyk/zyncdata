@@ -8,6 +8,7 @@ import HealthSummaryCards from './HealthSummaryCards'
 import SystemsHealthTable from './SystemsHealthTable'
 import ResponseTimeChart from './ResponseTimeChart'
 import ConnectionStatus from './ConnectionStatus'
+import NotificationSettings from './NotificationSettings'
 import AnalyticsSkeleton from './AnalyticsSkeleton'
 
 interface HealthDashboardProps {
@@ -46,6 +47,7 @@ export default function HealthDashboard({ initialData }: HealthDashboardProps) {
         <h2 className="mb-4 text-lg font-semibold">Response Times</h2>
         <ResponseTimeChart systems={data.systems} />
       </div>
+      <NotificationSettings />
     </div>
   )
 }
