@@ -1,8 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import UsersTable from './UsersTable'
 import { createQueryWrapper } from '@/lib/test-utils'
 import { createMockCmsUser, createMockCmsUserList } from '@/lib/test-utils/mock-factories'
+
+vi.mock('sonner', () => ({
+  toast: {
+    success: vi.fn(),
+    error: vi.fn(),
+  },
+}))
 
 const mockFetch = vi.fn()
 global.fetch = mockFetch
@@ -14,7 +21,7 @@ describe('UsersTable', () => {
 
   it('should render loading skeleton initially', () => {
     mockFetch.mockImplementation(() => new Promise(() => {}))
-    render(<UsersTable />, { wrapper: createQueryWrapper() })
+    render(<UsersTable currentAuthUserId="current-user-id" />, { wrapper: createQueryWrapper() })
 
     expect(screen.getByTestId('users-table-loading')).toBeInTheDocument()
   })
@@ -29,7 +36,7 @@ describe('UsersTable', () => {
       json: () => Promise.resolve({ data: users, error: null }),
     })
 
-    render(<UsersTable />, { wrapper: createQueryWrapper() })
+    render(<UsersTable currentAuthUserId="current-user-id" />, { wrapper: createQueryWrapper() })
 
     await waitFor(() => {
       expect(screen.getByTestId('users-table')).toBeInTheDocument()
@@ -49,7 +56,7 @@ describe('UsersTable', () => {
       json: () => Promise.resolve({ data: [], error: null }),
     })
 
-    render(<UsersTable />, { wrapper: createQueryWrapper() })
+    render(<UsersTable currentAuthUserId="current-user-id" />, { wrapper: createQueryWrapper() })
 
     await waitFor(() => {
       expect(screen.getByTestId('users-empty-state')).toBeInTheDocument()
@@ -69,7 +76,7 @@ describe('UsersTable', () => {
         }),
     })
 
-    render(<UsersTable />, { wrapper: createQueryWrapper() })
+    render(<UsersTable currentAuthUserId="current-user-id" />, { wrapper: createQueryWrapper() })
 
     await waitFor(() => {
       expect(screen.getByTestId('users-table-error')).toBeInTheDocument()
@@ -85,7 +92,7 @@ describe('UsersTable', () => {
       json: () => Promise.resolve({ data: users, error: null }),
     })
 
-    render(<UsersTable />, { wrapper: createQueryWrapper() })
+    render(<UsersTable currentAuthUserId="current-user-id" />, { wrapper: createQueryWrapper() })
 
     await waitFor(() => {
       expect(screen.getByText('3 users')).toBeInTheDocument()
@@ -99,7 +106,7 @@ describe('UsersTable', () => {
       json: () => Promise.resolve({ data: users, error: null }),
     })
 
-    render(<UsersTable />, { wrapper: createQueryWrapper() })
+    render(<UsersTable currentAuthUserId="current-user-id" />, { wrapper: createQueryWrapper() })
 
     await waitFor(() => {
       expect(screen.getByText('1 user')).toBeInTheDocument()
@@ -113,7 +120,7 @@ describe('UsersTable', () => {
       json: () => Promise.resolve({ data: users, error: null }),
     })
 
-    render(<UsersTable />, { wrapper: createQueryWrapper() })
+    render(<UsersTable currentAuthUserId="current-user-id" />, { wrapper: createQueryWrapper() })
 
     await waitFor(() => {
       expect(screen.getByText('Never')).toBeInTheDocument()
@@ -127,7 +134,7 @@ describe('UsersTable', () => {
       json: () => Promise.resolve({ data: users, error: null }),
     })
 
-    render(<UsersTable />, { wrapper: createQueryWrapper() })
+    render(<UsersTable currentAuthUserId="current-user-id" />, { wrapper: createQueryWrapper() })
 
     await waitFor(() => {
       expect(screen.getByText('Super Admin')).toBeInTheDocument()
@@ -140,10 +147,103 @@ describe('UsersTable', () => {
       json: () => Promise.resolve({ data: [], error: null }),
     })
 
-    render(<UsersTable />, { wrapper: createQueryWrapper() })
+    render(<UsersTable currentAuthUserId="current-user-id" />, { wrapper: createQueryWrapper() })
 
     await waitFor(() => {
       expect(screen.getByTestId('add-user-button')).toBeInTheDocument()
     })
+  })
+
+  it('should render actions button for other users', async () => {
+    const users = [
+      createMockCmsUser({ id: 'user-other', email: 'other@dxt.com', role: 'admin' }),
+    ]
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ data: users, error: null }),
+    })
+
+    render(<UsersTable currentAuthUserId="current-user-id" />, { wrapper: createQueryWrapper() })
+
+    await waitFor(() => {
+      expect(screen.getByTestId('user-actions-user-other')).toBeInTheDocument()
+    })
+  })
+
+  it('should NOT render actions button for current user row', async () => {
+    const users = [
+      createMockCmsUser({ id: 'current-user-id', email: 'me@dxt.com', role: 'super_admin' }),
+      createMockCmsUser({ id: 'user-other', email: 'other@dxt.com', role: 'admin' }),
+    ]
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ data: users, error: null }),
+    })
+
+    render(<UsersTable currentAuthUserId="current-user-id" />, { wrapper: createQueryWrapper() })
+
+    await waitFor(() => {
+      expect(screen.getByTestId('users-table')).toBeInTheDocument()
+    })
+
+    // Current user's row should NOT have actions
+    expect(screen.queryByTestId('user-actions-current-user-id')).not.toBeInTheDocument()
+    // Other user's row SHOULD have actions
+    expect(screen.getByTestId('user-actions-user-other')).toBeInTheDocument()
+  })
+
+  it('should open dropdown menu with Change Role option', async () => {
+    const users = [
+      createMockCmsUser({ id: 'user-other', email: 'other@dxt.com', role: 'admin' }),
+    ]
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ data: users, error: null }),
+    })
+
+    render(<UsersTable currentAuthUserId="current-user-id" />, { wrapper: createQueryWrapper() })
+
+    await waitFor(() => {
+      expect(screen.getByTestId('user-actions-user-other')).toBeInTheDocument()
+    })
+
+    // Open the dropdown — Radix needs pointerDown in JSDOM
+    fireEvent.pointerDown(screen.getByTestId('user-actions-user-other'), { button: 0, pointerId: 1, pointerType: 'mouse' })
+
+    await waitFor(() => {
+      expect(screen.getByTestId('change-role-user-other')).toBeInTheDocument()
+    })
+    expect(screen.getByText('Change Role')).toBeInTheDocument()
+  })
+
+  it('should open EditRoleDialog when Change Role clicked', async () => {
+    const users = [
+      createMockCmsUser({ id: 'user-other', email: 'other@dxt.com', role: 'admin' }),
+    ]
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ data: users, error: null }),
+    })
+
+    render(<UsersTable currentAuthUserId="current-user-id" />, { wrapper: createQueryWrapper() })
+
+    await waitFor(() => {
+      expect(screen.getByTestId('user-actions-user-other')).toBeInTheDocument()
+    })
+
+    // Open dropdown — Radix needs pointerDown in JSDOM
+    fireEvent.pointerDown(screen.getByTestId('user-actions-user-other'), { button: 0, pointerId: 1, pointerType: 'mouse' })
+
+    await waitFor(() => {
+      expect(screen.getByTestId('change-role-user-other')).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByTestId('change-role-user-other'))
+
+    await waitFor(() => {
+      expect(screen.getByTestId('edit-role-dialog')).toBeInTheDocument()
+    })
+    // Email appears both in table row and dialog
+    expect(screen.getAllByText('other@dxt.com').length).toBeGreaterThanOrEqual(2)
   })
 })

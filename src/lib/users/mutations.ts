@@ -1,7 +1,16 @@
 import 'server-only'
 
 import { createServiceClient } from '@/lib/supabase/service'
-import type { CreateUserInput, CmsUser } from '@/lib/validations/user'
+import { transformAuthUser } from '@/lib/users/queries'
+import type { CreateUserInput, CmsUser, UpdateUserRoleInput } from '@/lib/validations/user'
+
+/** Typed error for last-super-admin protection (caught by route handler) */
+export class LastSuperAdminError extends Error {
+  constructor() {
+    super('At least one Super Admin is required')
+    this.name = 'LastSuperAdminError'
+  }
+}
 
 /**
  * Create a new CMS user via Supabase Auth Admin API.
@@ -30,11 +39,18 @@ export async function createCmsUser(input: CreateUserInput): Promise<CmsUser> {
     throw new Error(`Failed to create user: ${createError.message}`)
   }
 
-  const user = createData.user
+  if (!createData.user) {
+    throw new Error('Failed to create user: no user returned')
+  }
 
   // Step 2: Send invite email (user sets own password)
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
+  if (!siteUrl) {
+    console.warn('[users] NEXT_PUBLIC_SITE_URL is not configured — invite redirect may fail')
+  }
+
   const { error: inviteError } = await serviceClient.auth.admin.inviteUserByEmail(input.email, {
-    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/login`,
+    redirectTo: `${siteUrl ?? ''}/auth/login`,
   })
 
   if (inviteError) {
@@ -43,12 +59,44 @@ export async function createCmsUser(input: CreateUserInput): Promise<CmsUser> {
     console.warn('[users] Invite email failed for:', input.email, inviteError.message)
   }
 
-  return {
-    id: user.id,
-    email: user.email ?? '',
-    role: (user.app_metadata?.role as string) ?? 'user',
-    isConfirmed: !!user.email_confirmed_at,
-    lastSignInAt: user.last_sign_in_at ?? null,
-    createdAt: user.created_at,
+  return transformAuthUser(createData.user)
+}
+
+/**
+ * Update a CMS user's role via Supabase Auth Admin API.
+ * Enforces last-super-admin protection server-side.
+ *
+ * @param userId - The user ID to update
+ * @param currentRole - The user's current role (used for last-super-admin check)
+ * @param input - The new role to assign
+ * @throws LastSuperAdminError if demoting the last super admin
+ * @throws Error with "Failed to update user role" for Supabase API errors
+ */
+export async function updateCmsUserRole(
+  userId: string,
+  currentRole: string,
+  input: UpdateUserRoleInput,
+): Promise<CmsUser> {
+  const serviceClient = createServiceClient()
+
+  // Last Super Admin check: only when demoting FROM super_admin
+  if (currentRole === 'super_admin' && input.role !== 'super_admin') {
+    const { data: { users } } = await serviceClient.auth.admin.listUsers()
+    const superAdminCount = users.filter(
+      (u) => u.app_metadata?.role === 'super_admin',
+    ).length
+    if (superAdminCount <= 1) {
+      throw new LastSuperAdminError()
+    }
   }
+
+  const { data, error } = await serviceClient.auth.admin.updateUserById(userId, {
+    app_metadata: { role: input.role },
+  })
+
+  if (error) {
+    throw new Error(`Failed to update user role: ${error.message}`)
+  }
+
+  return transformAuthUser(data.user)
 }

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { createUserSchema, ASSIGNABLE_ROLES, ROLE_LABELS } from './user'
+import { createUserSchema, ASSIGNABLE_ROLES, ROLE_LABELS, ALL_ROLES, ALL_ROLE_LABELS, updateUserRoleSchema } from './user'
 
 describe('createUserSchema', () => {
   it('should accept valid email and admin role', () => {
@@ -80,6 +80,67 @@ describe('ROLE_LABELS', () => {
     for (const role of ASSIGNABLE_ROLES) {
       expect(ROLE_LABELS[role]).toBeDefined()
       expect(typeof ROLE_LABELS[role]).toBe('string')
+    }
+  })
+})
+
+describe('ALL_ROLES', () => {
+  it('should contain super_admin, admin, and user', () => {
+    expect(ALL_ROLES).toEqual(['super_admin', 'admin', 'user'])
+  })
+
+  it('should include super_admin (unlike ASSIGNABLE_ROLES)', () => {
+    expect(ALL_ROLES).toContain('super_admin')
+  })
+})
+
+describe('ALL_ROLE_LABELS', () => {
+  it('should have labels for all roles including super_admin', () => {
+    for (const role of ALL_ROLES) {
+      expect(ALL_ROLE_LABELS[role]).toBeDefined()
+      expect(typeof ALL_ROLE_LABELS[role]).toBe('string')
+    }
+  })
+
+  it('should map super_admin to Super Admin', () => {
+    expect(ALL_ROLE_LABELS.super_admin).toBe('Super Admin')
+  })
+})
+
+describe('updateUserRoleSchema', () => {
+  it('should accept super_admin role', () => {
+    const result = updateUserRoleSchema.safeParse({ role: 'super_admin' })
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.role).toBe('super_admin')
+    }
+  })
+
+  it('should accept admin role', () => {
+    const result = updateUserRoleSchema.safeParse({ role: 'admin' })
+    expect(result.success).toBe(true)
+  })
+
+  it('should accept user role', () => {
+    const result = updateUserRoleSchema.safeParse({ role: 'user' })
+    expect(result.success).toBe(true)
+  })
+
+  it('should reject invalid role value', () => {
+    const result = updateUserRoleSchema.safeParse({ role: 'manager' })
+    expect(result.success).toBe(false)
+  })
+
+  it('should reject empty string role', () => {
+    const result = updateUserRoleSchema.safeParse({ role: '' })
+    expect(result.success).toBe(false)
+  })
+
+  it('should reject missing role', () => {
+    const result = updateUserRoleSchema.safeParse({})
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(result.error.issues[0].message).toBe('Role is required')
     }
   })
 })

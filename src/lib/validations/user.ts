@@ -1,5 +1,15 @@
 import { z } from 'zod'
 
+/** All roles including super_admin — used in Change Role dialog (Story 6-2) */
+export const ALL_ROLES = ['super_admin', 'admin', 'user'] as const
+export type AllRole = (typeof ALL_ROLES)[number]
+
+export const ALL_ROLE_LABELS: Record<AllRole, string> = {
+  super_admin: 'Super Admin',
+  admin: 'Admin',
+  user: 'User',
+}
+
 /** Roles that can be assigned via the Add User form (super_admin excluded) */
 export const ASSIGNABLE_ROLES = ['admin', 'user'] as const
 export type AssignableRole = (typeof ASSIGNABLE_ROLES)[number]
@@ -21,11 +31,18 @@ export const createUserSchema = z.object({
 
 export type CreateUserInput = z.infer<typeof createUserSchema>
 
+/** Schema for updating a CMS user's role via Change Role dialog */
+export const updateUserRoleSchema = z.object({
+  role: z.enum(ALL_ROLES, { message: 'Role is required' }),
+})
+
+export type UpdateUserRoleInput = z.infer<typeof updateUserRoleSchema>
+
 /** CMS user as displayed in the admin UI (camelCase) */
 export interface CmsUser {
   id: string
   email: string
-  role: string // 'super_admin' | 'admin' | 'user'
+  role: AllRole
   isConfirmed: boolean // email confirmed
   lastSignInAt: string | null
   createdAt: string

@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { usersQueryOptions } from '@/lib/admin/queries/users'
 import {
@@ -10,11 +11,21 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
+import { MoreHorizontal, UserCog } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
+import type { CmsUser } from '@/lib/validations/user'
 import AddUserDialog from './AddUserDialog'
+import EditRoleDialog from './EditRoleDialog'
 
 function getRoleBadgeVariant(role: string) {
   switch (role) {
@@ -47,8 +58,13 @@ function getStatusInfo(isConfirmed: boolean) {
   return { label: 'Invited', variant: 'outline' as const }
 }
 
-export default function UsersTable() {
+interface UsersTableProps {
+  currentAuthUserId: string
+}
+
+export default function UsersTable({ currentAuthUserId }: UsersTableProps) {
   const { data: users, isLoading, isError } = useQuery(usersQueryOptions)
+  const [editingUser, setEditingUser] = useState<CmsUser | null>(null)
 
   if (isLoading) {
     return (
@@ -120,12 +136,47 @@ export default function UsersTable() {
                       ? formatDistanceToNow(new Date(user.lastSignInAt), { addSuffix: true })
                       : 'Never'}
                   </TableCell>
-                  <TableCell>{/* Story 6-2/6-3/6-4 actions */}</TableCell>
+                  <TableCell>
+                    {user.id !== currentAuthUserId && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            data-testid={`user-actions-${user.id}`}
+                          >
+                            <MoreHorizontal className="h-4 w-4" />
+                            <span className="sr-only">Open menu</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onSelect={() => setEditingUser(user)}
+                            data-testid={`change-role-${user.id}`}
+                          >
+                            <UserCog className="mr-2 h-4 w-4" />
+                            Change Role
+                          </DropdownMenuItem>
+                          {/* Story 6-3/6-4 actions */}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
+                  </TableCell>
                 </TableRow>
               )
             })}
           </TableBody>
         </Table>
+      )}
+
+      {editingUser && (
+        <EditRoleDialog
+          user={editingUser}
+          open={!!editingUser}
+          onOpenChange={(open) => {
+            if (!open) setEditingUser(null)
+          }}
+        />
       )}
     </>
   )

@@ -1,11 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { createCmsUser } from './mutations'
+import { createCmsUser, updateCmsUserRole, LastSuperAdminError } from './mutations'
 
 // Mock server-only (no-op)
 vi.mock('server-only', () => ({}))
 
 const mockCreateUser = vi.fn()
 const mockInviteUserByEmail = vi.fn()
+const mockUpdateUserById = vi.fn()
+const mockListUsers = vi.fn()
 
 vi.mock('@/lib/supabase/service', () => ({
   createServiceClient: () => ({
@@ -13,6 +15,8 @@ vi.mock('@/lib/supabase/service', () => ({
       admin: {
         createUser: mockCreateUser,
         inviteUserByEmail: mockInviteUserByEmail,
+        updateUserById: mockUpdateUserById,
+        listUsers: mockListUsers,
       },
     },
   }),
@@ -91,6 +95,15 @@ describe('createCmsUser', () => {
     expect(result.email).toBe('new@dxt.com')
   })
 
+  it('should throw when createUser returns null user without error', async () => {
+    mockCreateUser.mockResolvedValue({ data: { user: null }, error: null })
+
+    await expect(createCmsUser({ email: 'new@dxt.com', role: 'admin' })).rejects.toThrow(
+      'Failed to create user: no user returned',
+    )
+    expect(mockInviteUserByEmail).not.toHaveBeenCalled()
+  })
+
   it('should create user with user role', async () => {
     const userRoleAuthUser = { ...mockAuthUser, app_metadata: { role: 'user' } }
     mockCreateUser.mockResolvedValue({ data: { user: userRoleAuthUser }, error: null })
@@ -102,5 +115,106 @@ describe('createCmsUser', () => {
       expect.objectContaining({ app_metadata: { role: 'user' } }),
     )
     expect(result.role).toBe('user')
+  })
+})
+
+describe('updateCmsUserRole', () => {
+  const mockUpdatedUser = {
+    id: 'user-001',
+    email: 'admin@dxt.com',
+    app_metadata: { role: 'user' },
+    email_confirmed_at: '2026-01-01T00:00:00Z',
+    last_sign_in_at: '2026-02-10T00:00:00Z',
+    created_at: '2026-01-01T00:00:00Z',
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('should update user role via admin API', async () => {
+    // User is currently admin, has 2 super_admins in the system
+    mockUpdateUserById.mockResolvedValue({ data: { user: mockUpdatedUser }, error: null })
+    mockListUsers.mockResolvedValue({
+      data: { users: [
+        { id: 'sa-1', app_metadata: { role: 'super_admin' } },
+        { id: 'sa-2', app_metadata: { role: 'super_admin' } },
+        { id: 'user-001', app_metadata: { role: 'admin' } },
+      ] },
+      error: null,
+    })
+
+    const result = await updateCmsUserRole('user-001', 'admin', { role: 'user' })
+
+    expect(mockUpdateUserById).toHaveBeenCalledWith('user-001', {
+      app_metadata: { role: 'user' },
+    })
+    expect(result).toEqual({
+      id: 'user-001',
+      email: 'admin@dxt.com',
+      role: 'user',
+      isConfirmed: true,
+      lastSignInAt: '2026-02-10T00:00:00Z',
+      createdAt: '2026-01-01T00:00:00Z',
+    })
+  })
+
+  it('should throw LastSuperAdminError when demoting the last super admin', async () => {
+    mockListUsers.mockResolvedValue({
+      data: { users: [
+        { id: 'sa-only', app_metadata: { role: 'super_admin' } },
+        { id: 'user-002', app_metadata: { role: 'admin' } },
+      ] },
+      error: null,
+    })
+
+    await expect(
+      updateCmsUserRole('sa-only', 'super_admin', { role: 'admin' }),
+    ).rejects.toThrow(LastSuperAdminError)
+
+    await expect(
+      updateCmsUserRole('sa-only', 'super_admin', { role: 'admin' }),
+    ).rejects.toThrow('At least one Super Admin is required')
+
+    expect(mockUpdateUserById).not.toHaveBeenCalled()
+  })
+
+  it('should allow demoting super admin when multiple exist', async () => {
+    const updatedSa = { ...mockUpdatedUser, id: 'sa-1', app_metadata: { role: 'admin' } }
+    mockUpdateUserById.mockResolvedValue({ data: { user: updatedSa }, error: null })
+    mockListUsers.mockResolvedValue({
+      data: { users: [
+        { id: 'sa-1', app_metadata: { role: 'super_admin' } },
+        { id: 'sa-2', app_metadata: { role: 'super_admin' } },
+      ] },
+      error: null,
+    })
+
+    const result = await updateCmsUserRole('sa-1', 'super_admin', { role: 'admin' })
+
+    expect(mockUpdateUserById).toHaveBeenCalled()
+    expect(result.role).toBe('admin')
+  })
+
+  it('should skip super admin check when not demoting from super_admin', async () => {
+    const updatedAdmin = { ...mockUpdatedUser, app_metadata: { role: 'super_admin' } }
+    mockUpdateUserById.mockResolvedValue({ data: { user: updatedAdmin }, error: null })
+
+    await updateCmsUserRole('user-001', 'admin', { role: 'super_admin' })
+
+    // listUsers should NOT be called since we're promoting, not demoting
+    expect(mockListUsers).not.toHaveBeenCalled()
+    expect(mockUpdateUserById).toHaveBeenCalled()
+  })
+
+  it('should throw on updateUserById error', async () => {
+    mockUpdateUserById.mockResolvedValue({
+      data: { user: null },
+      error: { message: 'User not found' },
+    })
+
+    await expect(
+      updateCmsUserRole('bad-id', 'admin', { role: 'user' }),
+    ).rejects.toThrow('Failed to update user role: User not found')
   })
 })

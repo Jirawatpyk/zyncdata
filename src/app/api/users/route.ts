@@ -26,7 +26,15 @@ export async function POST(request: Request) {
   if (isAuthError(auth)) return auth
 
   try {
-    const body = await request.json()
+    let body: unknown
+    try {
+      body = await request.json()
+    } catch {
+      return NextResponse.json(
+        { data: null, error: { message: 'Invalid request body', code: ErrorCode.VALIDATION_ERROR } },
+        { status: 400 },
+      )
+    }
     const validated = createUserSchema.parse(body)
     const user = await createCmsUser(validated)
     return NextResponse.json({ data: user, error: null }, { status: 201 })

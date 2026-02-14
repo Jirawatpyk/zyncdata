@@ -1,6 +1,6 @@
 # Story 6.1: Create CMS User Accounts
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -477,8 +477,41 @@ Task execution order follows story file exactly. Red-green-refactor cycle per ta
 - `src/test-setup.ts` — JSDOM polyfills for Radix UI
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` — status update
 
+### Code Review
+
+**Reviewer:** Claude Opus 4.6 (5-agent parallel review)
+**Date:** 2026-02-14
+**Result:** No issues ≥80 confidence. 2 near-threshold issues fixed before commit.
+
+**Review Agents:**
+1. CLAUDE.md compliance audit
+2. Shallow bug scan
+3. Git history context review
+4. Previous PR comments check (no PRs in repo — direct-to-main workflow)
+5. Code comments compliance check
+
+**Issues Found & Resolved:**
+
+| # | File | Issue | Score | Resolution |
+|---|------|-------|-------|------------|
+| 1 | `src/lib/users/mutations.ts:42` | Comment says "log but don't throw" but `if (inviteError) {}` was empty — no logging | 72 | Added `console.warn('[users] Invite email failed for:', input.email, inviteError.message)` |
+| 2 | `AdminSidebar.guardrails.test.tsx:82` | Test title says "4 nav items" but sidebar has 7 (Branding/Preview added in Epic 4, Users in 6-1) | 75 | Updated all assertions to cover 7 items: touch targets, labels, hrefs, aria-current |
+
+**Issues Reviewed & Accepted (score <80):**
+
+| # | Issue | Score | Rationale |
+|---|-------|-------|-----------|
+| 3 | ROLE_HIERARCHY duplicated with `string` type instead of `Role` | 25 | Story doc explicitly recommends this pattern — guard.ts has `server-only` |
+| 4 | `users.test.tsx` should be `.ts` (no JSX) | 25 | Stylistic, no functional impact, inconsistent in codebase |
+| 5 | Temp ID `Date.now()` collision risk | 25 | Same pattern as systems, `onSettled` invalidation safety net, single super_admin usage |
+| 6 | Missing P0 security guardrail for role filtering | 25 | Unit tests cover this; server-side RBAC guards are the real enforcement |
+| 7 | Stale role prop in sidebar | 25 | Standard Next.js pattern; layout re-renders on navigation |
+
+**Post-fix Re-review:** No new issues. 1591/1591 tests passing.
+
 ### Change Log
 
 | Date | Change | Files |
 |------|--------|-------|
 | 2026-02-14 | Story 6-1 implementation complete | 26 files (19 new, 7 modified) |
+| 2026-02-14 | Code review fixes: invite error logging + guardrail test update | 2 files modified |

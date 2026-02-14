@@ -102,6 +102,25 @@ describe('AddUserDialog', () => {
     expect(mockFetch).not.toHaveBeenCalled()
   })
 
+  it('should show validation error for missing role (AC #6)', async () => {
+    const user = userEvent.setup()
+    render(<AddUserDialog />, { wrapper: createQueryWrapper() })
+
+    await user.click(screen.getByTestId('add-user-button'))
+
+    await waitFor(() => {
+      expect(screen.getByTestId('user-email-input')).toBeInTheDocument()
+    })
+
+    await user.type(screen.getByTestId('user-email-input'), 'valid@dxt.com')
+    await user.click(screen.getByTestId('submit-button'))
+
+    await waitFor(() => {
+      expect(screen.getByText('Role is required')).toBeInTheDocument()
+    })
+    expect(mockFetch).not.toHaveBeenCalled()
+  })
+
   it('should show validation error for invalid email (AC #6)', async () => {
     const user = userEvent.setup()
     render(<AddUserDialog />, { wrapper: createQueryWrapper() })

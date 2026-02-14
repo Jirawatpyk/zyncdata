@@ -6,7 +6,7 @@ export const metadata = {
 }
 
 export default async function UsersPage() {
-  await requireAuth('super_admin')
+  const { user } = await requireAuth('super_admin')
 
   return (
     <div className="p-6" data-testid="users-page">
@@ -16,7 +16,7 @@ export default async function UsersPage() {
       </div>
 
       <div className="rounded-lg border border-border bg-card">
-        <UsersTable />
+        <UsersTable currentAuthUserId={user.id} />
       </div>
     </div>
   )

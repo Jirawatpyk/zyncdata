@@ -1,10 +1,14 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import type { CmsUser, CreateUserInput } from '@/lib/validations/user'
+import type { AllRole, CmsUser, CreateUserInput } from '@/lib/validations/user'
 import { unwrapResponse } from '@/lib/admin/queries/api-adapter'
 
 interface CreateUserMutationContext {
   previous: CmsUser[] | undefined
   optimistic: CmsUser
+}
+
+interface UpdateUserRoleMutationContext {
+  previous: CmsUser[] | undefined
 }
 
 export function useCreateUser() {
@@ -59,6 +63,47 @@ export function useCreateUser() {
 
     onSettled: () => {
       // Always refetch to ensure consistency
+      queryClient.invalidateQueries({ queryKey: ['admin', 'users'] })
+    },
+  })
+}
+
+interface UpdateUserRoleVariables {
+  userId: string
+  role: AllRole
+}
+
+export function useUpdateUserRole() {
+  const queryClient = useQueryClient()
+
+  return useMutation<CmsUser, Error, UpdateUserRoleVariables, UpdateUserRoleMutationContext>({
+    mutationFn: async ({ userId, role }: UpdateUserRoleVariables) => {
+      const res = await fetch(`/api/users/${userId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role }),
+      })
+      return unwrapResponse<CmsUser>(res)
+    },
+
+    onMutate: async ({ userId, role }) => {
+      await queryClient.cancelQueries({ queryKey: ['admin', 'users'] })
+      const previous = queryClient.getQueryData<CmsUser[]>(['admin', 'users'])
+
+      queryClient.setQueryData<CmsUser[]>(['admin', 'users'], (old) =>
+        old?.map((u) => (u.id === userId ? { ...u, role } : u)) ?? [],
+      )
+
+      return { previous }
+    },
+
+    onError: (_error, _variables, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(['admin', 'users'], context.previous)
+      }
+    },
+
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'users'] })
     },
   })
