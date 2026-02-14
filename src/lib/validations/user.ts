@@ -38,6 +38,21 @@ export const updateUserRoleSchema = z.object({
 
 export type UpdateUserRoleInput = z.infer<typeof updateUserRoleSchema>
 
+/** Schema for the update-password form (user-facing password reset) */
+export const updatePasswordSchema = z.object({
+  password: z
+    .string()
+    .min(6, 'Password must be at least 6 characters'),
+  confirmPassword: z
+    .string()
+    .min(1, 'Please confirm your password'),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: 'Passwords do not match',
+  path: ['confirmPassword'],
+})
+
+export type UpdatePasswordInput = z.infer<typeof updatePasswordSchema>
+
 /** CMS user as displayed in the admin UI (camelCase) */
 export interface CmsUser {
   id: string

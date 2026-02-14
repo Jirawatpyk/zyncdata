@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { createUserSchema, ASSIGNABLE_ROLES, ROLE_LABELS, ALL_ROLES, ALL_ROLE_LABELS, updateUserRoleSchema } from './user'
+import { createUserSchema, ASSIGNABLE_ROLES, ROLE_LABELS, ALL_ROLES, ALL_ROLE_LABELS, updateUserRoleSchema, updatePasswordSchema } from './user'
 
 describe('createUserSchema', () => {
   it('should accept valid email and admin role', () => {
@@ -142,5 +142,62 @@ describe('updateUserRoleSchema', () => {
     if (!result.success) {
       expect(result.error.issues[0].message).toBe('Role is required')
     }
+  })
+})
+
+describe('updatePasswordSchema', () => {
+  it('should accept valid matching passwords', () => {
+    const result = updatePasswordSchema.safeParse({
+      password: 'newpass123',
+      confirmPassword: 'newpass123',
+    })
+    expect(result.success).toBe(true)
+  })
+
+  it('should reject password shorter than 6 characters', () => {
+    const result = updatePasswordSchema.safeParse({
+      password: '12345',
+      confirmPassword: '12345',
+    })
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(result.error.issues[0].message).toBe('Password must be at least 6 characters')
+    }
+  })
+
+  it('should reject non-matching passwords', () => {
+    const result = updatePasswordSchema.safeParse({
+      password: 'password123',
+      confirmPassword: 'different456',
+    })
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      const matchError = result.error.issues.find((i) => i.path.includes('confirmPassword'))
+      expect(matchError?.message).toBe('Passwords do not match')
+    }
+  })
+
+  it('should reject empty password', () => {
+    const result = updatePasswordSchema.safeParse({
+      password: '',
+      confirmPassword: '',
+    })
+    expect(result.success).toBe(false)
+  })
+
+  it('should reject empty confirmPassword', () => {
+    const result = updatePasswordSchema.safeParse({
+      password: 'validpass',
+      confirmPassword: '',
+    })
+    expect(result.success).toBe(false)
+  })
+
+  it('should accept exactly 6 characters', () => {
+    const result = updatePasswordSchema.safeParse({
+      password: '123456',
+      confirmPassword: '123456',
+    })
+    expect(result.success).toBe(true)
   })
 })

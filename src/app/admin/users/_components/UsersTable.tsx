@@ -21,11 +21,12 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
-import { MoreHorizontal, UserCog } from 'lucide-react'
+import { KeyRound, MoreHorizontal, UserCog } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import type { CmsUser } from '@/lib/validations/user'
 import AddUserDialog from './AddUserDialog'
 import EditRoleDialog from './EditRoleDialog'
+import ResetPasswordDialog from './ResetPasswordDialog'
 
 function getRoleBadgeVariant(role: string) {
   switch (role) {
@@ -65,6 +66,7 @@ interface UsersTableProps {
 export default function UsersTable({ currentAuthUserId }: UsersTableProps) {
   const { data: users, isLoading, isError } = useQuery(usersQueryOptions)
   const [editingUser, setEditingUser] = useState<CmsUser | null>(null)
+  const [resettingUser, setResettingUser] = useState<CmsUser | null>(null)
 
   if (isLoading) {
     return (
@@ -157,7 +159,14 @@ export default function UsersTable({ currentAuthUserId }: UsersTableProps) {
                             <UserCog className="mr-2 h-4 w-4" />
                             Change Role
                           </DropdownMenuItem>
-                          {/* Story 6-3/6-4 actions */}
+                          <DropdownMenuItem
+                            onSelect={() => setResettingUser(user)}
+                            data-testid={`reset-password-${user.id}`}
+                          >
+                            <KeyRound className="mr-2 h-4 w-4" />
+                            Reset Password
+                          </DropdownMenuItem>
+                          {/* Story 6-4 actions */}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     )}
@@ -175,6 +184,16 @@ export default function UsersTable({ currentAuthUserId }: UsersTableProps) {
           open={!!editingUser}
           onOpenChange={(open) => {
             if (!open) setEditingUser(null)
+          }}
+        />
+      )}
+
+      {resettingUser && (
+        <ResetPasswordDialog
+          user={resettingUser}
+          open={!!resettingUser}
+          onOpenChange={(open) => {
+            if (!open) setResettingUser(null)
           }}
         />
       )}

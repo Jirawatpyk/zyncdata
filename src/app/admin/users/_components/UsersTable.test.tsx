@@ -246,4 +246,55 @@ describe('UsersTable', () => {
     // Email appears both in table row and dialog
     expect(screen.getAllByText('other@dxt.com').length).toBeGreaterThanOrEqual(2)
   })
+
+  it('should show Reset Password option in dropdown', async () => {
+    const users = [
+      createMockCmsUser({ id: 'user-other', email: 'other@dxt.com', role: 'admin' }),
+    ]
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ data: users, error: null }),
+    })
+
+    render(<UsersTable currentAuthUserId="current-user-id" />, { wrapper: createQueryWrapper() })
+
+    await waitFor(() => {
+      expect(screen.getByTestId('user-actions-user-other')).toBeInTheDocument()
+    })
+
+    fireEvent.pointerDown(screen.getByTestId('user-actions-user-other'), { button: 0, pointerId: 1, pointerType: 'mouse' })
+
+    await waitFor(() => {
+      expect(screen.getByTestId('reset-password-user-other')).toBeInTheDocument()
+    })
+    expect(screen.getByText('Reset Password')).toBeInTheDocument()
+  })
+
+  it('should open ResetPasswordDialog when Reset Password clicked', async () => {
+    const users = [
+      createMockCmsUser({ id: 'user-other', email: 'other@dxt.com', role: 'admin' }),
+    ]
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ data: users, error: null }),
+    })
+
+    render(<UsersTable currentAuthUserId="current-user-id" />, { wrapper: createQueryWrapper() })
+
+    await waitFor(() => {
+      expect(screen.getByTestId('user-actions-user-other')).toBeInTheDocument()
+    })
+
+    fireEvent.pointerDown(screen.getByTestId('user-actions-user-other'), { button: 0, pointerId: 1, pointerType: 'mouse' })
+
+    await waitFor(() => {
+      expect(screen.getByTestId('reset-password-user-other')).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByTestId('reset-password-user-other'))
+
+    await waitFor(() => {
+      expect(screen.getByTestId('reset-password-dialog')).toBeInTheDocument()
+    })
+  })
 })

@@ -4,6 +4,46 @@ import { createServiceClient } from '@/lib/supabase/service'
 import { transformAuthUser } from '@/lib/users/queries'
 import type { CreateUserInput, CmsUser, UpdateUserRoleInput } from '@/lib/validations/user'
 
+/**
+ * Send a password reset email to a CMS user via Supabase Auth.
+ * Uses service client (implicit flow) — MUST NOT use SSR server client (PKCE breaks admin-triggered resets).
+ *
+ * @param userId - The user ID to reset password for
+ * @returns { email } on success (used by toast)
+ * @throws Error with "User not found" if userId doesn't exist
+ * @throws Error with "Failed to send password reset email" if email delivery fails
+ */
+export async function resetCmsUserPassword(userId: string): Promise<{ email: string }> {
+  const serviceClient = createServiceClient()
+
+  // Step 1: Look up user email from userId
+  const { data: userData, error: getUserError } = await serviceClient.auth.admin.getUserById(userId)
+
+  if (getUserError || !userData.user) {
+    throw new Error('User not found')
+  }
+
+  const email = userData.user.email
+  if (!email) {
+    throw new Error('User not found')
+  }
+
+  // Step 2: Send password reset email (implicit flow — no code_challenge)
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
+  if (!siteUrl) {
+    console.warn('[users] NEXT_PUBLIC_SITE_URL is not configured — password reset redirect may fail')
+  }
+  const { error: resetError } = await serviceClient.auth.resetPasswordForEmail(email, {
+    redirectTo: `${siteUrl ?? ''}/auth/update-password`,
+  })
+
+  if (resetError) {
+    throw new Error(`Failed to send password reset email: ${resetError.message}`)
+  }
+
+  return { email }
+}
+
 /** Typed error for last-super-admin protection (caught by route handler) */
 export class LastSuperAdminError extends Error {
   constructor() {

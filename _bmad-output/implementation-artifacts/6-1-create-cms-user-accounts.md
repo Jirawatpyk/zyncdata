@@ -509,9 +509,26 @@ Task execution order follows story file exactly. Red-green-refactor cycle per ta
 
 **Post-fix Re-review:** No new issues. 1591/1591 tests passing.
 
+**Code Review #2 (Adversarial):**
+**Reviewer:** Claude Opus 4.6 (adversarial dev agent)
+**Date:** 2026-02-14
+**Result:** 2 MEDIUM + 4 LOW issues found. 5 fixed (L4 accepted as documented limitation).
+
+| # | Sev | File | Issue | Resolution |
+|---|-----|------|-------|------------|
+| M1 | MED | `mutations.ts` / `queries.ts` | DRY violation: duplicate CmsUser transform (`toCmsUser` vs `transformAuthUser`) | Exported `transformAuthUser` from queries, removed duplicate from mutations |
+| M2 | MED | `mutations.ts:44` | `NEXT_PUBLIC_SITE_URL` undefined → broken invite redirect | Added `console.warn` + fallback `?? ''` |
+| L1 | LOW | `route.ts:29` | Malformed JSON body → misleading 500 "Failed to create user" | Added inner try/catch → 400 "Invalid request body" |
+| L2 | LOW | `AddUserDialog.test.tsx` | No component test for "Role is required" validation | Added test case |
+| L3 | LOW | `mutations.ts:41` | `createData.user` null access risk | Added null guard with descriptive error |
+| L4 | LOW | `mutations.ts` | No re-invite path when invite fails | ACCEPTED — documented limitation, Story 6-3 scope |
+
+**Post-fix:** type-check ✅, lint ✅, 1637/1638 tests passing (1 pre-existing flaky timing test in health/check.test.ts)
+
 ### Change Log
 
 | Date | Change | Files |
 |------|--------|-------|
 | 2026-02-14 | Story 6-1 implementation complete | 26 files (19 new, 7 modified) |
 | 2026-02-14 | Code review fixes: invite error logging + guardrail test update | 2 files modified |
+| 2026-02-14 | Code review #2 fixes: DRY transform, env var guard, JSON parse, null guard, role test | 5 files modified |

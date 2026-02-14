@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { createCmsUser, updateCmsUserRole, LastSuperAdminError } from './mutations'
+import { createCmsUser, updateCmsUserRole, LastSuperAdminError, resetCmsUserPassword } from './mutations'
 
 // Mock server-only (no-op)
 vi.mock('server-only', () => ({}))
@@ -8,6 +8,8 @@ const mockCreateUser = vi.fn()
 const mockInviteUserByEmail = vi.fn()
 const mockUpdateUserById = vi.fn()
 const mockListUsers = vi.fn()
+const mockGetUserById = vi.fn()
+const mockResetPasswordForEmail = vi.fn()
 
 vi.mock('@/lib/supabase/service', () => ({
   createServiceClient: () => ({
@@ -17,7 +19,9 @@ vi.mock('@/lib/supabase/service', () => ({
         inviteUserByEmail: mockInviteUserByEmail,
         updateUserById: mockUpdateUserById,
         listUsers: mockListUsers,
+        getUserById: mockGetUserById,
       },
+      resetPasswordForEmail: mockResetPasswordForEmail,
     },
   }),
 }))
@@ -216,5 +220,79 @@ describe('updateCmsUserRole', () => {
     await expect(
       updateCmsUserRole('bad-id', 'admin', { role: 'user' }),
     ).rejects.toThrow('Failed to update user role: User not found')
+  })
+})
+
+describe('resetCmsUserPassword', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.stubEnv('NEXT_PUBLIC_SITE_URL', 'http://localhost:3000')
+  })
+
+  it('should look up user by ID and send reset email', async () => {
+    mockGetUserById.mockResolvedValue({
+      data: { user: { id: 'user-001', email: 'reset@dxt.com' } },
+      error: null,
+    })
+    mockResetPasswordForEmail.mockResolvedValue({ data: {}, error: null })
+
+    const result = await resetCmsUserPassword('user-001')
+
+    expect(mockGetUserById).toHaveBeenCalledWith('user-001')
+    expect(mockResetPasswordForEmail).toHaveBeenCalledWith('reset@dxt.com', {
+      redirectTo: 'http://localhost:3000/auth/update-password',
+    })
+    expect(result).toEqual({ email: 'reset@dxt.com' })
+  })
+
+  it('should throw when user not found', async () => {
+    mockGetUserById.mockResolvedValue({
+      data: { user: null },
+      error: { message: 'User not found' },
+    })
+
+    await expect(resetCmsUserPassword('bad-id')).rejects.toThrow('User not found')
+    expect(mockResetPasswordForEmail).not.toHaveBeenCalled()
+  })
+
+  it('should throw when getUserById returns null user without error', async () => {
+    mockGetUserById.mockResolvedValue({
+      data: { user: null },
+      error: null,
+    })
+
+    await expect(resetCmsUserPassword('bad-id')).rejects.toThrow('User not found')
+    expect(mockResetPasswordForEmail).not.toHaveBeenCalled()
+  })
+
+  it('should throw when resetPasswordForEmail fails', async () => {
+    mockGetUserById.mockResolvedValue({
+      data: { user: { id: 'user-001', email: 'reset@dxt.com' } },
+      error: null,
+    })
+    mockResetPasswordForEmail.mockResolvedValue({
+      data: null,
+      error: { message: 'Rate limit exceeded' },
+    })
+
+    await expect(resetCmsUserPassword('user-001')).rejects.toThrow(
+      'Failed to send password reset email: Rate limit exceeded',
+    )
+  })
+
+  it('should handle missing NEXT_PUBLIC_SITE_URL gracefully', async () => {
+    vi.stubEnv('NEXT_PUBLIC_SITE_URL', '')
+    mockGetUserById.mockResolvedValue({
+      data: { user: { id: 'user-001', email: 'reset@dxt.com' } },
+      error: null,
+    })
+    mockResetPasswordForEmail.mockResolvedValue({ data: {}, error: null })
+
+    const result = await resetCmsUserPassword('user-001')
+
+    expect(mockResetPasswordForEmail).toHaveBeenCalledWith('reset@dxt.com', {
+      redirectTo: '/auth/update-password',
+    })
+    expect(result).toEqual({ email: 'reset@dxt.com' })
   })
 })

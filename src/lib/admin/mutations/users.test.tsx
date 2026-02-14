@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook, waitFor } from '@testing-library/react'
-import { useCreateUser, useUpdateUserRole } from './users'
+import { useCreateUser, useUpdateUserRole, useResetUserPassword } from './users'
 import { createQueryWrapper } from '@/lib/test-utils'
 
 const mockFetch = vi.fn()
@@ -207,6 +207,90 @@ describe('useUpdateUserRole', () => {
     })
 
     result.current.mutate({ userId: 'user-001', role: 'user' })
+
+    await waitFor(() => {
+      expect(result.current.isError).toBe(true)
+    })
+  })
+})
+
+describe('useResetUserPassword', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('should call POST /api/users/:userId/reset-password on mutate', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ data: { email: 'target@dxt.com' }, error: null }),
+    })
+
+    const { result } = renderHook(() => useResetUserPassword(), {
+      wrapper: createQueryWrapper(),
+    })
+
+    result.current.mutate('user-001')
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true)
+    })
+
+    expect(mockFetch).toHaveBeenCalledWith('/api/users/user-001/reset-password', {
+      method: 'POST',
+    })
+  })
+
+  it('should return email on success', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ data: { email: 'target@dxt.com' }, error: null }),
+    })
+
+    const { result } = renderHook(() => useResetUserPassword(), {
+      wrapper: createQueryWrapper(),
+    })
+
+    result.current.mutate('user-001')
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true)
+    })
+
+    expect(result.current.data).toEqual({ email: 'target@dxt.com' })
+  })
+
+  it('should set error state on API failure', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 404,
+      json: () =>
+        Promise.resolve({
+          data: null,
+          error: { message: 'User not found', code: 'NOT_FOUND' },
+        }),
+    })
+
+    const { result } = renderHook(() => useResetUserPassword(), {
+      wrapper: createQueryWrapper(),
+    })
+
+    result.current.mutate('bad-id')
+
+    await waitFor(() => {
+      expect(result.current.isError).toBe(true)
+    })
+
+    expect(result.current.error?.message).toBe('User not found')
+  })
+
+  it('should handle network errors', async () => {
+    mockFetch.mockRejectedValueOnce(new Error('Network error'))
+
+    const { result } = renderHook(() => useResetUserPassword(), {
+      wrapper: createQueryWrapper(),
+    })
+
+    result.current.mutate('user-001')
 
     await waitFor(() => {
       expect(result.current.isError).toBe(true)

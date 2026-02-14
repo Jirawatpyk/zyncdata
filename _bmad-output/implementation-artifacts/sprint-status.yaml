@@ -98,7 +98,7 @@ development_status:
   epic-6: in-progress
   6-1-create-cms-user-accounts: done
   6-2-assign-change-user-roles: done
-  6-3-reset-user-passwords: backlog
+  6-3-reset-user-passwords: done
   6-4-disable-delete-user-accounts: backlog
   6-5-user-login-history-activity-tracking: backlog
   epic-6-retrospective: optional

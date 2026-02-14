@@ -68,6 +68,21 @@ export function useCreateUser() {
   })
 }
 
+interface ResetPasswordResult {
+  email: string
+}
+
+export function useResetUserPassword() {
+  return useMutation<ResetPasswordResult, Error, string>({
+    mutationFn: async (userId: string) => {
+      const res = await fetch(`/api/users/${userId}/reset-password`, {
+        method: 'POST',
+      })
+      return unwrapResponse<ResetPasswordResult>(res)
+    },
+  })
+}
+
 interface UpdateUserRoleVariables {
   userId: string
   role: AllRole
