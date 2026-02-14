@@ -26,13 +26,16 @@ describe('AdminSidebar Guardrails', () => {
 
   describe('P0: Critical Invariants', () => {
     it('[P0] MUST have min-h-11 (44px touch target) on all nav links - Epic 2 retro requirement', () => {
-      render(<AdminSidebar isOpen={true} onClose={vi.fn()} />)
+      render(<AdminSidebar isOpen={true} onClose={vi.fn()} role="super_admin" />)
 
-      // All 4 navigation links must have 44px minimum touch target
+      // All 7 navigation links must have 44px minimum touch target (super_admin sees all)
       const navLinks = [
         screen.getByTestId('nav-link-systems'),
         screen.getByTestId('nav-link-content'),
+        screen.getByTestId('nav-link-branding'),
+        screen.getByTestId('nav-link-preview'),
         screen.getByTestId('nav-link-analytics'),
+        screen.getByTestId('nav-link-users'),
         screen.getByTestId('nav-link-settings'),
       ]
 
@@ -45,7 +48,7 @@ describe('AdminSidebar Guardrails', () => {
     })
 
     it('[P0] MUST have min-h-11 (44px touch target) on close button', () => {
-      render(<AdminSidebar isOpen={true} onClose={vi.fn()} />)
+      render(<AdminSidebar isOpen={true} onClose={vi.fn()} role="super_admin" />)
 
       const closeButton = screen.getByTestId('sidebar-close-button')
       expect(
@@ -55,7 +58,7 @@ describe('AdminSidebar Guardrails', () => {
     })
 
     it('[P0] MUST render navigation landmark with aria-label for screen readers', () => {
-      render(<AdminSidebar isOpen={true} onClose={vi.fn()} />)
+      render(<AdminSidebar isOpen={true} onClose={vi.fn()} role="super_admin" />)
 
       // Navigation landmark MUST exist
       const nav = screen.getByRole('navigation')
@@ -69,7 +72,7 @@ describe('AdminSidebar Guardrails', () => {
     })
 
     it('[P0] MUST have no accessibility violations (axe)', async () => {
-      const { container } = render(<AdminSidebar isOpen={true} onClose={vi.fn()} />)
+      const { container } = render(<AdminSidebar isOpen={true} onClose={vi.fn()} role="super_admin" />)
 
       await act(async () => {
         const results = await axe(container)
@@ -79,14 +82,17 @@ describe('AdminSidebar Guardrails', () => {
   })
 
   describe('P1: Important Invariants', () => {
-    it('[P1] MUST render all 4 nav items: Systems, Content, Analytics, Settings', () => {
-      render(<AdminSidebar isOpen={true} onClose={vi.fn()} />)
+    it('[P1] MUST render all 7 nav items for super_admin: Systems, Content, Branding, Preview, Analytics, Users, Settings', () => {
+      render(<AdminSidebar isOpen={true} onClose={vi.fn()} role="super_admin" />)
 
-      // These exact 4 nav items are required for CMS admin
+      // All 7 nav items required for super_admin (Users requires super_admin role)
       const requiredNavItems = [
         { testId: 'nav-link-systems', label: 'Systems' },
         { testId: 'nav-link-content', label: 'Content' },
+        { testId: 'nav-link-branding', label: 'Branding' },
+        { testId: 'nav-link-preview', label: 'Preview' },
         { testId: 'nav-link-analytics', label: 'Analytics' },
+        { testId: 'nav-link-users', label: 'Users' },
         { testId: 'nav-link-settings', label: 'Settings' },
       ]
 
@@ -98,13 +104,16 @@ describe('AdminSidebar Guardrails', () => {
     })
 
     it('[P1] MUST have correct href for each nav item', () => {
-      render(<AdminSidebar isOpen={true} onClose={vi.fn()} />)
+      render(<AdminSidebar isOpen={true} onClose={vi.fn()} role="super_admin" />)
 
-      // Routes MUST match expected admin routes
+      // Routes MUST match expected admin routes (all 7 for super_admin)
       const expectedRoutes = [
         { testId: 'nav-link-systems', href: '/admin/systems' },
         { testId: 'nav-link-content', href: '/admin/content' },
+        { testId: 'nav-link-branding', href: '/admin/branding' },
+        { testId: 'nav-link-preview', href: '/admin/preview' },
         { testId: 'nav-link-analytics', href: '/admin/analytics' },
+        { testId: 'nav-link-users', href: '/admin/users' },
         { testId: 'nav-link-settings', href: '/admin/settings' },
       ]
 
@@ -118,7 +127,7 @@ describe('AdminSidebar Guardrails', () => {
 
     it('[P1] Active route MUST have aria-current="page" for accessibility', () => {
       mockPathname.mockReturnValue('/admin/systems')
-      render(<AdminSidebar isOpen={true} onClose={vi.fn()} />)
+      render(<AdminSidebar isOpen={true} onClose={vi.fn()} role="super_admin" />)
 
       // Active link MUST have aria-current="page"
       const activeLink = screen.getByTestId('nav-link-systems')
@@ -130,7 +139,10 @@ describe('AdminSidebar Guardrails', () => {
       // Inactive links MUST NOT have aria-current
       const inactiveLinks = [
         screen.getByTestId('nav-link-content'),
+        screen.getByTestId('nav-link-branding'),
+        screen.getByTestId('nav-link-preview'),
         screen.getByTestId('nav-link-analytics'),
+        screen.getByTestId('nav-link-users'),
         screen.getByTestId('nav-link-settings'),
       ]
 
@@ -145,21 +157,21 @@ describe('AdminSidebar Guardrails', () => {
     it('[P1] Active state MUST update when pathname changes', () => {
       // Test Content route active
       mockPathname.mockReturnValue('/admin/content')
-      const { rerender } = render(<AdminSidebar isOpen={true} onClose={vi.fn()} />)
+      const { rerender } = render(<AdminSidebar isOpen={true} onClose={vi.fn()} role="super_admin" />)
 
       expect(screen.getByTestId('nav-link-content')).toHaveAttribute('aria-current', 'page')
       expect(screen.getByTestId('nav-link-systems')).not.toHaveAttribute('aria-current')
 
       // Test Settings route active
       mockPathname.mockReturnValue('/admin/settings')
-      rerender(<AdminSidebar isOpen={true} onClose={vi.fn()} />)
+      rerender(<AdminSidebar isOpen={true} onClose={vi.fn()} role="super_admin" />)
 
       expect(screen.getByTestId('nav-link-settings')).toHaveAttribute('aria-current', 'page')
       expect(screen.getByTestId('nav-link-content')).not.toHaveAttribute('aria-current')
     })
 
     it('[P1] Close button MUST have accessible label', () => {
-      render(<AdminSidebar isOpen={true} onClose={vi.fn()} />)
+      render(<AdminSidebar isOpen={true} onClose={vi.fn()} role="super_admin" />)
 
       const closeButton = screen.getByTestId('sidebar-close-button')
       expect(

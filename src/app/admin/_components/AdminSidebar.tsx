@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Monitor, FileText, Palette, Eye, BarChart3, Settings, X } from 'lucide-react'
+import { Monitor, FileText, Palette, Eye, BarChart3, Settings, Users, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 
@@ -10,7 +10,11 @@ interface NavItem {
   label: string
   href: string
   icon: React.ComponentType<{ className?: string }>
+  requiredRole?: string // undefined = visible to all admin roles
 }
+
+// Client-side role hierarchy (guard.ts has 'server-only', cannot import in client)
+const ROLE_HIERARCHY: Record<string, number> = { user: 1, admin: 2, super_admin: 3 }
 
 const navItems: NavItem[] = [
   { label: 'Systems', href: '/admin/systems', icon: Monitor },
@@ -18,16 +22,22 @@ const navItems: NavItem[] = [
   { label: 'Branding', href: '/admin/branding', icon: Palette },
   { label: 'Preview', href: '/admin/preview', icon: Eye },
   { label: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
+  { label: 'Users', href: '/admin/users', icon: Users, requiredRole: 'super_admin' },
   { label: 'Settings', href: '/admin/settings', icon: Settings },
 ]
 
 interface AdminSidebarProps {
   isOpen: boolean
   onClose: () => void
+  role: string
 }
 
-export default function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
+export default function AdminSidebar({ isOpen, onClose, role }: AdminSidebarProps) {
   const pathname = usePathname()
+
+  const visibleItems = navItems.filter(
+    (item) => !item.requiredRole || (ROLE_HIERARCHY[role] ?? 0) >= (ROLE_HIERARCHY[item.requiredRole] ?? 0),
+  )
 
   return (
     <>
@@ -69,7 +79,7 @@ export default function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
           role="navigation"
           aria-label="Admin navigation"
         >
-          {navItems.map((item) => {
+          {visibleItems.map((item) => {
             const isActive = pathname.startsWith(item.href)
             const Icon = item.icon
 

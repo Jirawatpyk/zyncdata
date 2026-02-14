@@ -37,7 +37,7 @@ export default function AdminShell({ auth, children }: AdminShellProps) {
         isSidebarOpen={isSidebarOpen}
       />
 
-      <AdminSidebar isOpen={isSidebarOpen} onClose={handleSidebarClose} />
+      <AdminSidebar isOpen={isSidebarOpen} onClose={handleSidebarClose} role={auth.role} />
 
       <main
         id="main-content"

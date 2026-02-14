@@ -11,6 +11,7 @@ import type { User } from '@supabase/supabase-js'
 import type { AuthResult } from '@/lib/auth/guard'
 import type { HeroContent, PillarsContent, FooterContent, ThemeContent } from '@/lib/validations/content'
 import type { LandingPageContent } from '@/lib/content/queries'
+import type { CmsUser } from '@/lib/validations/user'
 
 // ── System (camelCase — app shape) ──────────────────────────────────
 
@@ -192,6 +193,31 @@ export function createMockHealthDashboard(overrides?: Partial<HealthDashboardDat
     lastUpdated: '2026-01-01T00:00:00Z',
     ...overrides,
   }
+}
+
+// ── CMS User ─────────────────────────────────────────────────────────
+
+const CMS_USER_DEFAULTS: CmsUser = {
+  id: 'user-001',
+  email: 'test@dxt.com',
+  role: 'admin',
+  isConfirmed: true,
+  lastSignInAt: '2026-02-14T10:00:00Z',
+  createdAt: '2026-01-01T00:00:00Z',
+}
+
+export function createMockCmsUser(overrides?: Partial<CmsUser>): CmsUser {
+  return { ...CMS_USER_DEFAULTS, ...overrides }
+}
+
+export function createMockCmsUserList(count: number, overrides?: Partial<CmsUser>): CmsUser[] {
+  return Array.from({ length: count }, (_, i) =>
+    createMockCmsUser({
+      id: `user-${String(i + 1).padStart(3, '0')}`,
+      email: `user${i + 1}@dxt.com`,
+      ...overrides,
+    }),
+  )
 }
 
 // ── Auth ────────────────────────────────────────────────────────────
